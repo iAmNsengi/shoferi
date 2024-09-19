@@ -60,7 +60,7 @@ export const signIn = async (req, res, next) => {
   try {
     //validation
     if (!email || !password) {
-      next("Please Provide AUser Credentials");
+      next("Please Provide All User Credentials");
       return;
     }
 
@@ -68,7 +68,7 @@ export const signIn = async (req, res, next) => {
     const user = await Users.findOne({ email }).select("+password");
 
     if (!user) {
-      next("Invalid -email or password");
+      next("Invalid email or password");
       return;
     }
 
@@ -84,7 +84,7 @@ export const signIn = async (req, res, next) => {
 
     const token = user.createJWT();
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: "Login successfully",
       user,
