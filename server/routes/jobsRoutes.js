@@ -20,6 +20,9 @@ router.put("/update/:jobId", userAuth, updateJob);
 router.get("/", getJobPosts);
 router.get("/details/:id", getJobById);
 
+// APPLY TO JOB ROUTE
+router.post("/apply/:id", applyJob)
+
 // DELETE JOB POST
 router.delete("/delete/:id", userAuth, deleteJobPost);
 

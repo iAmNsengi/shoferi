@@ -48,8 +48,8 @@ export const createJob = async (req, res, next) => {
 
     //update the company information with job id
     const company = await Companies.findById(id);
-    if(!company)
-      return res.status(400).send("You are not logged in as a company!")
+    if (!company)
+      return res.status(400).send("You are not logged in as a company!");
 
     company.jobPosts.push(job._id);
     const updateCompany = await Companies.findByIdAndUpdate(id, company, {
@@ -58,7 +58,7 @@ export const createJob = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Job Posted SUccessfully",
+      message: "Job Posted Successfully",
       job,
     });
   } catch (error) {
@@ -260,4 +260,17 @@ export const deleteJobPost = async (req, res, next) => {
     console.log(error);
     res.status(404).json({ message: error.message });
   }
+};
+
+export default applyJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const job = await Jobs.findById({ id });
+    if (!job)
+      return res
+        .status(400)
+        .json({ message: "Job post with given ID not found", success: false });
+    
+  } catch (error) {}
 };
