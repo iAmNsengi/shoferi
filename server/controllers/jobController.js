@@ -48,6 +48,8 @@ export const createJob = async (req, res, next) => {
 
     //update the company information with job id
     const company = await Companies.findById(id);
+    if(!company)
+      return res.status(400).send("You are not logged in as a company!")
 
     company.jobPosts.push(job._id);
     const updateCompany = await Companies.findByIdAndUpdate(id, company, {
