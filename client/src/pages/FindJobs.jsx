@@ -37,10 +37,29 @@ const FindJobs = () => {
 
     // Filter by search query (job title)
     if (searchQuery) {
-      filteredJobs = filteredJobs.filter(
-        (job) =>
-          job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          job.location.toLowerCase().includes(searchQuery.toLowerCase())
+      filteredJobs = filteredJobs.filter((job) =>
+        job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by job location
+    if (jobLocation) {
+      filteredJobs = filteredJobs.filter((job) =>
+        job.location.toLowerCase().includes(jobLocation.toLowerCase())
+      );
+    }
+
+    // Filter by selected job types (if any)
+    if (filterJobTypes.length > 0) {
+      filteredJobs = filteredJobs.filter((job) =>
+        filterJobTypes.includes(job.jobType)
+      );
+    }
+
+    // Filter by experience level (if any)
+    if (filterExp.length > 0) {
+      filteredJobs = filteredJobs.filter((job) =>
+        filterExp.includes(job.experience)
       );
     }
 
@@ -59,19 +78,23 @@ const FindJobs = () => {
       filteredJobs.sort((a, b) => b.jobTitle.localeCompare(a.jobTitle)); // Sort alphabetically by jobTitle (Z-A)
     }
 
+    // Set the filtered and sorted data
     setData(filteredJobs);
-  }, [jobs, sort, searchQuery, jobLocation]);
+  }, [jobs, sort, searchQuery, jobLocation, filterJobTypes, filterExp]);
 
   const filterJobs = (val) => {
-    if (filterJobTypes?.includes(val)) {
+    if (filterJobTypes.includes(val)) {
       setFilterJobTypes(filterJobTypes.filter((el) => el !== val));
     } else {
       setFilterJobTypes([...filterJobTypes, val]);
     }
   };
-
-  const filterExperience = async (e) => {
-    setFilterExp(e);
+  const filterExperience = (val) => {
+    if (filterExp.includes(val)) {
+      setFilterExp(filterExp.filter((el) => el !== val));
+    } else {
+      setFilterExp([...filterExp, val]);
+    }
   };
 
   return (
