@@ -27,16 +27,31 @@ const FindJobs = () => {
   const navigate = useNavigate();
 
   const { jobs, loading, error, getJobs } = useJobs();
-  
-  // if (loading) return <Loading />;
 
   useEffect(() => {
     getJobs(); // Fetch jobs on component mount
   }, []);
 
+  useEffect(() => {
+    let filteredJobs = jobs;
+
+    // Apply sorting
+    if (sort === "Newest") {
+      filteredJobs = jobs.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    } else if (sort === "Oldest") {
+      filteredJobs = jobs.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+    }
+
+    setData(filteredJobs);
+  }, [jobs, sort]);
+
   const filterJobs = (val) => {
     if (filterJobTypes?.includes(val)) {
-      setFilterJobTypes(filterJobTypes.filter((el) => el != val));
+      setFilterJobTypes(filterJobTypes.filter((el) => el !== val));
     } else {
       setFilterJobTypes([...filterJobTypes, val]);
     }
@@ -120,8 +135,8 @@ const FindJobs = () => {
         <div className="w-full md:w-5/6 px-5 md:px-0">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm md:text-base">
-              Showing: <span className="font-semibold">1,902</span> Jobs
-              Available
+              Showing: <span className="font-semibold">({data.length})</span>{" "}
+              Jobs Available
             </p>
 
             <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:items-center">
@@ -132,7 +147,8 @@ const FindJobs = () => {
           </div>
 
           <div className="w-full flex flex-wrap gap-4">
-            {jobs.map((job, index) => (
+            {loading && <Loading />}
+            {data.map((job, index) => (
               <JobCard job={job} key={index} />
             ))}
           </div>
