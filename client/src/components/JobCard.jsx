@@ -6,12 +6,15 @@ const JobCard = ({ job }) => {
   return (
     <Link to={`/job-detail/${job?._id}`}>
       <div
-        className="w-full md:w-[17rem] 2xl:w-[18rem] h-[16rem] md:h-[18rem] bg-white flex flex-col justify-between shadow-lg 
-                rounded-md px-2 py-5 "
+        className="w-full md:w-[17rem] 2xl:w-[19rem] h-[16rem] md:h-[18rem] bg-white flex flex-col justify-between shadow-lg 
+                rounded-md px-3 py-6 "
       >
         <div className="flex gap-3">
           <img
-            src={job?.company?.profileUrl}
+            src={
+              job?.company?.profileUrl ||
+              `https://avatar.iran.liara.run/username?username=-`
+            }
             alt={job?.company?.name}
             className="w-14 h-14"
           />

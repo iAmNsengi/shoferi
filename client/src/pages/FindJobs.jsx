@@ -35,17 +35,12 @@ const FindJobs = () => {
   useEffect(() => {
     let filteredJobs = [...jobs]; // Create a copy of jobs to avoid mutating the original array
 
-    // Filter by search query (job title)
+    // Filter by search query (job title or location)
     if (searchQuery) {
-      filteredJobs = filteredJobs.filter((job) =>
-        job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Filter by job location
-    if (jobLocation) {
-      filteredJobs = filteredJobs.filter((job) =>
-        job.location.toLowerCase().includes(jobLocation.toLowerCase())
+      filteredJobs = filteredJobs.filter(
+        (job) =>
+          job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.location.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 

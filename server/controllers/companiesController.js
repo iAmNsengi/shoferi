@@ -3,7 +3,8 @@ import Companies from "../models/companiesModel.js";
 import { response } from "express";
 
 export const register = async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, contact, location, about, profileUrl } =
+    req.body;
 
   //validate fields
   if (!name) {
@@ -32,6 +33,10 @@ export const register = async (req, res, next) => {
       name,
       email,
       password,
+      contact,
+      location,
+      about,
+      profileUrl,
     });
 
     // user token
