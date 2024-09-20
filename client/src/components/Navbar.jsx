@@ -6,7 +6,6 @@ import { HiMenuAlt3 } from "react-icons/hi";
 import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import CustomButton from "./CustomButton";
-import { users } from "../utils/data";
 import { useSelector } from "react-redux";
 
 function MenuList({ user, onClick }) {
@@ -167,7 +166,9 @@ const Navbar = () => {
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.accountType === "seeker" ? "applly-gistory" : "upload-job"
+              user?.accountType === "seeker"
+                ? "Application-History"
+                : "upload-job"
             }
           >
             {user?.accountType === "seeker" ? "Applications" : "Upload Job"}
