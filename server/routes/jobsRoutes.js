@@ -1,6 +1,7 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
 import {
+  applyJob,
   createJob,
   deleteJobPost,
   getJobById,
@@ -21,7 +22,7 @@ router.get("/", getJobPosts);
 router.get("/details/:id", getJobById);
 
 // APPLY TO JOB ROUTE
-router.post("/apply/:id", applyJob)
+router.post("/apply/:id", userAuth, applyJob);
 
 // DELETE JOB POST
 router.delete("/delete/:id", userAuth, deleteJobPost);

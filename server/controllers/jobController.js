@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
+import Users from "../models/userModel.js";
 
 export const createJob = async (req, res, next) => {
   try {
@@ -262,15 +263,54 @@ export const deleteJobPost = async (req, res, next) => {
   }
 };
 
-export default applyJob = async (req, res, next) => {
+export const applyJob = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Job ID from the URL params
+    const userId = req.body.user.userId; // User ID from the request body
 
-    const job = await Jobs.findById({ id });
-    if (!job)
+    // Check if the user exists
+    const userExist = await Users.findById(userId);
+    if (!userExist) {
       return res
         .status(400)
-        .json({ message: "Job post with given ID not found", success: false });
-    
-  } catch (error) {}
+        .json({ message: "You need to be logged in to apply!" });
+    }
+
+    // Check if the job post exists
+    const job = await Jobs.findById(id);
+    if (!job) {
+      return res
+        .status(400)
+        .json({
+          message: "Job post with the given ID not found",
+          success: false,
+        });
+    }
+
+    // Check if the user has already applied for the job
+    const hasApplied = job.application.includes(userId);
+    if (hasApplied) {
+      return res.status(400).json({
+        message: "You have already applied for this job!",
+        success: false,
+      });
+    }
+
+    // Add the user to the applications array
+    job.application.push(userId);
+
+    // Save the updated job document
+    await job.save();
+
+    return res.status(200).json({
+      message: "You have successfully applied for the job!",
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "An error occurred while applying for the job",
+      success: false,
+    });
+  }
 };
