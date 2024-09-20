@@ -273,18 +273,19 @@ export const applyJob = async (req, res, next) => {
     if (!userExist) {
       return res
         .status(400)
-        .json({ message: "You need to be logged in to apply!" });
+        .json({
+          message: "You need to be logged in to apply!",
+          success: false,
+        });
     }
 
     // Check if the job post exists
     const job = await Jobs.findById(id);
     if (!job) {
-      return res
-        .status(400)
-        .json({
-          message: "Job post with the given ID not found",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "Job post with the given ID not found",
+        success: false,
+      });
     }
 
     // Check if the user has already applied for the job
