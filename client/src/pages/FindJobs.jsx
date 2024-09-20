@@ -30,6 +30,7 @@ const FindJobs = () => {
 
   useEffect(() => {
     getJobs(); // Fetch jobs on component mount
+    
   }, []);
 
   useEffect(() => {
