@@ -33,17 +33,20 @@ const FindJobs = () => {
   }, []);
 
   useEffect(() => {
-    let filteredJobs = jobs;
+    let filteredJobs = [...jobs]; // Create a copy of jobs to avoid mutating the original array
 
-    // Apply sorting
     if (sort === "Newest") {
-      filteredJobs = jobs.sort(
+      filteredJobs.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
     } else if (sort === "Oldest") {
-      filteredJobs = jobs.sort(
+      filteredJobs.sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
+    } else if (sort === "A-Z") {
+      filteredJobs.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle)); // Sort alphabetically by jobTitle (A-Z)
+    } else if (sort === "Z-A") {
+      filteredJobs.sort((a, b) => b.jobTitle.localeCompare(a.jobTitle)); // Sort alphabetically by jobTitle (Z-A)
     }
 
     setData(filteredJobs);
