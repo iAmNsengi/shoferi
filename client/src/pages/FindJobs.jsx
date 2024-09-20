@@ -35,6 +35,16 @@ const FindJobs = () => {
   useEffect(() => {
     let filteredJobs = [...jobs]; // Create a copy of jobs to avoid mutating the original array
 
+    // Filter by search query (job title)
+    if (searchQuery) {
+      filteredJobs = filteredJobs.filter(
+        (job) =>
+          job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.location.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Sort jobs
     if (sort === "Newest") {
       filteredJobs.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -50,7 +60,7 @@ const FindJobs = () => {
     }
 
     setData(filteredJobs);
-  }, [jobs, sort]);
+  }, [jobs, sort, searchQuery, jobLocation]);
 
   const filterJobs = (val) => {
     if (filterJobTypes?.includes(val)) {
