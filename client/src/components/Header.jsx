@@ -11,14 +11,16 @@ const SearchInput = ({ placeholder, icon, value, setValue, styles }) => {
   const clearInput = () => setValue("");
 
   return (
-    <div className={`flex w-full md:w-1/3 items-center ${styles}`}>
+    <div
+      className={`flex w-full md:w-1/3 items-center justify-between border rounded-full px-2 ${styles}`}
+    >
       {icon}
 
       <input
         value={value}
         onChange={(e) => handleChange(e)}
         type="text"
-        className="w-full md:w-64 p-2 outline-none bg-transparent text-base"
+        className="w-full md:w-80 p-2 outline-none bg-transparent text-base"
         placeholder={placeholder}
       />
 
@@ -55,7 +57,7 @@ const Header = ({
 
           <div className="w-full flex items-center justify-center bg-white px-2 md:px-5 py-2.5 md:py-6 shadow-2xl rounded-full">
             <SearchInput
-              placeholder="Job Title or Keywords"
+              placeholder="Job title or location..."
               icon={<AiOutlineSearch className="text-gray-600 text-xl" />}
               value={searchQuery}
               setValue={setSearchQuery}
