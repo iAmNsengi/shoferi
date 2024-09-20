@@ -6,8 +6,8 @@ import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 import Header from "../components/Header";
 import { experience, jobTypes } from "../utils/data";
-import { CustomButton, JobCard, ListBox } from "../components";
-import useJobs from "../hooks/useJobs";
+import { CustomButton, JobCard, ListBox, Loading } from "../components";
+import { useJobs } from "../hooks/useJobs";
 
 const FindJobs = () => {
   const [sort, setSort] = useState("Newest");
@@ -25,11 +25,13 @@ const FindJobs = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [jobs, setJobs] = useState();
+
+  const { jobs, loading, error, getJobs } = useJobs();
+  
+  // if (loading) return <Loading />;
 
   useEffect(() => {
-    const allJobs = useJobs();
-    setJobs(allJobs.data);
+    getJobs(); // Fetch jobs on component mount
   }, []);
 
   const filterJobs = (val) => {
