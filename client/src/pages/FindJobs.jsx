@@ -30,7 +30,6 @@ const FindJobs = () => {
 
   useEffect(() => {
     getJobs(); // Fetch jobs on component mount
-    
   }, []);
 
   useEffect(() => {
@@ -98,6 +97,7 @@ const FindJobs = () => {
       <Header
         title="Search driver's job in Rwanda"
         type="home"
+        placeholder={"Search job title or location..."}
         handleClick={() => {}}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

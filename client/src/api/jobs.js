@@ -1,16 +1,4 @@
-import axios from "axios";
-
-// Set base URL for Axios
-const API = axios.create({ baseURL: import.meta.env.VITE_API_URL });
-
-// For authenticated requests, include the token in the headers
-API.interceptors.request.use((req) => {
-  const user = localStorage.getItem("profile");
-  if (user) {
-    req.headers.Authorization = `Bearer ${JSON.parse(user).token}`;
-  }
-  return req;
-});
+import API from ".";
 
 // Fetch job posts with filters, pagination, etc.
 export const fetchJobs = (params) => API.get("/jobs", { params });
