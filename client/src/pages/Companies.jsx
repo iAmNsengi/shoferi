@@ -35,6 +35,13 @@ const Companies = () => {
 
   useEffect(() => {
     let filteredCompanies = [...companies];
+
+    // Filter by search query (company name)
+    if (searchQuery) {
+      filteredCompanies = filteredCompanies.filter((company) =>
+        company.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
     // Sort jobs
     if (sort === "Newest") {
       filteredCompanies.sort(
@@ -50,7 +57,7 @@ const Companies = () => {
       filteredCompanies.sort((a, b) => b.name.localeCompare(a.name)); // Sort alphabetically by name (Z-A)
     }
     setData(filteredCompanies);
-  }, [companies, sort]);
+  }, [companies, sort, searchQuery]);
 
   return (
     <div className="w-full">
