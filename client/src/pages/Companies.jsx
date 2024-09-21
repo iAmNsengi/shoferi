@@ -35,8 +35,22 @@ const Companies = () => {
 
   useEffect(() => {
     let filteredCompanies = [...companies];
+    // Sort jobs
+    if (sort === "Newest") {
+      filteredCompanies.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    } else if (sort === "Oldest") {
+      filteredCompanies.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+    } else if (sort === "A-Z") {
+      filteredCompanies.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name (A-Z)
+    } else if (sort === "Z-A") {
+      filteredCompanies.sort((a, b) => b.name.localeCompare(a.name)); // Sort alphabetically by name (Z-A)
+    }
     setData(filteredCompanies);
-  }, [companies]);
+  }, [companies, sort]);
 
   return (
     <div className="w-full">
@@ -65,7 +79,6 @@ const Companies = () => {
 
         <div className="w-full flex flex-col gap-6">
           {loading && <Loading />}
-          {/* {!data.length && <Loading />} */}
           {error && (
             <Notification message="Error fetching companies details. Try again later!" />
           )}
