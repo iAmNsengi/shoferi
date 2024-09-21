@@ -64,16 +64,12 @@ const Companies = () => {
         </div>
 
         <div className="w-full flex flex-col gap-6">
-          {loading && (
-            <div className="mt-10">
-              <Loading />
-            </div>
+          {loading && <Loading />}
+          {/* {!data.length && <Loading />} */}
+          {error && (
+            <Notification message="Error fetching companies details. Try again later!" />
           )}
-          <Notification
-            type="error"
-            title="Testing"
-            message="This is an issue man"
-          />
+
           {data?.map((cmp, index) => (
             <CompanyCard cmp={cmp} key={index} />
           ))}

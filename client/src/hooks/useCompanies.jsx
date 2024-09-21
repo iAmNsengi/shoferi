@@ -24,6 +24,7 @@ export const useCompanies = () => {
 
   return {
     companies,
+    loading,
     getCompanies,
   };
 };
