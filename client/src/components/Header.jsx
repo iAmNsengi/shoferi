@@ -38,6 +38,7 @@ const Header = ({
   handleClick,
   searchQuery,
   setSearchQuery,
+  placeholder,
   location,
   setLocation,
 }) => {
@@ -57,7 +58,7 @@ const Header = ({
 
           <div className="w-full flex items-center justify-center bg-white px-2 md:px-5 py-2.5 md:py-6 shadow-2xl rounded-full">
             <SearchInput
-              placeholder="Job title or location..."
+              placeholder={placeholder}
               icon={<AiOutlineSearch className="text-gray-600 text-xl" />}
               value={searchQuery}
               setValue={setSearchQuery}

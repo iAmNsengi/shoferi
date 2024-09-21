@@ -30,7 +30,6 @@ const FindJobs = () => {
 
   useEffect(() => {
     getJobs(); // Fetch jobs on component mount
-    
   }, []);
 
   useEffect(() => {
@@ -49,13 +48,6 @@ const FindJobs = () => {
     if (filterJobTypes.length > 0) {
       filteredJobs = filteredJobs.filter((job) =>
         filterJobTypes.includes(job.jobType)
-      );
-    }
-
-    // Filter by experience level (if any)
-    if (filterExp.length > 0) {
-      filteredJobs = filteredJobs.filter((job) =>
-        filterExp.includes(job.experience)
       );
     }
 
@@ -98,6 +90,7 @@ const FindJobs = () => {
       <Header
         title="Search driver's job in Rwanda"
         type="home"
+        placeholder={"Search job title or location..."}
         handleClick={() => {}}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
