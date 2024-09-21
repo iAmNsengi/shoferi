@@ -14,13 +14,12 @@ import {
 import { useSelector } from 'react-redux';
 
 function Layout() {
-  const { auth } = useSelector((store) => store.user);
-  return auth?.token ? <Outlet /> : <Navigate to="/user-auth" />;
+  const auth = useSelector((store) => store.user);
+  return auth ? <Outlet /> : <Navigate to="/user-auth" />;
 }
 
 function App() {
   const { user } = useSelector((state) => state.user);
-  const { auth } = useSelector((store) => store.user);
   return (
     <main className="bg-[#f7fdfd]">
       <Navbar />
