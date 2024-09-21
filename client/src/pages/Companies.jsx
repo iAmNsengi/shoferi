@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CompanyCard, CustomButton, Header, ListBox } from "../components";
+import {
+  CompanyCard,
+  CustomButton,
+  Header,
+  ListBox,
+  Loading,
+} from "../components";
 import { companies } from "../utils/data";
 import { useCompanies } from "../hooks/useCompanies";
+import Notification from "../components/Notification";
 
 const Companies = () => {
   const [page, setPage] = useState(1);
@@ -25,7 +32,7 @@ const Companies = () => {
   useEffect(() => {
     getCompanies();
   }, []);
-  
+
   useEffect(() => {
     let filteredCompanies = [...companies];
     setData(filteredCompanies);
@@ -52,21 +59,24 @@ const Companies = () => {
 
           <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:items-center">
             <p className="text-sm md:text-base">Sort By:</p>
-
             <ListBox sort={sort} setSort={setSort} />
           </div>
         </div>
 
         <div className="w-full flex flex-col gap-6">
-          {data?.map((cmp, index) => (
-            <CompanyCard cmp={cmp} key={index} />
-          ))}
-
-          {isFetching && (
+          {loading && (
             <div className="mt-10">
               <Loading />
             </div>
           )}
+          <Notification
+            type="error"
+            title="Testing"
+            message="This is an issue man"
+          />
+          {data?.map((cmp, index) => (
+            <CompanyCard cmp={cmp} key={index} />
+          ))}
 
           <p className="text-sm text-right">
             {data?.length} records out of {recordsCount}
