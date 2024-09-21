@@ -41,7 +41,7 @@ const TeamMember = ({ name, role, image, delay }) => (
 );
 
 const GradientText = ({ children }) => (
-  <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-orange-900">
+  <span className="bg-clip-text font-extrabold text-transparent bg-gradient-to-r from-orange-300 to-orange-800">
     {children}
   </span>
 );
