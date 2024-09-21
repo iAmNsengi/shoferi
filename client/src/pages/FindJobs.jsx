@@ -51,13 +51,6 @@ const FindJobs = () => {
       );
     }
 
-    // Filter by experience level (if any)
-    if (filterExp.length > 0) {
-      filteredJobs = filteredJobs.filter((job) =>
-        filterExp.includes(job.experience)
-      );
-    }
-
     // Sort jobs
     if (sort === "Newest") {
       filteredJobs.sort(

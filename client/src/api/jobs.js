@@ -4,7 +4,7 @@ import API from ".";
 export const fetchJobs = (params) => API.get("/jobs", { params });
 
 // Fetch a specific job by its ID
-export const fetchJobById = (id) => API.get(`/jobs/${id}`);
+export const fetchJobById = (id) => API.get(`/jobs/details/${id}`);
 
 // Create a new job post
 export const createJob = (jobData) => API.post("/jobs", jobData);

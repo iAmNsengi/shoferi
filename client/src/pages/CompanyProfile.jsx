@@ -8,8 +8,10 @@ import { FiPhoneCall, FiEdit3, FiUpload } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
 import { companies, jobs } from "../utils/data";
 import { CustomButton, JobCard, Loading, TextInput } from "../components";
+import { useCompanies } from "../hooks/useCompanies";
+import Notification from "../components/Notification";
 
-const CompnayForm = ({ open, setOpen }) => {
+const CompanyForm = ({ open, setOpen }) => {
   const { user } = useSelector((state) => state.user);
   const {
     register,
@@ -74,7 +76,7 @@ const CompnayForm = ({ open, setOpen }) => {
                       label="Company Name"
                       type="text"
                       register={register("name", {
-                        required: "Compnay Name is required",
+                        required: "Company Name is required",
                       })}
                       error={errors.name ? errors.name?.message : ""}
                     />
@@ -159,29 +161,25 @@ const CompnayForm = ({ open, setOpen }) => {
 const CompanyProfile = () => {
   const params = useParams();
   const { user } = useSelector((state) => state.user);
-  const [info, setInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
 
+  const { company, loading, error, getCompany } = useCompanies();
+
   useEffect(() => {
-    setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
+    getCompany(params.id);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   return (
     <div className="container mx-auto p-5">
       <div className="">
         <div className="w-full flex flex-col md:flex-row gap-3 justify-between">
           <h2 className="text-gray-600 text-xl font-semibold">
-            Welcome, {info?.name}
+            Welcome to {company?.name}
           </h2>
 
           {user?.user?.accountType === undefined &&
-            info?._id === user?.user?._id && (
+            company?._id === user?.user?._id && (
               <div className="flex items-center justifu-center py-5 md:py-0 gap-4">
                 <CustomButton
                   onClick={() => setOpenForm(true)}
@@ -202,17 +200,17 @@ const CompanyProfile = () => {
 
         <div className="w-full flex flex-col md:flex-row justify-start md:justify-between mt-4 md:mt-8 text-sm">
           <p className="flex gap-1 items-center   px-3 py-1 text-slate-600 rounded-full">
-            <HiLocationMarker /> {info?.location ?? "No Location"}
+            <HiLocationMarker /> {company?.location ?? "No Location"}
           </p>
           <p className="flex gap-1 items-center   px-3 py-1 text-slate-600 rounded-full">
-            <AiOutlineMail /> {info?.email ?? "No Email"}
+            <AiOutlineMail /> {company?.email ?? "No Email"}
           </p>
           <p className="flex gap-1 items-center   px-3 py-1 text-slate-600 rounded-full">
-            <FiPhoneCall /> {info?.contact ?? "No Contact"}
+            <FiPhoneCall /> {company?.contact ?? "No Contact"}
           </p>
 
           <div className="flex flex-col items-center mt-10 md:mt-0">
-            <span className="text-xl">{info?.jobPosts?.length}</span>
+            <span className="text-xl">{company?.jobPosts?.length}</span>
             <p className="text-blue-600 ">Job Post</p>
           </div>
         </div>
@@ -220,20 +218,21 @@ const CompanyProfile = () => {
 
       <div className="w-full mt-20 flex flex-col gap-2">
         <p>Jobs Posted</p>
+        {loading && <Loading />}
+        {!loading && company.jobPosts && !company.jobPosts.length && (
+          <Notification message="No jobs added yet!" />
+        )}
 
-        <div className="flex flex-wrap gap-3">
-          {jobs?.map((job, index) => {
-            const data = {
-              name: info?.name,
-              email: info?.email,
-              ...job,
-            };
-            return <JobCard job={data} key={index} />;
-          })}
-        </div>
+        {company.jobPosts && (
+          <div className="flex flex-wrap gap-3">
+            {company.jobPosts.map((job, index) => (
+              <JobCard job={job} key={index} />
+            ))}
+          </div>
+        )}
       </div>
 
-      <CompnayForm open={openForm} setOpen={setOpenForm} />
+      <CompanyForm open={openForm} setOpen={setOpenForm} />
     </div>
   );
 };

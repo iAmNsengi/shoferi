@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CompanyCard, CustomButton, Header, ListBox } from "../components";
-import { companies } from "../utils/data";
+import {
+  CompanyCard,
+  CustomButton,
+  Header,
+  ListBox,
+  Loading,
+} from "../components";
 import { useCompanies } from "../hooks/useCompanies";
+import Notification from "../components/Notification";
 
 const Companies = () => {
   const [page, setPage] = useState(1);
@@ -25,11 +31,32 @@ const Companies = () => {
   useEffect(() => {
     getCompanies();
   }, []);
-  
+
   useEffect(() => {
     let filteredCompanies = [...companies];
+
+    // Filter by search query (company name)
+    if (searchQuery) {
+      filteredCompanies = filteredCompanies.filter((company) =>
+        company.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    // Sort jobs
+    if (sort === "Newest") {
+      filteredCompanies.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    } else if (sort === "Oldest") {
+      filteredCompanies.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+    } else if (sort === "A-Z") {
+      filteredCompanies.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name (A-Z)
+    } else if (sort === "Z-A") {
+      filteredCompanies.sort((a, b) => b.name.localeCompare(a.name)); // Sort alphabetically by name (Z-A)
+    }
     setData(filteredCompanies);
-  }, [companies]);
+  }, [companies, sort, searchQuery]);
 
   return (
     <div className="w-full">
@@ -52,21 +79,20 @@ const Companies = () => {
 
           <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:items-center">
             <p className="text-sm md:text-base">Sort By:</p>
-
             <ListBox sort={sort} setSort={setSort} />
           </div>
         </div>
 
         <div className="w-full flex flex-col gap-6">
+          {loading && <Loading />}
+          {error && (
+            <Notification message="Error fetching companies details. Try again later!" />
+          )}
+
           {data?.map((cmp, index) => (
             <CompanyCard cmp={cmp} key={index} />
           ))}
-
-          {isFetching && (
-            <div className="mt-10">
-              <Loading />
-            </div>
-          )}
+          {!loading && !data.length && <Notification />}
 
           <p className="text-sm text-right">
             {data?.length} records out of {recordsCount}
