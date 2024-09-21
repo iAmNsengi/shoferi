@@ -32,7 +32,7 @@ export const useJobs = () => {
     setLoading(true);
     try {
       const response = await fetchJobById(id);
-      setJob(response.data.data); // Assuming the response data is in `data.data`
+      setJob(response.data.data);
       setLoading(false);
     } catch (err) {
       setError(err.message);

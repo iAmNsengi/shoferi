@@ -7,7 +7,6 @@ import {
   ListBox,
   Loading,
 } from "../components";
-import { companies } from "../utils/data";
 import { useCompanies } from "../hooks/useCompanies";
 import Notification from "../components/Notification";
 
@@ -93,6 +92,7 @@ const Companies = () => {
           {data?.map((cmp, index) => (
             <CompanyCard cmp={cmp} key={index} />
           ))}
+          {!loading && !data.length && <Notification />}
 
           <p className="text-sm text-right">
             {data?.length} records out of {recordsCount}
