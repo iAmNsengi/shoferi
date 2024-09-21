@@ -69,7 +69,7 @@ const JobCard = ({ job }) => {
           transition={{ delay: 0.5 }}
         >
           <motion.p
-            className="bg-[#1d4fd826] text-[#1d4fd8] py-1 px-2 rounded font-semibold text-sm"
+            className="bg-orange-100 text-orange-600 py-1 px-2 rounded font-semibold text-sm"
             whileHover={{ scale: 1.05 }}
           >
             {job?.jobType}
