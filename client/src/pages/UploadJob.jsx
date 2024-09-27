@@ -89,7 +89,7 @@ const UploadJob = () => {
             <TextInput
               name="location"
               label="Job Location"
-              placeholder="eg. New York"
+              placeholder="eg. Kigali Rwanda"
               type="text"
               register={register("location", {
                 required: "Job Location is required",
@@ -144,7 +144,7 @@ const UploadJob = () => {
         </div>
       </div>
       <div className="w-full md:w-1/3 2xl:2/4 p-5 mt-20 md:mt-0">
-        <p className="text-gray-500 font-semibold">Recent Job Post</p>
+        <p className="text-gray-500 font-semibold py-5">Recent Job Post</p>
 
         <div className="w-full flex flex-wrap gap-4">
           {loading && <Loading />}

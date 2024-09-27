@@ -8,8 +8,8 @@ const JobCard = ({ job }) => {
   return (
     <Link to={`/job-detail/${job?._id}`}>
       <motion.div
-        className="w-full md:w-[17rem] 2xl:w-[19rem] h-auto min-h-[16rem] md:min-h-[18rem] bg-white flex flex-col justify-between shadow-lg 
-                rounded-md px-3 py-6 hover:shadow-xl transition-shadow duration-300"
+        className="w-96 md:w-[20rem] px-4 h-auto min-h-[16rem] md:min-h-[18rem] bg-white flex flex-col justify-between shadow-lg 
+                rounded-md py-6 hover:shadow-xl transition-shadow duration-300"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -32,7 +32,7 @@ const JobCard = ({ job }) => {
             whileHover={{ scale: 1.1, rotate: 5 }}
           />
 
-          <div className="">
+          <div className="w-fit truncate">
             <motion.p
               className="text-lg font-semibold truncate"
               initial={{ y: -10, opacity: 0 }}
