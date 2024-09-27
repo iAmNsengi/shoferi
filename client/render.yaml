@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: shoferi
+    env: static
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - source: /*
+        headers:
+          - key: Cache-Control
+            value: no-cache
