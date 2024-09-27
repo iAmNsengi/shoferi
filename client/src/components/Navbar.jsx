@@ -104,15 +104,31 @@ function MenuList({ user, onClick }) {
 }
 const Navbar = () => {
   const navigate = useNavigate();
-  const { auth } = useSelector((state) => state.user);
+  const { auth } = useSelector((store) => store.user);
+  const { company } = useSelector((store) => store.company);
   const [isOpen, setIsOpen] = useState(false);
-
-  const user = auth;
+  const [LoggedIn, setLoggedIn] = useState(null);
+  useEffect(() => {
+    const loginUser = auth || company;
+    if (loginUser) {
+      setLoggedIn(loginUser);
+    } else {
+      setLoggedIn(null);
+    }
+  }, [
+    auth,
+    company,
+    auth?.token,
+    company?.token,
+    auth?.accountType,
+    company?.accountType,
+  ]);
+  const user = LoggedIn;
   useEffect(() => {
     if (user) {
       navigate("/find-jobs");
     }
-  }, []);
+  }, [user]);
   const handleCloseNavbar = () => {
     setIsOpen((prev) => !prev);
   };
@@ -180,7 +196,7 @@ const Navbar = () => {
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.user?.accountType === "seeker"
+              user?.accountType === "seeker"
                 ? "Application-History"
                 : "Upload-job"
             }
