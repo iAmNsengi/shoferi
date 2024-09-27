@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 
 function MenuList({ user, onClick }) {
   const handleLogout = () => {};
-
   return (
     <div>
       <Menu as="div" className="inline-block text-left">
@@ -57,7 +56,7 @@ function MenuList({ user, onClick }) {
                         : 'company-profile'
                     }`}
                     className={`${
-                      active ? "bg-orange-500 text-white" : "text-gray-900"
+                      active ? 'bg-orange-500 text-white' : 'text-gray-900'
                     } group flex w-full items-center rounded-md p-2 text-sm`}
                     onClick={onClick}
                   >
@@ -99,15 +98,31 @@ function MenuList({ user, onClick }) {
 }
 const Navbar = () => {
   const navigate = useNavigate();
-  const { auth } = useSelector((state) => state.user);
+  const { auth } = useSelector((store) => store.user);
+  const { company } = useSelector((store) => store.company);
   const [isOpen, setIsOpen] = useState(false);
-
-  const user = auth;
+  const [LoggedIn, setLoggedIn] = useState(null);
+  useEffect(() => {
+    const loginUser = auth || company;
+    if (loginUser) {
+      setLoggedIn(loginUser);
+    } else {
+      setLoggedIn(null);
+    }
+  }, [
+    auth,
+    company,
+    auth?.token,
+    company?.token,
+    auth?.accountType,
+    company?.accountType,
+  ]);
+  const user = LoggedIn;
   useEffect(() => {
     if (user) {
       navigate('/find-jobs');
     }
-  }, []);
+  }, [user]);
   const handleCloseNavbar = () => {
     setIsOpen((prev) => !prev);
   };
@@ -175,7 +190,7 @@ const Navbar = () => {
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.user?.accountType === 'seeker'
+              user?.accountType === 'seeker'
                 ? 'Application-History'
                 : 'Upload-job'
             }
