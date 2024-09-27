@@ -140,6 +140,7 @@ const JobDetail = () => {
             <CustomButton
               title="Apply Now"
               containerStyles={`w-full flex items-center justify-center text-white bg-orange-500 py-3 px-5 outline-none rounded-full text-base`}
+              
             />
           </div>
         </div>

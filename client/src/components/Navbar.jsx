@@ -1,15 +1,20 @@
-import React, { Fragment, useEffect, useState } from 'react';
-import { Menu, Transition } from '@headlessui/react';
-import { BiChevronDown } from 'react-icons/bi';
-import { CgProfile } from 'react-icons/cg';
-import { HiMenuAlt3 } from 'react-icons/hi';
-import { AiOutlineClose, AiOutlineLogout } from 'react-icons/ai';
-import { Link, useNavigate } from 'react-router-dom';
-import CustomButton from './CustomButton';
-import { useSelector } from 'react-redux';
+import React, { Fragment, useEffect, useState } from "react";
+import { Menu, Transition } from "@headlessui/react";
+import { BiChevronDown } from "react-icons/bi";
+import { CgProfile } from "react-icons/cg";
+import { HiMenuAlt3 } from "react-icons/hi";
+import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
+import { Link, useNavigate } from "react-router-dom";
+import CustomButton from "./CustomButton";
+import { useSelector } from "react-redux";
 
 function MenuList({ user, onClick }) {
-  const handleLogout = () => {};
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
+    navigate("/user-auth");
+  };
 
   return (
     <div>
@@ -52,9 +57,9 @@ function MenuList({ user, onClick }) {
                 {({ active }) => (
                   <Link
                     to={`${
-                      user?.accountType === 'seeker'
-                        ? 'user-profile'
-                        : 'company-profile'
+                      user?.accountType === "seeker"
+                        ? "user-profile"
+                        : "company-profile"
                     }`}
                     className={`${
                       active ? "bg-orange-500 text-white" : "text-gray-900"
@@ -63,11 +68,11 @@ function MenuList({ user, onClick }) {
                   >
                     <CgProfile
                       className={`${
-                        active ? 'text-white' : 'text-gray-600'
+                        active ? "text-white" : "text-gray-600"
                       } mr-2 h-5 w-5  `}
                       aria-hidden="true"
                     />
-                    {user?.accountType ? 'User Profile' : 'Company Profile'}
+                    {user?.accountType ? "User Profile" : "Company Profile"}
                   </Link>
                 )}
               </Menu.Item>
@@ -75,14 +80,14 @@ function MenuList({ user, onClick }) {
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    onClick={() => handleLogout()}
+                    onClick={handleLogout}
                     className={`${
-                      active ? 'bg-blue-500 text-white' : 'text-gray-900'
+                      active ? "bg-blue-500 text-white" : "text-gray-900"
                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                   >
                     <AiOutlineLogout
                       className={`${
-                        active ? 'text-white' : 'text-gray-600'
+                        active ? "text-white" : "text-gray-600"
                       } mr-2 h-5 w-5  `}
                       aria-hidden="true"
                     />
@@ -105,7 +110,7 @@ const Navbar = () => {
   const user = auth;
   useEffect(() => {
     if (user) {
-      navigate('/find-jobs');
+      navigate("/find-jobs");
     }
   }, []);
   const handleCloseNavbar = () => {
@@ -163,7 +168,7 @@ const Navbar = () => {
         {/* MOBILE MENU */}
         <div
           className={`${
-            isOpen ? 'absolute flex bg-[#f7fdfd] ' : 'hidden'
+            isOpen ? "absolute flex bg-[#f7fdfd] " : "hidden"
           } container mx-auto lg:hidden flex-col pl-8 gap-3 py-5`}
         >
           <Link to="/" onClick={handleCloseNavbar}>
@@ -175,12 +180,12 @@ const Navbar = () => {
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.user?.accountType === 'seeker'
-                ? 'Application-History'
-                : 'Upload-job'
+              user?.user?.accountType === "seeker"
+                ? "Application-History"
+                : "Upload-job"
             }
           >
-            {user?.accountType === 'seeker' ? 'Applications' : 'Upload Job'}
+            {user?.accountType === "seeker" ? "Applications" : "Upload Job"}
           </Link>
           <Link to="/about-us" onClick={handleCloseNavbar}>
             About
