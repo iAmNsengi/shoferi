@@ -53,10 +53,11 @@ export const loginCompanyAction = createAsyncThunk(
     }
   }
 );
+const loginCompany = JSON.parse(localStorage.getItem('companyInfo'));
 const companySlice = createSlice({
   name: 'company',
   initialState: {
-    company: {},
+    company: loginCompany,
     loading: false,
     error: null,
   },

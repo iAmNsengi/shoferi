@@ -76,9 +76,7 @@ export const logoutUserAction = createAsyncThunk(
 
 // ----- get the user from localStorage -------
 
-const userFromLocalStorage = localStorage.getItem('userInfo')
-  ? JSON.parse(localStorage.getItem('userInfo'))
-  : null;
+const userFromLocalStorage = JSON.parse(localStorage.getItem('userInfo'));
 
 // ----------- Create a user slice ------
 

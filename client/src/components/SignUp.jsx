@@ -35,40 +35,43 @@ const SignUp = ({ open, setOpen }) => {
   });
 
   const closeModal = () => setOpen(false);
-  useEffect(() => {
-    if (registerError || (loginError && !isRegister)) {
-      toast.error(registerError ?? loginError);
-    }
-  }, [registerError, loginError]);
-
-  useEffect(() => {
-    if (user && !isSubmitting && !isRegister) {
-      toast.success('Login Successful');
-    }
-  }, [user, isSubmitting]);
-
   const onSubmit = async (data) => {
     try {
       if (isRegister) {
         if (accountType === 'seeker') {
-          await dispatch(registerUserAction(data));
-          toast.success('Registed Successfull');
-          navigate('/find-jobs');
+          const response = await dispatch(registerUserAction(data));
+          if (response.error) {
+            toast.error(response.payload);
+          } else {
+            toast.success('Registed Successfull');
+            navigate('/find-jobs');
+          }
         } else {
           const response = await dispatch(registerCompanyAction(data));
-          toast.success('Registed Successfull');
-          navigate('/find-jobs');
-          console.log(response);
+          if (response.error) {
+            toast.error(response.payload);
+          } else {
+            toast.success('Registed Successfull');
+            navigate('/find-jobs');
+          }
         }
       } else {
         if (accountType === 'seeker') {
-          await dispatch(loginUserActionType(data));
-          navigate('/find-jobs');
+          const response = await dispatch(loginUserActionType(data));
+          if (response.error) {
+            toast.error(response.payload);
+          } else {
+            toast.success('Login Successfull');
+            navigate('/find-jobs');
+          }
         } else {
           const response = await dispatch(loginCompanyAction(data));
-          toast.success('Login Successfull');
-          navigate('/find-jobs');
-          console.log(response);
+          if (response.error) {
+            toast.error(response.payload);
+          } else {
+            toast.success('Login Successfull');
+            navigate('/find-jobs');
+          }
         }
       }
     } finally {
