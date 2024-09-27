@@ -8,9 +8,16 @@ import {
   TextInput,
 } from "../components";
 import { useJobs } from "../hooks/useJobs";
+import { useDispatch, useSelector } from "react-redux";
+import { registerCompanyAction } from "../redux/slices/companySlice";
+import toast from "react-hot-toast";
 
 const UploadJob = () => {
   const { jobs, loading, getJobs } = useJobs();
+  const dispatch = useDispatch();
+
+  const { company: loggedICompany } = useSelector((store) => store.company);
+  console.log(loggedICompany);
 
   useEffect(() => {
     getJobs();
@@ -29,10 +36,21 @@ const UploadJob = () => {
   const [errMsg, setErrMsg] = useState("");
   const [jobTitle, setJobTitle] = useState("Full-Time");
 
-  const onSubmit = async (data) => {};
+  const onSubmit = async (data) => {
+    console.log(data);
+
+    try {
+      const response = await dispatch(registerCompanyAction(data));
+      if (response.error) {
+        toast.error(response.payload);
+      } else {
+        toast.success("Job added Successfull");
+      }
+    } catch (error) {}
+  };
 
   return (
-    <div className="container mx-auto flex flex-col md:flex-row gap-8 2xl:gap-14 bg-[#f7fdfd] px-5">
+    <div className="container mx-auto flex flex-col md:flex-row gap-8 2xl:gap-14 bg-[#f7fdfd] px-5 py-16">
       <div className="w-full h-fit md:w-2/3 2xl:2/4 bg-white px-5 py-10 md:px-10 shadow-md">
         <div>
           <p className="text-gray-500 font-semibold text-2xl">Job Post</p>
@@ -44,7 +62,7 @@ const UploadJob = () => {
             <TextInput
               name="jobTitle"
               label="Job Title"
-              placeholder="eg. Software Engineer"
+              placeholder="eg. Driver at Company X"
               type="text"
               required={true}
               register={register("jobTitle", {
