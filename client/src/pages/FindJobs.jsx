@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { BiBriefcaseAlt2 } from "react-icons/bi";
 import { BsStars } from "react-icons/bs";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
-
 import Header from "../components/Header";
 import { experience, jobTypes } from "../utils/data";
 import { CustomButton, JobCard, ListBox, Loading } from "../components";
@@ -36,53 +35,47 @@ const FindJobs = () => {
     let filteredJobs = [...jobs]; // Create a copy of jobs to avoid mutating the original array
 
     // Filter by search query (job title or location)
-    if (searchQuery) {
+    if (searchQuery)
       filteredJobs = filteredJobs.filter(
         (job) =>
           job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
           job.location.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    }
 
     // Filter by selected job types (if any)
-    if (filterJobTypes.length > 0) {
+    if (filterJobTypes.length > 0)
       filteredJobs = filteredJobs.filter((job) =>
         filterJobTypes.includes(job.jobType)
       );
-    }
 
     // Sort jobs
-    if (sort === "Newest") {
+    if (sort === "Newest")
       filteredJobs.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
-    } else if (sort === "Oldest") {
+    else if (sort === "Oldest")
       filteredJobs.sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
-    } else if (sort === "A-Z") {
-      filteredJobs.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle)); // Sort alphabetically by jobTitle (A-Z)
-    } else if (sort === "Z-A") {
+    else if (sort === "A-Z")
+      filteredJobs.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle));
+    // Sort alphabetically by jobTitle (A-Z)
+    else if (sort === "Z-A")
       filteredJobs.sort((a, b) => b.jobTitle.localeCompare(a.jobTitle)); // Sort alphabetically by jobTitle (Z-A)
-    }
 
     // Set the filtered and sorted data
     setData(filteredJobs);
   }, [jobs, sort, searchQuery, jobLocation, filterJobTypes, filterExp]);
 
   const filterJobs = (val) => {
-    if (filterJobTypes.includes(val)) {
+    if (filterJobTypes.includes(val))
       setFilterJobTypes(filterJobTypes.filter((el) => el !== val));
-    } else {
-      setFilterJobTypes([...filterJobTypes, val]);
-    }
+    else setFilterJobTypes([...filterJobTypes, val]);
   };
   const filterExperience = (val) => {
-    if (filterExp.includes(val)) {
+    if (filterExp.includes(val))
       setFilterExp(filterExp.filter((el) => el !== val));
-    } else {
-      setFilterExp([...filterExp, val]);
-    }
+    else setFilterExp([...filterExp, val]);
   };
 
   return (
