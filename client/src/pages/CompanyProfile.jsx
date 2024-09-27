@@ -1,20 +1,18 @@
-import React, { Fragment, useEffect, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { HiLocationMarker } from "react-icons/hi";
 import { AiOutlineMail } from "react-icons/ai";
 import { FiPhoneCall, FiEdit3, FiUpload } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
-import { companies, jobs } from "../utils/data";
-import { CustomButton, JobCard, Loading, TextInput } from "../components";
+import { CustomButton, JobCard, Loading } from "../components";
 import { useCompanies } from "../hooks/useCompanies";
 import Notification from "../components/Notification";
 import CompanyForm from "../components/Forms/CompanyForm";
 
 const CompanyProfile = () => {
   const params = useParams();
-  const { user } = useSelector((state) => state.user);
+  const { auth: loggedInUser } = useSelector((store) => store.user);
+  const { company: loggedICompany } = useSelector((store) => store.company);
   const [openForm, setOpenForm] = useState(false);
 
   const { company, loading, error, getCompany } = useCompanies();
@@ -24,6 +22,8 @@ const CompanyProfile = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
+  console.log(loggedInUser);
+
   return (
     <div className="container mx-auto p-5">
       <div className="">
@@ -32,8 +32,8 @@ const CompanyProfile = () => {
             Welcome to {company?.name}
           </h2>
 
-          {user?.user?.accountType === undefined &&
-            company?._id === user?.user?._id && (
+          {loggedInUser?.user?.accountType === undefined &&
+            loggedICompany?._id === user?.user?._id && (
               <div className="flex items-center justifu-center py-5 md:py-0 gap-4">
                 <CustomButton
                   onClick={() => setOpenForm(true)}
