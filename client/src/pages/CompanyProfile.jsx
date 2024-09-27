@@ -33,7 +33,7 @@ const CompanyProfile = () => {
           </h2>
 
           {loggedInUser?.user?.accountType === undefined &&
-            loggedICompany?._id === user?.user?._id && (
+            loggedICompany?._id === loggedInUser?.user?._id && (
               <div className="flex items-center justifu-center py-5 md:py-0 gap-4">
                 <CustomButton
                   onClick={() => setOpenForm(true)}
