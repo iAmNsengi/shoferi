@@ -12,13 +12,13 @@ import CompanyForm from "../components/Forms/CompanyForm";
 const CompanyProfile = () => {
   const params = useParams();
   const { auth: loggedInUser } = useSelector((store) => store.user);
-  const { company: loggedICompany } = useSelector((store) => store.company);
+  const { company: loggedInCompany } = useSelector((store) => store.company);
   const [openForm, setOpenForm] = useState(false);
 
   const { company, loading, error, getCompany } = useCompanies();
 
   useEffect(() => {
-    getCompany(params.id);
+    getCompany(params.id || loggedInCompany.user._id);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, []);
 
@@ -33,7 +33,7 @@ const CompanyProfile = () => {
           </h2>
 
           {loggedInUser?.user?.accountType === undefined &&
-            loggedICompany?._id === loggedInUser?.user?._id && (
+            loggedInCompany?._id === loggedInUser?.user?._id && (
               <div className="flex items-center justifu-center py-5 md:py-0 gap-4">
                 <CustomButton
                   onClick={() => setOpenForm(true)}
