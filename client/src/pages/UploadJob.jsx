@@ -9,7 +9,6 @@ import {
 } from "../components";
 import { useJobs } from "../hooks/useJobs";
 import { useDispatch, useSelector } from "react-redux";
-import { registerCompanyAction } from "../redux/slices/companySlice";
 import toast from "react-hot-toast";
 import { createJobAction } from "../redux/slices/jobSlice";
 
@@ -183,7 +182,7 @@ const UploadJob = () => {
           {loading && <Loading />}
           {!loading &&
             jobs
-              ?.slice(0, 6)
+              ?.slice(0, 3)
               .map((job, index) => <JobCard job={job} key={index} />)}
         </div>
       </div>

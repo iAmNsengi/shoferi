@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { HiLocationMarker } from "react-icons/hi";
 import { AiOutlineMail } from "react-icons/ai";
@@ -15,12 +15,11 @@ const CompanyProfile = () => {
   const { company: loggedInCompany } = useSelector((store) => store.company);
   const [openForm, setOpenForm] = useState(false);
 
-  const { company, loading, error } = useCompanies(
-    useMemo(
-      () => ({ id: params.id || loggedInCompany.user._id }),
-      [params.id, loggedInCompany]
-    )
-  );
+  const { company, loading, error, getCompany } = useCompanies();
+
+  useEffect(() => {
+    getCompany(params.id || loggedInCompany.user._id);
+  }, []);
 
   return (
     <div className="container mx-auto p-5">
