@@ -3,11 +3,12 @@ import TextInput from "../TextInput";
 import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "../../redux/store";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import CustomButton from "../CustomButton";
+import { useUsers } from "../../hooks/useUsers";
 
-const UserForm = ({ open, setOpen }) => {
-  const { auth: user } = useSelector((state) => state.user);
+const UserForm = ({ open, setOpen, value }) => {
+  const loggedInUser = value._id;
   const {
     register,
     handleSubmit,
@@ -16,13 +17,22 @@ const UserForm = ({ open, setOpen }) => {
     formState: { errors },
   } = useForm({
     mode: "onChange",
-    defaultValues: { ...user?.user },
+    defaultValues: { ...value },
   });
+
   const dispatch = useDispatch();
   const [profileImage, setProfileImage] = useState("");
   const [uploadCv, setUploadCv] = useState("");
+  const { user, loading, error, getUser } = useUsers();
 
-  const onSubmit = async (data) => {};
+  useEffect(() => {
+    getUser(loggedInUser);
+  }, []);
+
+  const onSubmit = async (data) => {
+    console.log(data);
+    
+  };
 
   const closeModal = () => setOpen(false);
 

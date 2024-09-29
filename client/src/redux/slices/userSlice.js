@@ -3,6 +3,8 @@ import axios from "axios";
 import baseURL from "../../utils/baseUrl";
 // ------- create a Register actionType using asyncthunk ------
 
+
+
 export const registerUserAction = createAsyncThunk(
   "user/register",
   async (user, { rejectWithValue, getState, dispatch }) => {

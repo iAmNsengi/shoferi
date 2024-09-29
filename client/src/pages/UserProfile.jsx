@@ -16,13 +16,13 @@ const UserProfile = () => {
   const { auth: loggedInUser } = useSelector((state) => state.user);
   const params = useParams();
   const [open, setOpen] = useState(false);
-  console.log(loggedInUser);
 
   useEffect(() => {
-    getUser(params.id || loggedInUser?.user?._id);
+    getUser(params.id || loggedInUser.user._id);
   }, []);
   if (loading) return <Loading />;
 
+  console.log(user);
   return (
     <div className="container mx-auto flex items-center justify-center py-10">
       <div className="w-full md:w-2/3 2xl:w-2/4 bg-white shadow-lg p-10 pb-20 rounded-lg">
@@ -51,7 +51,7 @@ const UserProfile = () => {
         <hr />
 
         <div className="w-full py-10">
-          <div className="w-full flex flex-col-reverse md:flex-row gap-8 py-6">
+          <div className="w-full flex flex-col-reverse items-center md:flex-row gap-8 py-6">
             <div className="w-full md:w-2/3 flex flex-col gap-4 text-lg text-slate-600 mt-20 md:mt-0">
               <p className="text-[#0536e7]  font-semibold text-2xl">ABOUT</p>
               <span className="text-base text-justify leading-7">
@@ -66,7 +66,7 @@ const UserProfile = () => {
                 className="w-full h-48 object-contain rounded-lg"
               />
               <button
-                className="w-full md:w-64 bg-blue-600 text-white mt-4 py-2 rounded"
+                className="w-full md:w-56 bg-orange-600 text-white mt-4 py-2 rounded"
                 onClick={() => setOpen(true)}
               >
                 Edit Profile
@@ -76,7 +76,7 @@ const UserProfile = () => {
         </div>
       </div>
 
-      <UserForm open={open} setOpen={setOpen} />
+      <UserForm value={user} open={open} setOpen={setOpen} />
     </div>
   );
 };

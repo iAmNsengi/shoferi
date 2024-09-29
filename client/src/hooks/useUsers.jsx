@@ -25,7 +25,6 @@ export const useUsers = () => {
     setLoading(true);
     try {
       const response = await getUserById(id);
-      console.log(response);
       setUser(response.data.user);
       setLoading(false);
     } catch (err) {
