@@ -1,16 +1,15 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { HiMenuAlt3 } from "react-icons/hi";
-import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
-import { Link, useNavigate } from "react-router-dom";
-import CustomButton from "./CustomButton";
-import { useSelector } from "react-redux";
-import MenuList from "./MenuList";
+import { AiOutlineClose } from 'react-icons/ai';
+import { HiMenuAlt3 } from 'react-icons/hi';
+import { Link, useNavigate } from 'react-router-dom';
+import CustomButton from './CustomButton';
+import MenuList from './MenuList';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { auth } = useSelector((store) => store.user);
-  const { company } = useSelector((store) => store.company);
+  const auth = JSON.parse(localStorage.getItem('userInfo'));
+  const company = JSON.parse(localStorage.getItem('companyInfo'));
   const [isOpen, setIsOpen] = useState(false);
   const [LoggedIn, setLoggedIn] = useState(null);
   useEffect(() => {
@@ -20,16 +19,8 @@ const Navbar = () => {
     } else {
       setLoggedIn(null);
     }
-  }, [
-    auth,
-    company,
-    auth?.token,
-    company?.token,
-    auth?.accountType,
-    company?.accountType,
-  ]);
+  }, [auth?.token, auth?.user?.accountType, company?.token, company?.company]);
   const user = LoggedIn;
-
   const handleCloseNavbar = () => {
     setIsOpen((prev) => !prev);
   };
@@ -85,7 +76,7 @@ const Navbar = () => {
         {/* MOBILE MENU */}
         <div
           className={`${
-            isOpen ? "absolute flex bg-[#f7fdfd] " : "hidden"
+            isOpen ? 'absolute flex bg-[#f7fdfd] ' : 'hidden'
           } container mx-auto lg:hidden flex-col pl-8 gap-3 py-5`}
         >
           <Link to="/" onClick={handleCloseNavbar}>
@@ -97,12 +88,12 @@ const Navbar = () => {
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.accountType === "seeker"
-                ? "Application-History"
-                : "Upload-job"
+              user?.accountType === 'seeker'
+                ? 'Application-History'
+                : 'Upload-job'
             }
           >
-            {user?.accountType === "seeker" ? "Applications" : "Upload Job"}
+            {user?.accountType === 'seeker' ? 'Applications' : 'Upload Job'}
           </Link>
           <Link to="/about-us" onClick={handleCloseNavbar}>
             About
