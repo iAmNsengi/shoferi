@@ -47,7 +47,7 @@ const CompanyForm = ({ open, setOpen, value }) => {
       const result = await updateCompany(company?._id, updatedData);
       if (result.success) {
         setOpen(false);
-        // Optionally, show a success message
+        // toast.success("Company updated successfully");
       } else {
         // Handle error
         console.error("Failed to update company:", result.error);

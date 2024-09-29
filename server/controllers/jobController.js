@@ -267,7 +267,7 @@ export const deleteJobPost = async (req, res, next) => {
 export const applyJob = async (req, res, next) => {
   try {
     const { id } = req.params; // Job ID from the URL params
-    const userId = req.body.user.userId; // User ID from the request body
+    const userId = req.user.userId; // User ID from the request body
 
     // Check if the user exists
     const userExist = await Users.findById(userId);

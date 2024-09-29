@@ -88,10 +88,11 @@ const Companies = () => {
           {error && (
             <Notification message="Error fetching companies details. Try again later!" />
           )}
-
-          {data?.map((cmp, index) => (
-            <CompanyCard cmp={cmp} key={index} />
-          ))}
+          <div className="flex flex-wrap gap-4">
+            {data?.map((cmp, index) => (
+              <CompanyCard cmp={cmp} key={index} />
+            ))}
+          </div>
           {!loading && !data.length && <Notification />}
 
           <p className="text-sm text-right">
