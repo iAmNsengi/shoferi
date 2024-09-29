@@ -1,8 +1,13 @@
 import { Dialog, Transition } from "@headlessui/react";
 import TextInput from "../TextInput";
+import { useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "../../redux/store";
+import { Fragment, useState } from "react";
+import CustomButton from "../CustomButton";
 
 const UserForm = ({ open, setOpen }) => {
-  const { user } = useSelector((state) => state.user);
+  const { auth: user } = useSelector((state) => state.user);
   const {
     register,
     handleSubmit,

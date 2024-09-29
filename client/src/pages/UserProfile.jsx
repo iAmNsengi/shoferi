@@ -1,5 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { HiLocationMarker } from "react-icons/hi";
@@ -7,33 +7,43 @@ import { AiOutlineMail } from "react-icons/ai";
 import { FiPhoneCall } from "react-icons/fi";
 import { CustomButton, TextInput } from "../components";
 import UserForm from "../components/Forms/UserForm";
+import { useParams } from "react-router-dom";
+import { useCompanies } from "../hooks/useCompanies";
+import { useUsers } from "../hooks/useUsers";
 
 const UserProfile = () => {
-  const { user } = useSelector((state) => state.user);
+  const { user, loading, getUser } = useUsers();
+  const { auth: loggedInUser } = useSelector((state) => state.user);
+  console.log(loggedInUser);
+  const params = useParams();
   const [open, setOpen] = useState(false);
-  const userInfo = user;
+
+  useEffect(() => {
+    getUser(params.id || loggedInUser?.user?._id);
+  }, []);
 
   return (
     <div className="container mx-auto flex items-center justify-center py-10">
       <div className="w-full md:w-2/3 2xl:w-2/4 bg-white shadow-lg p-10 pb-20 rounded-lg">
         <div className="flex flex-col items-center justify-center mb-4">
           <h1 className="text-4xl font-semibold text-slate-600">
-            {userInfo?.firstName + " " + userInfo?.lastName}
+            {JSON.stringify(user)}
+            {user?.firstName + " " + user?.lastName}
           </h1>
 
           <h5 className="text-blue-700 text-base font-bold">
-            {userInfo?.jobTitle || "Add Job Title"}
+            {user?.jobTitle || "Add Job Title"}
           </h5>
 
           <div className="w-full flex flex-wrap lg:flex-row justify-between mt-8 text-sm">
             <p className="flex gap-1 items-center justify-center  px-3 py-1 text-slate-600 rounded-full">
-              <HiLocationMarker /> {userInfo?.location ?? "No Location"}
+              <HiLocationMarker /> {user?.location ?? "No Location"}
             </p>
             <p className="flex gap-1 items-center justify-center  px-3 py-1 text-slate-600 rounded-full">
-              <AiOutlineMail /> {userInfo?.email ?? "No Email"}
+              <AiOutlineMail /> {user?.email ?? "No Email"}
             </p>
             <p className="flex gap-1 items-center justify-center  px-3 py-1 text-slate-600 rounded-full">
-              <FiPhoneCall /> {userInfo?.contact ?? "No Contact"}
+              <FiPhoneCall /> {user?.contact ?? "No Contact"}
             </p>
           </div>
         </div>
@@ -45,14 +55,14 @@ const UserProfile = () => {
             <div className="w-full md:w-2/3 flex flex-col gap-4 text-lg text-slate-600 mt-20 md:mt-0">
               <p className="text-[#0536e7]  font-semibold text-2xl">ABOUT</p>
               <span className="text-base text-justify leading-7">
-                {userInfo?.about ?? "No About Found"}
+                {user?.about ?? "No About Found"}
               </span>
             </div>
 
             <div className="w-full md:w-1/3 h-44">
               <img
-                src={userInfo?.profileUrl}
-                alt={userInfo?.firstName}
+                src={user?.profileUrl}
+                alt={user?.firstName}
                 className="w-full h-48 object-contain rounded-lg"
               />
               <button
