@@ -8,7 +8,7 @@ import { AiOutlineLogout } from "react-icons/ai";
 function MenuList({ user, onClick }) {
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("companyInfo");
     localStorage.removeItem("userInfo");
     navigate("/user-auth");
   };
