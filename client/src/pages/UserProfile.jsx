@@ -21,8 +21,8 @@ const UserProfile = () => {
     getUser(params.id || loggedInUser.user._id);
   }, []);
   if (loading) return <Loading />;
-
-  console.log(user);
+  // Assuming user.appliedJobs is an array of job objects
+  const appliedJobs = loggedInUser?.appliedJobs || [];
   return (
     <div className="container mx-auto flex items-center justify-center py-10">
       <div className="w-full md:w-2/3 2xl:w-2/4 bg-white shadow-lg p-10 pb-20 rounded-lg">
@@ -73,6 +73,43 @@ const UserProfile = () => {
               </button>
             </div>
           </div>
+        </div>
+        <div className="bg-white shadow-lg p-10 rounded-lg py-5 mt-2">
+          <h2 className="text-2xl font-semibold text-slate-600 mb-6">
+            Applied Jobs
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="px-4 py-2 text-left">Job Title</th>
+                  <th className="px-4 py-2 text-left">Company</th>
+                  <th className="px-4 py-2 text-left">Application Date</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appliedJobs.map((job, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="px-4 py-2">{job.title}</td>
+                    <td className="px-4 py-2">{job.company}</td>
+                    <td className="px-4 py-2">
+                      {new Date(job.applicationDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-2">{job.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {appliedJobs.length === 0 && (
+            <p className="text-center text-gray-500 mt-4">
+              No applied jobs found.
+            </p>
+          )}
         </div>
       </div>
 
