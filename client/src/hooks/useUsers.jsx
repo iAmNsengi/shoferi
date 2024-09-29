@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getUsers,  getUserById, updateUser } from "../api/users";
+import { getUsers, getUserById, updateUser } from "../api/users";
 
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -25,7 +25,8 @@ export const useUsers = () => {
     setLoading(true);
     try {
       const response = await getUserById(id);
-      setUser(response.data.data);
+      console.log(response);
+      setUser(response.data.user);
       setLoading(false);
     } catch (err) {
       setError(err.message);

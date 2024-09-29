@@ -5,29 +5,29 @@ import { useDispatch, useSelector } from "react-redux";
 import { HiLocationMarker } from "react-icons/hi";
 import { AiOutlineMail } from "react-icons/ai";
 import { FiPhoneCall } from "react-icons/fi";
-import { CustomButton, TextInput } from "../components";
+import { CustomButton, Loading, TextInput } from "../components";
 import UserForm from "../components/Forms/UserForm";
 import { useParams } from "react-router-dom";
 import { useCompanies } from "../hooks/useCompanies";
 import { useUsers } from "../hooks/useUsers";
 
 const UserProfile = () => {
-  const { user, loading, getUser } = useUsers();
+  const { user, loading, error, getUser } = useUsers();
   const { auth: loggedInUser } = useSelector((state) => state.user);
-  console.log(loggedInUser);
   const params = useParams();
   const [open, setOpen] = useState(false);
+  console.log(loggedInUser);
 
   useEffect(() => {
     getUser(params.id || loggedInUser?.user?._id);
   }, []);
+  if (loading) return <Loading />;
 
   return (
     <div className="container mx-auto flex items-center justify-center py-10">
       <div className="w-full md:w-2/3 2xl:w-2/4 bg-white shadow-lg p-10 pb-20 rounded-lg">
         <div className="flex flex-col items-center justify-center mb-4">
           <h1 className="text-4xl font-semibold text-slate-600">
-            {JSON.stringify(user)}
             {user?.firstName + " " + user?.lastName}
           </h1>
 
