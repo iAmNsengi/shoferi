@@ -1,21 +1,23 @@
-import { useEffect, useState } from "react";
-import moment from "moment";
-import { AiOutlineSafetyCertificate } from "react-icons/ai";
-import { useParams } from "react-router-dom";
-import { jobs } from "../utils/data";
-import { CustomButton, JobCard, Loading } from "../components";
-import { useJobs } from "../hooks/useJobs";
+import moment from 'moment';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import { CustomButton, JobCard, Loading } from '../components';
+import { useJobs } from '../hooks/useJobs';
+import { applyJobAction } from '../redux/slices/jobSlice';
 
 const JobDetail = () => {
+  const { loading: applyJobLoading } = useSelector((store) => store.job);
+  const dispatch = useDispatch();
   const params = useParams();
-  const [selected, setSelected] = useState("0");
+  const [selected, setSelected] = useState('0');
 
   const { job, jobs, loading, error, getJobById, getJobs } = useJobs();
-
   useEffect(() => {
     getJobById(params.id);
     getJobs();
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   }, [params.id]);
   if (loading)
     return (
@@ -23,6 +25,14 @@ const JobDetail = () => {
         <Loading />
       </div>
     );
+  async function handleApplyJob() {
+    const response = await dispatch(applyJobAction(params?.id));
+    if (response.error) {
+      toast.error(response.payload);
+    } else {
+      toast.success(response.payload.message);
+    }
+  }
 
   return (
     <div className="container mx-auto">
@@ -80,28 +90,28 @@ const JobDetail = () => {
 
           <div className="w-full flex gap-4 py-5">
             <CustomButton
-              onClick={() => setSelected("0")}
+              onClick={() => setSelected('0')}
               title="Job Description"
               containerStyles={`w-full flex items-center justify-center py-3 px-5 outline-none rounded-full text-sm ${
-                selected === "0"
-                  ? "bg-orange-500 text-white"
-                  : "bg-white text-black border border-gray-300"
+                selected === '0'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-white text-black border border-gray-300'
               }`}
             />
 
             <CustomButton
-              onClick={() => setSelected("1")}
+              onClick={() => setSelected('1')}
               title="Company"
               containerStyles={`w-full flex items-center justify-center  py-3 px-5 outline-none rounded-full text-sm ${
-                selected === "1"
-                  ? "bg-orange-500 text-white"
-                  : "bg-white text-black border border-gray-300"
+                selected === '1'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-white text-black border border-gray-300'
               }`}
             />
           </div>
 
           <div className="my-6">
-            {selected === "0" ? (
+            {selected === '0' ? (
               <>
                 <p className="text-xl font-semibold underline">
                   Job Decsription
@@ -138,9 +148,9 @@ const JobDetail = () => {
 
           <div className="w-full">
             <CustomButton
-              title="Apply Now"
+              title={applyJobLoading ? 'Applying ...' : 'Apply Now'}
               containerStyles={`w-full flex items-center justify-center text-white bg-orange-500 py-3 px-5 outline-none rounded-full text-base`}
-              
+              onClick={handleApplyJob}
             />
           </div>
         </div>
