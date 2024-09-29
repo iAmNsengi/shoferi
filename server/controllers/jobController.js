@@ -28,11 +28,6 @@ export const createJob = async (req, res, next) => {
       return;
     }
 
-    const id = req.body.user.userId;
-
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).send(`No Company with id: ${id}`);
-
     const jobPost = {
       jobTitle,
       jobType,
@@ -41,21 +36,27 @@ export const createJob = async (req, res, next) => {
       vacancies,
       experience,
       detail: { desc, requirements },
-      company: id,
+      company: req?.user?.userId,
     };
+
+    //Get company with given ID
+    const company = await Companies.findById(req?.user?.userId);
+    if (!company)
+      return res.status(400).send("You are not logged in as a company!");
 
     const job = new Jobs(jobPost);
     await job.save();
 
-    //update the company information with job id
-    const company = await Companies.findById(id);
-    if (!company)
-      return res.status(400).send("You are not logged in as a company!");
+    console.log(company);
 
     company.jobPosts.push(job._id);
-    const updateCompany = await Companies.findByIdAndUpdate(id, company, {
-      new: true,
-    });
+    const updateCompany = await Companies.findByIdAndUpdate(
+      req?.user?.userId,
+      company,
+      {
+        new: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
@@ -271,12 +272,10 @@ export const applyJob = async (req, res, next) => {
     // Check if the user exists
     const userExist = await Users.findById(userId);
     if (!userExist) {
-      return res
-        .status(400)
-        .json({
-          message: "You need to be logged in to apply!",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "You need to be logged in to apply!",
+        success: false,
+      });
     }
 
     // Check if the job post exists

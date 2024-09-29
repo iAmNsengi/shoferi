@@ -28,6 +28,7 @@ export const registerCompanyAction = createAsyncThunk(
     }
   }
 );
+
 export const loginCompanyAction = createAsyncThunk(
   'company/login',
   async (company, { rejectWithValue, getState, dispatch }) => {

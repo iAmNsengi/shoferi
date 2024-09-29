@@ -1,14 +1,14 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import axios from 'axios';
-import baseURL from '../../utils/baseUrl';
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
+import baseURL from "../../utils/baseUrl";
 // ------- create a Register actionType using asyncthunk ------
 
 export const registerUserAction = createAsyncThunk(
-  'user/register',
+  "user/register",
   async (user, { rejectWithValue, getState, dispatch }) => {
     const config = {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     };
     try {
@@ -17,7 +17,7 @@ export const registerUserAction = createAsyncThunk(
         user,
         config
       );
-      localStorage.setItem('userInfo', JSON.stringify(data));
+      localStorage.setItem("userInfo", JSON.stringify(data));
       return data;
     } catch (error) {
       if (!error?.response) {
@@ -32,11 +32,11 @@ export const registerUserAction = createAsyncThunk(
 // ---------- Create a login action type using asynchthunk --------
 
 export const loginUserActionType = createAsyncThunk(
-  'user/login',
+  "user/login",
   async (userData, { rejectWithValue, getState, dispatch }) => {
     const config = {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     };
     try {
@@ -46,7 +46,7 @@ export const loginUserActionType = createAsyncThunk(
         config
       );
 
-      localStorage.setItem('userInfo', JSON.stringify(data));
+      localStorage.setItem("userInfo", JSON.stringify(data));
       return data;
     } catch (error) {
       if (!error?.response) {
@@ -61,10 +61,10 @@ export const loginUserActionType = createAsyncThunk(
 // ------------------ User logout action --------
 
 export const logoutUserAction = createAsyncThunk(
-  'user/logout',
+  "user/logout",
   async (payload, { rejectWithValue, getState, dispatch }) => {
     try {
-      localStorage.removeItem('userInfo');
+      localStorage.removeItem("userInfo");
     } catch (error) {
       if (!error?.response) {
         throw error;
@@ -76,12 +76,12 @@ export const logoutUserAction = createAsyncThunk(
 
 // ----- get the user from localStorage -------
 
-const userFromLocalStorage = JSON.parse(localStorage.getItem('userInfo'));
+const userFromLocalStorage = JSON.parse(localStorage.getItem("userInfo"));
 
 // ----------- Create a user slice ------
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState: {
     auth: userFromLocalStorage,
   },

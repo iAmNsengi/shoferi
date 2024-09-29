@@ -5,7 +5,7 @@ import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
 import { Link, useNavigate } from "react-router-dom";
 import CustomButton from "./CustomButton";
 import { useSelector } from "react-redux";
-
+import MenuList from "./MenuList";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -29,11 +29,7 @@ const Navbar = () => {
     company?.accountType,
   ]);
   const user = LoggedIn;
-  useEffect(() => {
-    if (user) {
-      navigate("/find-jobs");
-    }
-  }, [user]);
+
   const handleCloseNavbar = () => {
     setIsOpen((prev) => !prev);
   };
