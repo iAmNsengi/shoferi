@@ -28,11 +28,6 @@ export const createJob = async (req, res, next) => {
       return;
     }
 
-    const id = req.body.user.userId;
-
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).send(`No Company with id: ${id}`);
-
     const jobPost = {
       jobTitle,
       jobType,
@@ -41,14 +36,14 @@ export const createJob = async (req, res, next) => {
       vacancies,
       experience,
       detail: { desc, requirements },
-      company: id,
+      company: req?.user?._id,
     };
 
     const job = new Jobs(jobPost);
     await job.save();
 
     //update the company information with job id
-    const company = await Companies.findById(id);
+    const company = await Companies.findById(req?.user?._id);
     if (!company)
       return res.status(400).send("You are not logged in as a company!");
 
@@ -271,12 +266,10 @@ export const applyJob = async (req, res, next) => {
     // Check if the user exists
     const userExist = await Users.findById(userId);
     if (!userExist) {
-      return res
-        .status(400)
-        .json({
-          message: "You need to be logged in to apply!",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "You need to be logged in to apply!",
+        success: false,
+      });
     }
 
     // Check if the job post exists

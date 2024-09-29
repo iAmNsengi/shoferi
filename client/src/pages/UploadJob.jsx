@@ -11,13 +11,13 @@ import { useJobs } from "../hooks/useJobs";
 import { useDispatch, useSelector } from "react-redux";
 import { registerCompanyAction } from "../redux/slices/companySlice";
 import toast from "react-hot-toast";
+import { createJobAction } from "../redux/slices/jobSlice";
 
 const UploadJob = () => {
   const { jobs, loading, getJobs } = useJobs();
   const dispatch = useDispatch();
 
-  const { company: loggedICompany } = useSelector((store) => store.company);
-  console.log(loggedICompany);
+  const { company } = useSelector((store) => store.company);
 
   useEffect(() => {
     getJobs();
@@ -40,11 +40,12 @@ const UploadJob = () => {
     console.log(data);
 
     try {
-      const response = await dispatch(registerCompanyAction(data));
+      const response = await dispatch(createJobAction(data));
       if (response.error) {
         toast.error(response.payload);
       } else {
-        toast.success("Job added Successfull");
+        console.error("Error adding job");
+        toast.success("Job added Successfully");
       }
     } catch (error) {}
   };

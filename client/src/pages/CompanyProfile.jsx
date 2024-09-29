@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { HiLocationMarker } from "react-icons/hi";
 import { AiOutlineMail } from "react-icons/ai";
@@ -15,14 +15,12 @@ const CompanyProfile = () => {
   const { company: loggedInCompany } = useSelector((store) => store.company);
   const [openForm, setOpenForm] = useState(false);
 
-  const { company, loading, error, getCompany } = useCompanies();
-
-  useEffect(() => {
-    getCompany(params.id || loggedInCompany.user._id);
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  }, []);
-
-  console.log(loggedInUser);
+  const { company, loading, error } = useCompanies(
+    useMemo(
+      () => ({ id: params.id || loggedInCompany.user._id }),
+      [params.id, loggedInCompany]
+    )
+  );
 
   return (
     <div className="container mx-auto p-5">
