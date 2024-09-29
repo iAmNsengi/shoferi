@@ -10,19 +10,27 @@ import UserForm from "../components/Forms/UserForm";
 import { useParams } from "react-router-dom";
 import { useCompanies } from "../hooks/useCompanies";
 import { useUsers } from "../hooks/useUsers";
+import { useJobs } from "../hooks/useJobs";
+import moment from "moment";
 
 const UserProfile = () => {
   const { user, loading, error, getUser } = useUsers();
   const { auth: loggedInUser } = useSelector((state) => state.user);
+  const { jobs, getJobs } = useJobs();
   const params = useParams();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     getUser(params.id || loggedInUser.user._id);
+    getJobs();
   }, []);
   if (loading) return <Loading />;
-  // Assuming user.appliedJobs is an array of job objects
-  const appliedJobs = loggedInUser?.appliedJobs || [];
+
+  const appliedJobs = jobs.filter((job) =>
+    job.application.includes(loggedInUser.user._id)
+  );
+  console.log(appliedJobs);
+
   return (
     <div className="container mx-auto flex items-center justify-center py-10">
       <div className="w-full md:w-2/3 2xl:w-2/4 bg-white shadow-lg p-10 pb-20 rounded-lg">
@@ -74,11 +82,11 @@ const UserProfile = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white shadow-lg p-10 rounded-lg py-5 mt-2">
-          <h2 className="text-2xl font-semibold text-slate-600 mb-6">
+        <div className="bg-white shadow-lg p-2 rounded-lg mt-2">
+          <h2 className="text-2xl font-semibold text-slate-600 mb-6 p-2">
             Applied Jobs
           </h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full">
             <table className="w-full table-auto">
               <thead>
                 <tr className="bg-gray-100">
@@ -86,20 +94,26 @@ const UserProfile = () => {
                   <th className="px-4 py-2 text-left">Company</th>
                   <th className="px-4 py-2 text-left">Application Date</th>
                   <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-4 py-2 text-left">Response</th>
                 </tr>
               </thead>
               <tbody>
                 {appliedJobs.map((job, index) => (
                   <tr
-                    key={index}
+                    key={job._id}
                     className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                   >
-                    <td className="px-4 py-2">{job.title}</td>
-                    <td className="px-4 py-2">{job.company}</td>
+                    <td className="px-4 py-2 text-sm">{job.jobTitle}</td>
+                    <td className="px-4 py-2 text-sm">{job.company.name}</td>
                     <td className="px-4 py-2">
-                      {new Date(job.applicationDate).toLocaleDateString()}
+                      {moment(job.application.appliedAt).format("ll")}
                     </td>
-                    <td className="px-4 py-2">{job.status}</td>
+                    <td className="px-4 py-2 text-sm">
+                      {job.application.status || "Pending"}{" "}
+                    </td>
+                    <td className="px-4 py-2 text-sm">
+                      {job.application.response || "Pending"}{" "}
+                    </td>
                   </tr>
                 ))}
               </tbody>
