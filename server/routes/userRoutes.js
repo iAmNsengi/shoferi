@@ -5,9 +5,9 @@ import { getUser, updateUser } from "../controllers/userController.js";
 const router = express.Router();
 
 // GET user
-router.post("/get-user", userAuth, getUser);
+router.get("/:id", getUser);
 
 // UPDATE USER || PUT
-router.put("/update-user", userAuth, updateUser);
+router.put("/:id", userAuth, updateUser);
 
 export default router;

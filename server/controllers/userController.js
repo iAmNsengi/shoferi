@@ -18,7 +18,7 @@ export const updateUser = async (req, res, next) => {
       next("Please provide all required fields");
     }
 
-    const id = req.body.user.userId;
+    const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).send(`No User with id: ${id}`);
@@ -56,7 +56,7 @@ export const updateUser = async (req, res, next) => {
 
 export const getUser = async (req, res, next) => {
   try {
-    const id = req.body.user.userId;
+    const { id } = req.params;
 
     const user = await Users.findById({ _id: id });
 
