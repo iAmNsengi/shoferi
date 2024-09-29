@@ -82,8 +82,9 @@ const CompanyProfile = () => {
           </div>
         )}
       </div>
-
-      <CompanyForm open={openForm} setOpen={setOpenForm} />
+      {openForm && (
+        <CompanyForm value={company} open={openForm} setOpen={setOpenForm} />
+      )}
     </div>
   );
 };

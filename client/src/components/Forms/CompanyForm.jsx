@@ -2,11 +2,20 @@ import { Dialog, Transition } from "@headlessui/react";
 import CustomButton from "../CustomButton";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import TextInput from "../TextInput";
+import { useCompanies } from "../../hooks/useCompanies";
+import Loading from "../Loading";
+import { updateCompany } from "../../api/companies";
 
-const CompanyForm = ({ open, setOpen }) => {
+const CompanyForm = ({ open, setOpen, value }) => {
   const { user } = useSelector((state) => state.user);
+  const { company, loading, error, getCompany } = useCompanies();
+
+  useEffect(() => {
+    getCompany(value?._id);
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -15,20 +24,46 @@ const CompanyForm = ({ open, setOpen }) => {
     formState: { errors },
   } = useForm({
     mode: "onChange",
-    defaultValues: { ...user?.user },
+    defaultValues: {
+      name: company?.name,
+      location: company?.location,
+      contact: company?.contact,
+      about: company?.about,
+    },
   });
 
   const dispatch = useDispatch();
   const [profileImage, setProfileImage] = useState("");
   const [uploadCv, setUploadCv] = useState("");
 
-  const onSubmit = () => {};
+  const onSubmit = async (data) => {
+    try {
+      const updatedData = { ...data };
+      if (profileImage) {
+        const imageUrl = await uploadImage(profileImage);
+        updatedData.profileUrl = imageUrl;
+      }
+
+      const result = await updateCompany(company?._id, updatedData);
+      if (result.success) {
+        setOpen(false);
+        // Optionally, show a success message
+      } else {
+        // Handle error
+        console.error("Failed to update company:", result.error);
+      }
+    } catch (error) {
+      console.error("Error updating company:", error);
+      // Optionally, show an error message
+    }
+  };
 
   const closeModal = () => setOpen(false);
 
   return (
     <>
-      <Transition appear show={opener ?? false} as={Fragment}>
+      {loading && <Loading />}
+      <Transition appear show={open ?? false} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={closeModal}>
           <Transition.Child
             as={Fragment}
@@ -69,6 +104,7 @@ const CompanyForm = ({ open, setOpen }) => {
                       name="name"
                       label="Company Name"
                       type="text"
+                      value={company?.name}
                       register={register("name", {
                         required: "Company Name is required",
                       })}
@@ -92,6 +128,7 @@ const CompanyForm = ({ open, setOpen }) => {
                           name="contact"
                           label="Contact"
                           placeholder="Phone Number"
+                          value={company?.contact}
                           type="text"
                           register={register("contact", {
                             required: "Contact is required!",
