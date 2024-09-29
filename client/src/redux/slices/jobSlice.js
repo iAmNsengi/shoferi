@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import baseURL from "../../utils/baseUrl";
+
+const loginCompany = JSON.parse(localStorage.getItem("companyInfo"));
 
 export const createJobAction = createAsyncThunk(
   "jobs/add",
@@ -7,6 +10,7 @@ export const createJobAction = createAsyncThunk(
     const config = {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${loginCompany?.token}`,
       },
     };
     try {
@@ -25,6 +29,7 @@ export const createJobAction = createAsyncThunk(
 const jobSlice = createSlice({
   name: "jobs",
   initialState: {
+    // company: loginCompany,
     jobs: [],
     loading: false,
     error: null,

@@ -36,21 +36,27 @@ export const createJob = async (req, res, next) => {
       vacancies,
       experience,
       detail: { desc, requirements },
-      company: req?.user?._id,
+      company: req?.user?.userId,
     };
+
+    //Get company with given ID
+    const company = await Companies.findById(req?.user?.userId);
+    if (!company)
+      return res.status(400).send("You are not logged in as a company!");
 
     const job = new Jobs(jobPost);
     await job.save();
 
-    //update the company information with job id
-    const company = await Companies.findById(req?.user?._id);
-    if (!company)
-      return res.status(400).send("You are not logged in as a company!");
+    console.log(company);
 
     company.jobPosts.push(job._id);
-    const updateCompany = await Companies.findByIdAndUpdate(id, company, {
-      new: true,
-    });
+    const updateCompany = await Companies.findByIdAndUpdate(
+      req?.user?.userId,
+      company,
+      {
+        new: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
