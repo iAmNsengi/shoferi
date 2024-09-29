@@ -9,7 +9,7 @@ import {
   Facebook,
 } from "../assets";
 
-export const jobTypes = ["Full Time", "Part Time", "Contract", "Intern"];
+export const jobTypes = ["Full-Time", "Part-Time", "Contract", "Intern"];
 
 export const experience = [
   { title: "Under 1 Year", value: "0-1" },
