@@ -1,12 +1,14 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, Transition } from "@headlessui/react";
 import { BiChevronDown } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
+import { Fragment } from "react";
+import { AiOutlineLogout } from "react-icons/ai";
 
 function MenuList({ user, onClick }) {
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("companyInfo");
     localStorage.removeItem("userInfo");
     navigate("/user-auth");
   };

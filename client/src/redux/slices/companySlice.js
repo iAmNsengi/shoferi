@@ -18,6 +18,7 @@ export const registerCompanyAction = createAsyncThunk(
         company,
         config
       );
+      localStorage.setItem('companyInfo', JSON.stringify(data));
       return data;
     } catch (error) {
       if (!error?.response) {
@@ -28,6 +29,7 @@ export const registerCompanyAction = createAsyncThunk(
     }
   }
 );
+
 export const loginCompanyAction = createAsyncThunk(
   'company/login',
   async (company, { rejectWithValue, getState, dispatch }) => {

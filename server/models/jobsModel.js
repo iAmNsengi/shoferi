@@ -10,7 +10,15 @@ const jobSchema = new mongoose.Schema(
     vacancies: { type: Number },
     experience: { type: Number, default: 0 },
     detail: [{ desc: { type: String }, requirements: { type: String } }],
-    application: [{ type: Schema.Types.ObjectId, ref: "Users" }],
+    application: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Users",
+        appliedAt: { type: Date, default: Date.now },
+        status: { type: String, default: "pending" },
+        response: { type: String, default: "pending" },
+      },
+    ],
   },
   { timestamps: true }
 );

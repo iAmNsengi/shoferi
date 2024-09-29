@@ -1,6 +1,6 @@
-import { Outlet, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { Footer, Navbar } from './components';
+import { Footer, Navbar } from "./components";
 import {
   About,
   AuthPage,
@@ -10,8 +10,8 @@ import {
   JobDetail,
   UploadJob,
   UserProfile,
-} from './pages';
-import { useSelector } from 'react-redux';
+} from "./pages";
+import { useSelector } from "react-redux";
 
 function Layout() {
   const auth = useSelector((store) => store.user);
@@ -19,7 +19,7 @@ function Layout() {
 }
 
 function App() {
-  const { user } = useSelector((state) => state.user);
+  const { auth: user } = useSelector((state) => state.user);
   return (
     <main className="bg-[#f7fdfd]">
       <Navbar />
@@ -34,17 +34,17 @@ function App() {
           <Route path="/companies" element={<Companies />} />
           <Route
             path={
-              user?.user?.accountType === 'seeker'
-                ? '/user-profile'
-                : '/user-profile/:id'
+              user?.user?.accountType === "seeker"
+                ? "/user-profile"
+                : "/user-profile/:id"
             }
             element={<UserProfile />}
           />
 
-          <Route path={'/company-profile'} element={<CompanyProfile />} />
-          <Route path={'/company-profile/:id'} element={<CompanyProfile />} />
-          <Route path={'/upload-job'} element={<UploadJob />} />
-          <Route path={'/job-detail/:id'} element={<JobDetail />} />
+          <Route path={"/company-profile"} element={<CompanyProfile />} />
+          <Route path={"/company-profile/:id"} element={<CompanyProfile />} />
+          <Route path={"/upload-job"} element={<UploadJob />} />
+          <Route path={"/job-detail/:id"} element={<JobDetail />} />
         </Route>
 
         <Route path="/about-us" element={<About />} />

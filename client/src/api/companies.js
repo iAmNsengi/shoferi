@@ -15,3 +15,21 @@ export const updateCompany = (id, jobData) =>
 
 // Delete a company by its ID
 export const deleteCompany = (id) => API.delete(`/companies/${id}`);
+
+export const uploadImage = async (image) => {
+  try {
+    const formData = new FormData();
+    formData.append("profile", image);
+
+    const response = await API.post("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data.profileUrl;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
