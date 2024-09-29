@@ -23,7 +23,7 @@ const companySchema = new Schema({
   contact: { type: String },
   location: { type: String },
   about: { type: String },
-  profileUrl: { type: String },
+  profileUrl: { type: String, default: "" },
   jobPosts: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
 });
 
