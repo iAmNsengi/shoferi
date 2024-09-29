@@ -26,8 +26,7 @@ const UploadJob = () => {
   const {
     register,
     handleSubmit,
-    getValues,
-    watch,
+    reset,
     formState: { errors },
   } = useForm({
     mode: "onChange",
@@ -47,6 +46,7 @@ const UploadJob = () => {
       const response = await dispatch(createJobAction(jobData));
       if (response.payload) {
         toast.success("Job added Successfully");
+        reset();
       } else {
         console.error("Error adding job");
         // Check if response.error is an object or a string
