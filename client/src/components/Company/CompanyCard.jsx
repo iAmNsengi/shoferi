@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 const CompanyCard = ({ cmp }) => {
   return (
     <motion.div
-      className="w-full h-auto min-h-16 flex flex-col sm:flex-row gap-4 items-center justify-between bg-white shadow-md rounded px-4 py-3 sm:py-2"
+      className="w-full md:w-fit h-auto min-h-16 flex flex-col sm:flex-row gap-4 items-center justify-between bg-white shadow-md rounded px-4 py-3 sm:py-2"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
