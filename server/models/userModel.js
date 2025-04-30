@@ -26,13 +26,39 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Password length should be greater than 6 character"],
       select: true,
     },
-    accountType: { type: String, default: "seeker" },
+    accountType: { 
+      type: String, 
+      enum: ["user", "driver", "admin"],
+      default: "user" 
+    },
     contact: { type: String },
     location: { type: String },
     profileUrl: { type: String },
     cvUrl: { type: String },
     jobTitle: { type: String },
     about: { type: String },
+    phoneNumber: { type: String },
+    address: {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      country: { type: String },
+      postalCode: { type: String }
+    },
+    emergencyContact: {
+      name: { type: String },
+      relationship: { type: String },
+      phoneNumber: { type: String }
+    },
+    preferences: {
+      language: { type: String, default: "en" },
+      currency: { type: String, default: "RWF" },
+      notifications: {
+        email: { type: Boolean, default: true },
+        sms: { type: Boolean, default: true },
+        push: { type: Boolean, default: true }
+      }
+    }
   },
   { timestamps: true }
 );
