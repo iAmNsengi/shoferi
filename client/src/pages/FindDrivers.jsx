@@ -1,335 +1,293 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaSearch, FaStar, FaCar, FaMoneyBillWave } from "react-icons/fa";
-import { CustomButton, TextInput } from "../components";
+import { BiSearch, BiMap, BiFilter } from "react-icons/bi";
+import { BsStarFill } from "react-icons/bs";
 import { apiRequest } from "../utils";
-import { format } from "date-fns";
+import { CustomButton } from "../components";
 
 const FindDrivers = () => {
   const [drivers, setDrivers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchParams, setSearchParams] = useState({
-    location: "",
-    date: "",
-    type: "hourly",
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("");
+  const [filters, setFilters] = useState({
+    experience: [],
+    rating: null,
+    availability: "all",
   });
-  const [selectedDriver, setSelectedDriver] = useState(null);
-  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const navigate = useNavigate();
+  const { search } = useLocation();
 
   useEffect(() => {
-    fetchDrivers();
-  }, []);
+    const params = new URLSearchParams(search);
+    const query = params.get("q") || "";
+    const loc = params.get("location") || "";
+    const page = parseInt(params.get("page")) || 1;
 
-  const fetchDrivers = async () => {
+    setSearchQuery(query);
+    setLocation(loc);
+    setCurrentPage(page);
+
+    fetchDrivers(query, loc, page);
+  }, [search]);
+
+  const fetchDrivers = async (query, loc, page) => {
     try {
+      setLoading(true);
       const res = await apiRequest({
-        url: "/drivers/available",
+        url: `/drivers/search?q=${query}&location=${loc}&page=${page}&experience=${filters.experience.join(
+          ","
+        )}&rating=${filters.rating || ""}&availability=${filters.availability}`,
         method: "GET",
       });
 
-      if (res?.success) {
-        setDrivers(res.data);
-      }
+      setDrivers(res?.data?.drivers || []);
+      setTotalPages(res?.data?.totalPages || 1);
     } catch (error) {
       console.log(error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSearch = async (e) => {
+  const handleSearch = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    try {
-      const res = await apiRequest({
-        url: "/drivers/search",
-        method: "POST",
-        data: searchParams,
-      });
-
-      if (res?.success) {
-        setDrivers(res.data);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (location) params.set("location", location);
+    params.set("page", "1");
+    navigate(`?${params.toString()}`);
   };
 
-  const handleBooking = async (driverId) => {
-    const driver = drivers.find((d) => d._id === driverId);
-    setSelectedDriver(driver);
-    setShowBookingModal(true);
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => {
+      const newFilters = { ...prev, [key]: value };
+      fetchDrivers(searchQuery, location, currentPage);
+      return newFilters;
+    });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-    },
+  const handlePageChange = (page) => {
+    const params = new URLSearchParams(search);
+    params.set("page", page.toString());
+    navigate(`?${params.toString()}`);
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-lg p-6 mb-8"
-      >
-        <h1 className="text-3xl font-bold mb-6">Find Available Drivers</h1>
-        <form
-          onSubmit={handleSearch}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
+    <div className="container mx-auto px-4 py-20">
+      <div className="max-w-7xl mx-auto">
+        {/* Search Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-lg p-6 mb-8"
         >
-          <TextInput
-            placeholder="Enter location"
-            value={searchParams.location}
-            onChange={(e) =>
-              setSearchParams((prev) => ({ ...prev, location: e.target.value }))
-            }
-            icon={<FaSearch className="text-gray-400" />}
-          />
-          <input
-            type="date"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchParams.date}
-            onChange={(e) =>
-              setSearchParams((prev) => ({ ...prev, date: e.target.value }))
-            }
-          />
-          <select
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchParams.type}
-            onChange={(e) =>
-              setSearchParams((prev) => ({ ...prev, type: e.target.value }))
-            }
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row gap-4"
           >
-            <option value="hourly">Hourly</option>
-            <option value="daily">Daily</option>
-          </select>
-          <CustomButton
-            title="Search"
-            type="submit"
-            isLoading={isLoading}
-            containerStyles="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          />
-        </form>
-      </motion.div>
-
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        {drivers.map((driver) => (
-          <motion.div
-            key={driver._id}
-            variants={itemVariants}
-            className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
-          >
-            <div className="relative h-48">
-              <img
-                src={driver.user.profileUrl || "/default-avatar.png"}
-                alt="Driver"
-                className="w-full h-full object-cover"
+            <div className="flex-1 relative">
+              <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
+              <input
+                type="text"
+                placeholder="Search drivers by name or skills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
-              <div className="absolute top-4 right-4">
-                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                  Available
-                </span>
-              </div>
             </div>
-            <div className="p-6">
-              <h2 className="text-xl font-bold mb-2">
-                {driver.user.firstName} {driver.user.lastName}
-              </h2>
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2">
-                  <FaCar className="text-blue-500" />
-                  <span>{driver.licenseType}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaStar className="text-yellow-500" />
-                  <span>
-                    {driver.rating || 0} ({driver.reviews?.length || 0} reviews)
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaMoneyBillWave className="text-green-500" />
-                  <span>
-                    RWF {driver.pricePerHour}/hr | RWF {driver.pricePerDay}/day
-                  </span>
-                </div>
-              </div>
-              <CustomButton
-                title="Book Now"
-                onClick={() => handleBooking(driver._id)}
-                containerStyles="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            <div className="flex-1 relative">
+              <BiMap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
+              <input
+                type="text"
+                placeholder="Location..."
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
+            </div>
+            <CustomButton
+              title="Search"
+              type="submit"
+              containerStyles="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+            />
+          </form>
+        </motion.div>
+
+        {/* Filters and Results */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Filters */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white rounded-xl shadow-lg p-6 h-fit"
+          >
+            <div className="flex items-center gap-2 mb-6">
+              <BiFilter className="text-xl text-blue-600" />
+              <h2 className="text-lg font-semibold">Filters</h2>
+            </div>
+
+            {/* Experience Filter */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-3">Experience</h3>
+              {["0-2", "3-5", "5-10", "10+"].map((exp) => (
+                <label key={exp} className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.experience.includes(exp)}
+                    onChange={(e) => {
+                      const newExp = e.target.checked
+                        ? [...filters.experience, exp]
+                        : filters.experience.filter((x) => x !== exp);
+                      handleFilterChange("experience", newExp);
+                    }}
+                    className="rounded text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm">{exp} years</span>
+                </label>
+              ))}
+            </div>
+
+            {/* Rating Filter */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-3">Minimum Rating</h3>
+              {[5, 4, 3].map((rating) => (
+                <label key={rating} className="flex items-center gap-2 mb-2">
+                  <input
+                    type="radio"
+                    name="rating"
+                    checked={filters.rating === rating}
+                    onChange={() => handleFilterChange("rating", rating)}
+                    className="text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: rating }).map((_, i) => (
+                      <BsStarFill key={i} className="text-yellow-400 text-sm" />
+                    ))}
+                    <span className="text-sm ml-1">& up</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            {/* Availability Filter */}
+            <div>
+              <h3 className="text-sm font-medium mb-3">Availability</h3>
+              <select
+                value={filters.availability}
+                onChange={(e) =>
+                  handleFilterChange("availability", e.target.value)
+                }
+                className="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              >
+                <option value="all">All</option>
+                <option value="available">Available Now</option>
+                <option value="scheduled">Scheduled Only</option>
+              </select>
             </div>
           </motion.div>
-        ))}
-      </motion.div>
 
-      {showBookingModal && selectedDriver && (
-        <BookingModal
-          driver={selectedDriver}
-          onClose={() => setShowBookingModal(false)}
-          searchParams={searchParams}
-        />
-      )}
-    </div>
-  );
-};
+          {/* Results */}
+          <div className="md:col-span-3">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : drivers.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                <p className="text-gray-500">
+                  No drivers found matching your criteria
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {drivers.map((driver) => (
+                  <motion.div
+                    key={driver._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/driver/${driver._id}`)}
+                  >
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 bg-gray-200 rounded-xl overflow-hidden">
+                        <img
+                          src={driver.profileUrl || "/default-avatar.png"}
+                          alt={driver.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold mb-1">
+                          {driver.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-2">
+                          {driver.location}
+                        </p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <BsStarFill
+                                key={i}
+                                className={`text-sm ${
+                                  i < Math.floor(driver.rating)
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            ({driver.totalRatings})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {driver.experience} years exp.
+                          </span>
+                          <span className="text-sm text-gray-600">•</span>
+                          <span
+                            className={`text-sm ${
+                              driver.isAvailable
+                                ? "text-green-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {driver.isAvailable ? "Available" : "Unavailable"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
-const BookingModal = ({ driver, onClose, searchParams }) => {
-  const [bookingData, setBookingData] = useState({
-    startDate: searchParams.date || format(new Date(), "yyyy-MM-dd"),
-    endDate: searchParams.date || format(new Date(), "yyyy-MM-dd"),
-    bookingType: searchParams.type,
-    pickupLocation: searchParams.location,
-    dropoffLocation: "",
-    notes: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const res = await apiRequest({
-        url: "/bookings/create",
-        method: "POST",
-        data: {
-          ...bookingData,
-          driver: driver._id,
-        },
-      });
-
-      if (res?.success) {
-        onClose();
-        // Show success notification
-      }
-    } catch (error) {
-      console.log(error);
-      // Show error notification
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-      >
-        <h2 className="text-2xl font-bold mb-4">Book Driver</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border rounded-lg"
-                value={bookingData.startDate}
-                onChange={(e) =>
-                  setBookingData((prev) => ({
-                    ...prev,
-                    startDate: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border rounded-lg"
-                value={bookingData.endDate}
-                onChange={(e) =>
-                  setBookingData((prev) => ({
-                    ...prev,
-                    endDate: e.target.value,
-                  }))
-                }
-              />
-            </div>
+            {/* Pagination */}
+            {!loading && drivers.length > 0 && (
+              <div className="flex justify-center mt-8 gap-2">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={`px-4 py-2 rounded-lg ${
+                      currentPage === i + 1
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pickup Location
-            </label>
-            <TextInput
-              value={bookingData.pickupLocation}
-              onChange={(e) =>
-                setBookingData((prev) => ({
-                  ...prev,
-                  pickupLocation: e.target.value,
-                }))
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dropoff Location
-            </label>
-            <TextInput
-              value={bookingData.dropoffLocation}
-              onChange={(e) =>
-                setBookingData((prev) => ({
-                  ...prev,
-                  dropoffLocation: e.target.value,
-                }))
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border rounded-lg resize-none"
-              rows="3"
-              value={bookingData.notes}
-              onChange={(e) =>
-                setBookingData((prev) => ({ ...prev, notes: e.target.value }))
-              }
-            />
-          </div>
-          <div className="flex justify-end space-x-4">
-            <CustomButton
-              title="Cancel"
-              onClick={onClose}
-              containerStyles="px-4 py-2 border rounded-lg hover:bg-gray-50"
-            />
-            <CustomButton
-              title="Book Now"
-              type="submit"
-              isLoading={isLoading}
-              containerStyles="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            />
-          </div>
-        </form>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 };

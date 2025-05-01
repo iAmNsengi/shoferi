@@ -1,19 +1,25 @@
-import FindJobs from "./FindJobs";
+import About from "./About";
 import AuthPage from "./Auth";
 import Companies from "./Companies";
-import UserProfile from "./UserProfile";
 import CompanyProfile from "./CompanyProfile";
-import UploadJob from "./UploadJob";
-import About from "./About";
+import FindJobs from "./FindJobs";
 import JobDetail from "./JobDetail";
+import UploadJob from "./UploadJob";
+import UserProfile from "./UserProfile";
+import DriverRegistration from "./DriverRegistration";
+import DriverProfile from "./DriverProfile";
+import FindDrivers from "./FindDrivers";
 
 export {
-  FindJobs,
+  About,
   AuthPage,
   Companies,
-  UserProfile,
   CompanyProfile,
-  UploadJob,
-  About,
+  FindJobs,
   JobDetail,
+  UploadJob,
+  UserProfile,
+  DriverRegistration,
+  DriverProfile,
+  FindDrivers,
 };

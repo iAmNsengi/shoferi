@@ -1,186 +1,226 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BiBriefcaseAlt2 } from "react-icons/bi";
+import { motion } from "framer-motion";
+import { BiBriefcase, BiSearch, BiLocationPlus } from "react-icons/bi";
 import { BsStars } from "react-icons/bs";
-import { MdOutlineKeyboardArrowDown } from "react-icons/md";
-import Header from "../components/Header";
-import { experience, jobTypes } from "../utils/data";
-import { CustomButton, JobCard, ListBox, Loading } from "../components";
-import { useJobs } from "../hooks/useJobs";
+import { apiRequest, updateURL } from "../utils";
 
 const FindJobs = () => {
-  const [sort, setSort] = useState("Newest");
-  const [page, setPage] = useState(1);
-  const [numPage, setNumPage] = useState(1);
-  const [recordCount, setRecordCount] = useState(0);
-  const [data, setData] = useState([]);
-
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [jobLocation, setJobLocation] = useState("");
   const [filterJobTypes, setFilterJobTypes] = useState([]);
-  const [filterExp, setFilterExp] = useState([]);
-
-  const [isFetching, setIsFetching] = useState(false);
+  const [page, setPage] = useState(1);
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { jobs, loading, error, getJobs } = useJobs();
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRequest({
+        url: "/jobs",
+        method: "GET",
+        params: {
+          search: searchQuery,
+          location: jobLocation,
+          jtype: filterJobTypes.join(","),
+          page,
+        },
+      });
+
+      setJobs(res?.data || []);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    updateURL(
+      { query: searchQuery, location: jobLocation, page: 1 },
+      navigate,
+      location
+    );
+    fetchJobs();
+  };
 
   useEffect(() => {
-    getJobs(); // Fetch jobs on component mount
-  }, []);
+    const urlParams = new URLSearchParams(location.search);
+    const queryParam = urlParams.get("query") || "";
+    const locationParam = urlParams.get("location") || "";
+    const pageParam = parseInt(urlParams.get("page")) || 1;
 
-  useEffect(() => {
-    let filteredJobs = [...jobs]; // Create a copy of jobs to avoid mutating the original array
+    setSearchQuery(queryParam);
+    setJobLocation(locationParam);
+    setPage(pageParam);
 
-    // Filter by search query (job title or location)
-    if (searchQuery)
-      filteredJobs = filteredJobs.filter(
-        (job) =>
-          job.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          job.location.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    fetchJobs();
+  }, [location.search]);
 
-    // Filter by selected job types (if any)
-    if (filterJobTypes.length > 0)
-      filteredJobs = filteredJobs.filter((job) =>
-        filterJobTypes.includes(job.jobType)
-      );
-
-    // Sort jobs
-    if (sort === "Newest")
-      filteredJobs.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-    else if (sort === "Oldest")
-      filteredJobs.sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-      );
-    else if (sort === "A-Z")
-      filteredJobs.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle));
-    // Sort alphabetically by jobTitle (A-Z)
-    else if (sort === "Z-A")
-      filteredJobs.sort((a, b) => b.jobTitle.localeCompare(a.jobTitle)); // Sort alphabetically by jobTitle (Z-A)
-
-    // Set the filtered and sorted data
-    setData(filteredJobs);
-  }, [jobs, sort, searchQuery, jobLocation, filterJobTypes, filterExp]);
-
-  const filterJobs = (val) => {
-    if (filterJobTypes.includes(val))
-      setFilterJobTypes(filterJobTypes.filter((el) => el !== val));
-    else setFilterJobTypes([...filterJobTypes, val]);
-  };
-  const filterExperience = (val) => {
-    if (filterExp.includes(val))
-      setFilterExp(filterExp.filter((el) => el !== val));
-    else setFilterExp([...filterExp, val]);
-  };
+  const jobTypes = ["Full-Time", "Part-Time", "Contract", "Remote"];
 
   return (
-    <div>
-      <Header
-        title="Search driver's job in Rwanda"
-        type="home"
-        placeholder={"Search job title or location..."}
-        handleClick={() => {}}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        location={jobLocation}
-        setLocation={setJobLocation}
-      />
-
-      <div className="container mx-auto flex gap-6 2xl:gap-10 md:px-5 py-0 md:py-6 bg-[#f7fdfd]">
-        <div className="hidden md:flex flex-col w-1/6 h-fit bg-white shadow-sm">
-          <p className="text-lg font-semibold text-slate-600">Filter Search</p>
-
-          <div className="py-2">
-            <div className="flex justify-between mb-3">
-              <p className="flex items-center gap-2 font-semibold">
-                <BiBriefcaseAlt2 />
-                Job Type
-              </p>
-
-              <button>
-                <MdOutlineKeyboardArrowDown />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {jobTypes.map((jtype, index) => (
-                <div key={index} className="flex gap-2 text-sm md:text-base ">
-                  <input
-                    type="checkbox"
-                    value={jtype}
-                    className="w-4 h-4"
-                    onChange={(e) => filterJobs(e.target.value)}
-                  />
-                  <span>{jtype}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="py-2 mt-4">
-            <div className="flex justify-between mb-3">
-              <p className="flex items-center gap-2 font-semibold">
-                <BsStars />
-                Experience
-              </p>
-
-              <button>
-                <MdOutlineKeyboardArrowDown />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {experience.map((exp) => (
-                <div key={exp.title} className="flex gap-3">
-                  <input
-                    type="checkbox"
-                    value={exp?.value}
-                    className="w-4 h-4"
-                    onChange={(e) => filterExperience(e.target.value)}
-                  />
-                  <span>{exp.title}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full md:w-5/6 px-5 md:px-0">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm md:text-base">
-              Showing: <span className="font-semibold">({data.length})</span>{" "}
-              Jobs Available
-            </p>
-
-            <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:items-center">
-              <p className="text-sm md:text-base">Sort By:</p>
-
-              <ListBox sort={sort} setSort={setSort} />
-            </div>
-          </div>
-
-          <div className="w-full flex flex-wrap gap-4">
-            {loading && <Loading />}
-            {data.map((job, index) => (
-              <JobCard job={job} key={index} />
-            ))}
-          </div>
-
-          {numPage > page && !isFetching && (
-            <div className="w-full flex items-center justify-center pt-16">
-              <CustomButton
-                title="Load More"
-                containerStyles={`text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600`}
+    <div className="container mx-auto px-4 py-20">
+      {/* Search Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-xl shadow-lg p-6 mb-8"
+      >
+        <form onSubmit={handleSearch} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <BiSearch className="absolute left-3 top-3 text-gray-400 text-xl" />
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-          )}
-        </div>
+            <div className="relative">
+              <BiLocationPlus className="absolute left-3 top-3 text-gray-400 text-xl" />
+              <input
+                type="text"
+                placeholder="Location..."
+                value={jobLocation}
+                onChange={(e) => setJobLocation(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+            >
+              <BiSearch className="text-xl" />
+              <span>Search</span>
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {jobTypes.map((type) => (
+              <label
+                key={type}
+                className="flex items-center space-x-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={filterJobTypes.includes(type)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setFilterJobTypes([...filterJobTypes, type]);
+                    } else {
+                      setFilterJobTypes(
+                        filterJobTypes.filter((t) => t !== type)
+                      );
+                    }
+                  }}
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">{type}</span>
+              </label>
+            ))}
+          </div>
+        </form>
+      </motion.div>
+
+      {/* Jobs List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? (
+          Array(6)
+            .fill(0)
+            .map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white rounded-xl shadow-lg p-6 animate-pulse"
+              >
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </motion.div>
+            ))
+        ) : jobs.length === 0 ? (
+          <div className="col-span-full text-center py-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-gray-500"
+            >
+              No jobs found. Try adjusting your search.
+            </motion.div>
+          </div>
+        ) : (
+          jobs.map((job, i) => (
+            <motion.div
+              key={job._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow p-6 cursor-pointer"
+              onClick={() => navigate(`/job-detail/${job._id}`)}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <BiBriefcase className="text-2xl text-blue-600" />
+                </div>
+                {job.jobType === "Remote" && (
+                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
+                    <BsStars className="mr-1" />
+                    Remote
+                  </span>
+                )}
+              </div>
+
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">
+                {job.jobTitle}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {job.location || "Location not specified"}
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">
+                  {job.jobType}
+                </span>
+                <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded">
+                  ${job.salary}/year
+                </span>
+              </div>
+
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {job.detail?.[0]?.desc || "No description available"}
+              </p>
+            </motion.div>
+          ))
+        )}
       </div>
+
+      {/* Pagination */}
+      {jobs.length > 0 && (
+        <div className="flex justify-center mt-8 space-x-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={jobs.length < 10}
+            className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
