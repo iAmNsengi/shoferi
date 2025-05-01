@@ -10,6 +10,9 @@ import {
   JobDetail,
   UploadJob,
   UserProfile,
+  DriverRegistration,
+  DriverProfile,
+  FindDrivers,
 } from "./pages";
 import { useSelector } from "react-redux";
 
@@ -20,27 +23,29 @@ function Layout() {
 
 function App() {
   const { auth: user } = useSelector((state) => state.user);
+  const isDriver = user?.user?.accountType === "driver";
+
   return (
-    <main className="bg-[#f7fdfd]">
+    <main className="bg-[#f7fdfd] min-h-screen pt-10">
       <Navbar />
 
       <Routes>
         <Route element={<Layout />}>
           <Route
             path="/"
-            element={<Navigate to="/find-jobs" replace={true} />}
+            element={
+              <Navigate
+                to={isDriver ? "/driver-profile" : "/find-jobs"}
+                replace={true}
+              />
+            }
           />
           <Route path="/find-jobs" element={<FindJobs />} />
+          <Route path="/find-drivers" element={<FindDrivers />} />
           <Route path="/companies" element={<Companies />} />
-          <Route
-            path={
-              user?.user?.accountType === "seeker"
-                ? "/user-profile"
-                : "/user-profile/:id"
-            }
-            element={<UserProfile />}
-          />
-
+          <Route path="/user-profile" element={<UserProfile />} />
+          <Route path="/driver-registration" element={<DriverRegistration />} />
+          <Route path="/driver-profile" element={<DriverProfile />} />
           <Route path={"/company-profile"} element={<CompanyProfile />} />
           <Route path={"/company-profile/:id"} element={<CompanyProfile />} />
           <Route path={"/upload-job"} element={<UploadJob />} />

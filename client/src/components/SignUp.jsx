@@ -1,9 +1,9 @@
-import { Dialog, Transition } from "@headlessui/react";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { BiUser, BiBriefcase, BiCar } from "react-icons/bi";
 import {
   loginCompanyAction,
   registerCompanyAction,
@@ -12,290 +12,244 @@ import {
   loginUserActionType,
   registerUserAction,
 } from "../redux/slices/userSlice";
-import CustomButton from "./CustomButton";
-import Spinner from "./sharedUI/Spinner";
 import TextInput from "./TextInput";
 
-const SignUp = ({ open, setOpen }) => {
+const SignUp = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { error: registerError } = useSelector((store) => store?.company);
-
-  const { error: loginError, user } = useSelector((store) => store?.user);
   const [isRegister, setIsRegister] = useState(true);
   const [accountType, setAccountType] = useState("seeker");
+
   const {
     register,
     handleSubmit,
-    reset,
     getValues,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     mode: "onChange",
   });
 
-  const closeModal = () => setOpen(false);
   const onSubmit = async (data) => {
     try {
       if (isRegister) {
-        if (accountType === "seeker") {
-          const response = await dispatch(registerUserAction(data));
-          if (response.error) {
-            toast.error(response.payload);
-          } else {
-            toast.success("Registed Successfull");
-            navigate("/find-jobs");
+        if (accountType === "seeker" || accountType === "driver") {
+          const response = await dispatch(
+            registerUserAction({
+              ...data,
+              accountType: accountType === "driver" ? "driver" : "user",
+            })
+          );
+
+          if (!response.error) {
+            if (accountType === "driver") {
+              navigate("/driver-registration");
+            } else {
+              navigate("/find-jobs");
+            }
           }
         } else {
           const response = await dispatch(registerCompanyAction(data));
-          if (response.error) {
-            toast.error(response.payload);
-          } else {
-            toast.success("Registed Successfull");
+          if (!response.error) {
             navigate("/find-jobs");
           }
         }
       } else {
-        if (accountType === "seeker") {
+        if (accountType === "seeker" || accountType === "driver") {
           const response = await dispatch(loginUserActionType(data));
-          if (response.error) {
-            toast.error(response.payload);
-          } else {
-            toast.success("Login Successfull");
+          if (!response.error) {
             navigate("/find-jobs");
           }
         } else {
           const response = await dispatch(loginCompanyAction(data));
-          if (response.error) {
-            toast.error(response.payload);
-          } else {
-            toast.success("Login Successfull");
+          if (!response.error) {
             navigate("/find-jobs");
           }
         }
       }
-    } finally {
-      //reset();
+    } catch (error) {
+      console.log(error);
     }
   };
 
   return (
-    <>
-      <Transition appear show={open || false}>
-        <Dialog as="div" className="relative z-10 " onClose={closeModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
+        >
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            {isRegister ? "Create Account" : "Welcome Back"}
+          </h2>
 
-          <div className="fixed inset-0 overflow-y-auto ">
-            <div className="flex min-h-full items-center justify-center p-4 text-center ">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
+          <div className="w-full flex flex-col gap-4">
+            <div className="grid grid-cols-3 gap-2">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setAccountType("seeker")}
+                className={`p-4 rounded-xl flex flex-col items-center justify-center gap-2 ${
+                  accountType === "seeker"
+                    ? "bg-blue-50 border-2 border-blue-500"
+                    : "bg-gray-50 border-2 border-transparent"
+                }`}
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all ">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-xl font-semibold leading-6 text-gray-900"
-                  >
-                    {isRegister ? "Create Account" : "Account Sign In"}
-                  </Dialog.Title>
+                <BiUser
+                  className={`text-2xl ${
+                    accountType === "seeker" ? "text-blue-500" : "text-gray-600"
+                  }`}
+                />
+                <span className="text-sm font-medium">Job Seeker</span>
+              </motion.button>
 
-                  <div className="w-full flex items-center justify-center py-4 ">
-                    <button
-                      className={`flex-1 px-4 py-2 rounded text-sm outline-none ${
-                        accountType === "seeker"
-                          ? "bg-orange-600 text-white font-semibold"
-                          : "bg-white border border-blue-400"
-                      }`}
-                      onClick={() => setAccountType("seeker")}
-                    >
-                      User Account
-                    </button>
-                    <button
-                      className={`flex-1 px-4 py-2 rounded text-sm outline-none ${
-                        accountType !== "seeker"
-                          ? "bg-orange-600 text-white font-semibold"
-                          : "bg-white border border-blue-400"
-                      }`}
-                      onClick={() => setAccountType("company")}
-                    >
-                      Company Account
-                    </button>
-                  </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setAccountType("driver")}
+                className={`p-4 rounded-xl flex flex-col items-center justify-center gap-2 ${
+                  accountType === "driver"
+                    ? "bg-blue-50 border-2 border-blue-500"
+                    : "bg-gray-50 border-2 border-transparent"
+                }`}
+              >
+                <BiCar
+                  className={`text-2xl ${
+                    accountType === "driver" ? "text-blue-500" : "text-gray-600"
+                  }`}
+                />
+                <span className="text-sm font-medium">Driver</span>
+              </motion.button>
 
-                  {isSubmitting ? (
-                    <div className="w-full flex justify-center py-4">
-                      <Spinner />
-                    </div>
-                  ) : (
-                    <form
-                      className="w-full flex flex-col gap-5"
-                      onSubmit={handleSubmit(onSubmit)}
-                    >
-                      <TextInput
-                        name="email"
-                        label="Email Address"
-                        placeholder="email@example.com"
-                        type="email"
-                        register={register("email", {
-                          required: "Email Address is required!",
-                        })}
-                        error={errors.email ? errors.email.message : ""}
-                      />
-
-                      {isRegister && (
-                        <div className="w-full flex gap-1 md:gap-2">
-                          <div
-                            className={`${
-                              accountType === "seeker" ? "w-1/2" : "w-full"
-                            }`}
-                          >
-                            <TextInput
-                              name={
-                                accountType === "seeker" ? "firstName" : "name"
-                              }
-                              label={
-                                accountType === "seeker"
-                                  ? "First Name"
-                                  : "Company Name"
-                              }
-                              placeholder={
-                                accountType === "seeker"
-                                  ? "eg. James"
-                                  : "Company name"
-                              }
-                              type="text"
-                              register={register(
-                                accountType === "seeker" ? "firstName" : "name",
-                                {
-                                  required:
-                                    accountType === "seeker"
-                                      ? "First Name is required"
-                                      : "Company Name is required",
-                                }
-                              )}
-                              error={
-                                accountType === "seeker"
-                                  ? errors.firstName
-                                    ? errors.firstName?.message
-                                    : ""
-                                  : errors.name
-                                  ? errors.name?.message
-                                  : ""
-                              }
-                            />
-                          </div>
-
-                          {accountType === "seeker" && isRegister && (
-                            <div className="w-1/2">
-                              <TextInput
-                                name="lastName"
-                                label="Last Name"
-                                placeholder="Wagonner"
-                                type="text"
-                                register={register("lastName", {
-                                  required: "Last Name is required",
-                                })}
-                                error={
-                                  errors.lastName
-                                    ? errors.lastName?.message
-                                    : ""
-                                }
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="w-full flex gap-1 md:gap-2">
-                        <div className={`${isRegister ? "w-1/2" : "w-full"}`}>
-                          <TextInput
-                            name="password"
-                            label="Password"
-                            placeholder="Password"
-                            type="password"
-                            register={register("password", {
-                              required: "Password is required!",
-                            })}
-                            error={
-                              errors.password ? errors.password?.message : ""
-                            }
-                          />
-                        </div>
-
-                        {isRegister && (
-                          <div className="w-1/2">
-                            <TextInput
-                              label="Confirm Password"
-                              placeholder="Password"
-                              type="password"
-                              register={register("cPassword", {
-                                validate: (value) => {
-                                  const { password } = getValues();
-
-                                  if (password != value) {
-                                    return "Passwords do not match";
-                                  }
-                                },
-                              })}
-                              error={
-                                errors.cPassword &&
-                                errors.cPassword.type === "validate"
-                                  ? errors.cPassword?.message
-                                  : ""
-                              }
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-2">
-                        <CustomButton
-                          type="submit"
-                          containerStyles={`inline-flex justify-center rounded-md bg-orange-600 px-8 py-2 text-sm font-medium text-white outline-none hover:bg-transparent border border-orange-600 hover:text-orange-600`}
-                          title={
-                            isRegister ? "Create Account" : "Login Account"
-                          }
-                        />
-                      </div>
-                    </form>
-                  )}
-
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-700">
-                      {isRegister
-                        ? "Already have an account?"
-                        : "Do not have an account"}
-
-                      <span
-                        className="text-sm text-orange-600 ml-2 hover:text-orange-700 hover:font-semibold cursor-pointer"
-                        onClick={() => setIsRegister((prev) => !prev)}
-                      >
-                        {isRegister ? "Login" : "Create Account"}
-                      </span>
-                    </p>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setAccountType("company")}
+                className={`p-4 rounded-xl flex flex-col items-center justify-center gap-2 ${
+                  accountType === "company"
+                    ? "bg-blue-50 border-2 border-blue-500"
+                    : "bg-gray-50 border-2 border-transparent"
+                }`}
+              >
+                <BiBriefcase
+                  className={`text-2xl ${
+                    accountType === "company"
+                      ? "text-blue-500"
+                      : "text-gray-600"
+                  }`}
+                />
+                <span className="text-sm font-medium">Company</span>
+              </motion.button>
             </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <TextInput
+                name="email"
+                label="Email Address"
+                type="email"
+                register={register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+                error={errors.email?.message}
+              />
+
+              {isRegister && (
+                <div className="grid grid-cols-2 gap-4">
+                  <TextInput
+                    name={accountType === "company" ? "name" : "firstName"}
+                    label={
+                      accountType === "company" ? "Company Name" : "First Name"
+                    }
+                    register={register(
+                      accountType === "company" ? "name" : "firstName",
+                      {
+                        required: `${
+                          accountType === "company"
+                            ? "Company name"
+                            : "First name"
+                        } is required`,
+                      }
+                    )}
+                    error={
+                      accountType === "company"
+                        ? errors.name?.message
+                        : errors.firstName?.message
+                    }
+                  />
+
+                  {accountType !== "company" && (
+                    <TextInput
+                      name="lastName"
+                      label="Last Name"
+                      register={register("lastName", {
+                        required: "Last name is required",
+                      })}
+                      error={errors.lastName?.message}
+                    />
+                  )}
+                </div>
+              )}
+
+              <TextInput
+                name="password"
+                label="Password"
+                type="password"
+                register={register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                })}
+                error={errors.password?.message}
+              />
+
+              {isRegister && (
+                <TextInput
+                  name="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  register={register("confirmPassword", {
+                    required: "Please confirm your password",
+                    validate: (value) =>
+                      value === getValues("password") ||
+                      "Passwords do not match",
+                  })}
+                  error={errors.confirmPassword?.message}
+                />
+              )}
+
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                type="submit"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              >
+                {isRegister ? "Create Account" : "Sign In"}
+              </motion.button>
+            </form>
+
+            <p className="text-sm text-center text-gray-600">
+              {isRegister
+                ? "Already have an account?"
+                : "Don't have an account?"}{" "}
+              <button
+                type="button"
+                onClick={() => setIsRegister(!isRegister)}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {isRegister ? "Sign In" : "Create Account"}
+              </button>
+            </p>
           </div>
-        </Dialog>
-      </Transition>
-    </>
+        </motion.div>
+      </div>
+    </div>
   );
 };
 
