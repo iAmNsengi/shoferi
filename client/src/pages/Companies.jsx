@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BiSearch, BiBuildings } from "react-icons/bi";
 import { BsStarFill, BsPeople } from "react-icons/bs";
 import { apiRequest } from "../utils";
 import { CustomButton } from "../components";
+import { useCache } from "../hooks/useCache";
 
 const Companies = () => {
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState("Newest");
@@ -17,6 +16,25 @@ const Companies = () => {
 
   const navigate = useNavigate();
   const { search } = useLocation();
+
+  const fetchCompaniesFn = useCallback(async () => {
+    const res = await apiRequest({
+      url: "/companies",
+      method: "GET",
+      params: {
+        search: searchQuery,
+        location,
+        page: currentPage,
+        sort,
+      },
+    });
+
+    setTotalPages(res?.data?.numOfPage || 1);
+    return res?.data?.companies || [];
+  }, [searchQuery, location, currentPage, sort]);
+
+  const cacheKey = `companies-${searchQuery}-${location}-${currentPage}-${sort}`;
+  const { data: companies, loading } = useCache(cacheKey, fetchCompaniesFn);
 
   useEffect(() => {
     const params = new URLSearchParams(search);
@@ -29,32 +47,7 @@ const Companies = () => {
     setLocation(loc);
     setCurrentPage(page);
     setSort(sortParam);
-
-    fetchCompanies(query, loc, page, sortParam);
   }, [search]);
-
-  const fetchCompanies = async (query, loc, page, sortParam) => {
-    try {
-      setLoading(true);
-      const res = await apiRequest({
-        url: "/companies",
-        method: "GET",
-        params: {
-          search: query,
-          location: loc,
-          page,
-          sort: sortParam,
-        },
-      });
-
-      setCompanies(res?.data?.companies || []);
-      setTotalPages(res?.data?.numOfPage || 1);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -129,14 +122,14 @@ const Companies = () => {
             <div className="col-span-full flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-          ) : companies.length === 0 ? (
+          ) : companies?.length === 0 ? (
             <div className="col-span-full bg-white rounded-xl shadow-lg p-8 text-center">
               <p className="text-gray-500">
                 No companies found matching your criteria
               </p>
             </div>
           ) : (
-            companies.map((company) => (
+            companies?.map((company) => (
               <motion.div
                 key={company._id}
                 initial={{ opacity: 0, y: 20 }}
@@ -180,7 +173,7 @@ const Companies = () => {
         </div>
 
         {/* Pagination */}
-        {!loading && companies.length > 0 && (
+        {!loading && companies?.length > 0 && (
           <div className="flex justify-center mt-8 gap-2">
             {Array.from({ length: totalPages }).map((_, i) => (
               <button

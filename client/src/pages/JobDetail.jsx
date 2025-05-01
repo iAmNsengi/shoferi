@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import moment from "moment";
-import { BiBriefcase, BiTimeFive, BiMoney, BiMap } from "react-icons/bi";
+import {
+  BiBriefcase,
+  BiTimeFive,
+  BiMoney,
+  BiMap,
+  BiArrowBack,
+} from "react-icons/bi";
 import { BsBuildings, BsPeople } from "react-icons/bs";
 import { apiRequest } from "../utils";
 import { CustomButton } from "../components";
@@ -21,7 +27,7 @@ const JobDetail = () => {
   const fetchJobDetails = async () => {
     try {
       const res = await apiRequest({
-        url: `/jobs/${id}`,
+        url: `/jobs/details/${id}`,
         method: "GET",
       });
 
@@ -71,8 +77,30 @@ const JobDetail = () => {
 
   if (!job) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-gray-500">Job not found</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center"
+        >
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BiBriefcase className="text-3xl text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Job Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            The job posting you're looking for doesn't exist or has been
+            removed.
+          </p>
+          <Link
+            to="/find-jobs"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700"
+          >
+            <BiArrowBack className="mr-2" />
+            Back to Jobs
+          </Link>
+        </motion.div>
       </div>
     );
   }
