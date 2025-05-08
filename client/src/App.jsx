@@ -55,7 +55,7 @@ function App() {
         <Route path="/about-us" element={<About />} />
         <Route path="/user-auth" element={<AuthPage />} />
       </Routes>
-      {user && <Footer />}
+      {<Footer />}
     </main>
   );
 }
