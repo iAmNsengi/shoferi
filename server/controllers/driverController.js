@@ -137,25 +137,63 @@ export const toggleAvailability = async (req, res) => {
 
 export const searchDrivers = async (req, res) => {
   try {
-    const { location, date, type } = req.body;
+    const {
+      q: searchQuery,
+      location,
+      page = 1,
+      experience,
+      rating,
+      availability = "all",
+    } = req.query;
+    const limit = 10;
+    const skip = (page - 1) * limit;
 
-    const query = {
-      "availability.status": "available",
-    };
+    const query = {};
 
+    // Add search query
+    if (searchQuery) {
+      query.$or = [
+        { "user.firstName": { $regex: searchQuery, $options: "i" } },
+        { "user.lastName": { $regex: searchQuery, $options: "i" } },
+        { licenseNumber: { $regex: searchQuery, $options: "i" } },
+      ];
+    }
+
+    // Add location filter
     if (location) {
       // Add location-based search logic here
       // This would involve using MongoDB's geospatial queries
-      // You'll need to convert the location string to coordinates first
+    }
+
+    // Add experience filter
+    if (experience) {
+      query.experience = { $gte: parseInt(experience) };
+    }
+
+    // Add rating filter
+    if (rating) {
+      query.rating = { $gte: parseFloat(rating) };
+    }
+
+    // Add availability filter
+    if (availability !== "all") {
+      query["availability.status"] = availability;
     }
 
     const drivers = await Drivers.find(query)
       .populate("user", "firstName lastName email profileUrl")
-      .sort({ rating: -1 });
+      .sort({ rating: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Drivers.countDocuments(query);
 
     res.status(StatusCodes.OK).json({
       success: true,
       count: drivers.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
       drivers,
     });
   } catch (error) {

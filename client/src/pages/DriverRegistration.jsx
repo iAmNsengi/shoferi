@@ -24,7 +24,7 @@ const DriverRegistration = () => {
 
     try {
       const res = await apiRequest({
-        url: "/drivers/register",
+        url: "/api-v1/drivers/register",
         data: data,
         method: "POST",
       });

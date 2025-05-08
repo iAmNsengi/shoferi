@@ -110,13 +110,15 @@ const SignUp = () => {
                 onClick={() => setAccountType("driver")}
                 className={`p-4 rounded-xl flex flex-col items-center justify-center gap-2 ${
                   accountType === "driver"
-                    ? "bg-blue-50 border-2 border-blue-500"
+                    ? "bg-orange-50 border-2 border-orange-500"
                     : "bg-gray-50 border-2 border-transparent"
                 }`}
               >
                 <BiCar
                   className={`text-2xl ${
-                    accountType === "driver" ? "text-blue-500" : "text-gray-600"
+                    accountType === "driver"
+                      ? "text-orange-500"
+                      : "text-gray-600"
                   }`}
                 />
                 <span className="text-sm font-medium">Driver</span>
@@ -128,14 +130,14 @@ const SignUp = () => {
                 onClick={() => setAccountType("company")}
                 className={`p-4 rounded-xl flex flex-col items-center justify-center gap-2 ${
                   accountType === "company"
-                    ? "bg-blue-50 border-2 border-blue-500"
+                    ? "bg-orange-50 border-2 border-orange-500"
                     : "bg-gray-50 border-2 border-transparent"
                 }`}
               >
                 <BiBriefcase
                   className={`text-2xl ${
                     accountType === "company"
-                      ? "text-blue-500"
+                      ? "text-orange-500"
                       : "text-gray-600"
                   }`}
                 />
@@ -228,7 +230,7 @@ const SignUp = () => {
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 type="submit"
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                className="w-full bg-orange-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-orange-700 transition-colors"
               >
                 {isRegister ? "Create Account" : "Sign In"}
               </motion.button>
