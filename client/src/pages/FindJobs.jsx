@@ -57,7 +57,7 @@ const FindJobs = () => {
   return (
     <div>
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
         <div className="container mx-auto px-4 py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -67,7 +67,7 @@ const FindJobs = () => {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Find Your Next Driving Opportunity
             </h1>
-            <p className="text-xl text-blue-100 mb-8">
+            <p className="text-xl text-orange-100 mb-8">
               Connect with top companies in Rwanda looking for skilled drivers
               like you
             </p>
@@ -79,7 +79,7 @@ const FindJobs = () => {
                 className="bg-white/10 backdrop-blur-md rounded-xl p-6"
               >
                 <div className="text-3xl mb-2">1000+</div>
-                <div className="text-blue-100">Active Jobs</div>
+                <div className="text-orange-100">Active Jobs</div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -88,7 +88,7 @@ const FindJobs = () => {
                 className="bg-white/10 backdrop-blur-md rounded-xl p-6"
               >
                 <div className="text-3xl mb-2">500+</div>
-                <div className="text-blue-100">Companies</div>
+                <div className="text-orange-100">Companies</div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -97,7 +97,7 @@ const FindJobs = () => {
                 className="bg-white/10 backdrop-blur-md rounded-xl p-6"
               >
                 <div className="text-3xl mb-2">2000+</div>
-                <div className="text-blue-100">Drivers Hired</div>
+                <div className="text-orange-100">Drivers Hired</div>
               </motion.div>
             </div>
           </motion.div>
@@ -120,7 +120,7 @@ const FindJobs = () => {
                   placeholder="Search jobs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <div className="relative">
@@ -130,12 +130,12 @@ const FindJobs = () => {
                   placeholder="Location..."
                   value={jobLocation}
                   onChange={(e) => setJobLocation(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <BiSearch className="text-xl" />
                 <span>Search</span>
@@ -160,7 +160,7 @@ const FindJobs = () => {
                         );
                       }
                     }}
-                    className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                    className="form-checkbox h-4 w-4 text-orange-600 rounded focus:ring-orange-500"
                   />
                   <span className="text-sm text-gray-700">{type}</span>
                 </label>
@@ -193,7 +193,7 @@ const FindJobs = () => {
                 }}
               >
                 <h3 className="font-semibold mb-2">{category}</h3>
-                <div className="flex items-center text-blue-600 text-sm">
+                <div className="flex items-center text-orange-600 text-sm">
                   View Jobs <BsArrowRight className="ml-2" />
                 </div>
               </motion.div>
@@ -211,11 +211,11 @@ const FindJobs = () => {
                   key={i}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white rounded-xl shadow-lg p-6 animate-pulse"
+                  className="bg-gray-200 rounded-xl shadow-lg p-6 animate-pulse"
                 >
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-4 bg-gray-300 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-300 rounded w-1/2 mb-2"></div>
+                  <div className="h-3 bg-gray-300 rounded w-2/3"></div>
                 </motion.div>
               ))
           ) : jobs?.length === 0 ? (
@@ -239,8 +239,8 @@ const FindJobs = () => {
                 onClick={() => navigate(`/job-detail/${job._id}`)}
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <BiBriefcase className="text-2xl text-blue-600" />
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <BiBriefcase className="text-2xl text-orange-600" />
                   </div>
                   {job.jobType === "Remote" && (
                     <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
@@ -258,7 +258,7 @@ const FindJobs = () => {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">
+                  <span className="bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded">
                     {job.jobType}
                   </span>
                   <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded">

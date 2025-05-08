@@ -18,7 +18,7 @@ router.put("/profile", userAuth, updateDriverProfile);
 router.put("/toggle-availability", userAuth, toggleAvailability);
 
 // Driver search routes
-router.post("/search", searchDrivers);
+router.get("/search", searchDrivers);
 router.get("/available", getAvailableDrivers);
 
 export default router;

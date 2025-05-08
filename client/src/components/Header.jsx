@@ -14,7 +14,7 @@ const Header = ({
   setLocation,
 }) => {
   return (
-    <div className="bg-[#f7fdfd]">
+    <div className="bg-[#fffaf5]">
       <div
         className={`container mx-auto px-5 ${
           type ? "h-[500px]" : "h-[350px]"
@@ -22,7 +22,7 @@ const Header = ({
       >
         <div className="w-full z-10">
           <div className="mb-8">
-            <p className="text-slate-700 font-bold text-4xl text-center">
+            <p className="text-gray-800 font-bold text-4xl text-center">
               {title}
             </p>
           </div>

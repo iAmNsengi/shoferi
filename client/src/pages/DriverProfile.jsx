@@ -16,7 +16,7 @@ const DriverProfile = () => {
     const fetchDriverProfile = async () => {
       try {
         const res = await apiRequest({
-          url: "/drivers/profile",
+          url: "/api-v1/drivers/profile",
           method: "GET",
         });
 
@@ -31,7 +31,7 @@ const DriverProfile = () => {
     const fetchBookings = async () => {
       try {
         const res = await apiRequest({
-          url: "/bookings/driver",
+          url: "/api-v1/bookings/driver",
           method: "GET",
         });
 
@@ -52,7 +52,7 @@ const DriverProfile = () => {
   const toggleAvailability = async () => {
     try {
       const res = await apiRequest({
-        url: "/drivers/toggle-availability",
+        url: "/api-v1/drivers/toggle-availability",
         method: "PUT",
       });
 

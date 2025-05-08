@@ -39,7 +39,7 @@ const FindDrivers = () => {
     try {
       setLoading(true);
       const res = await apiRequest({
-        url: `/drivers/search?q=${query}&location=${loc}&page=${page}&experience=${filters.experience.join(
+        url: `/api-v1/drivers/search?q=${query}&location=${loc}&page=${page}&experience=${filters.experience.join(
           ","
         )}&rating=${filters.rating || ""}&availability=${filters.availability}`,
         method: "GET",

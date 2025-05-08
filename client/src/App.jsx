@@ -26,7 +26,7 @@ function App() {
   const isDriver = user?.user?.accountType === "driver";
 
   return (
-    <main className="bg-[#f7fdfd] min-h-screen pt-10">
+    <main className="bg-[#fffaf5] min-h-screen pt-10">
       <Navbar />
 
       <Routes>

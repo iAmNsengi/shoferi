@@ -65,9 +65,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-2 rounded-lg">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-2 rounded-lg">
               <span className="text-white font-bold text-xl">shoferi</span>
-              <span className="text-orange-400 font-bold text-xl">.com</span>
+              <span className="text-orange-200 font-bold text-xl">.com</span>
             </div>
           </Link>
 
@@ -78,9 +78,9 @@ const Navbar = () => {
                 <li key={link.path}>
                   <Link
                     to={link.path}
-                    className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                    className={`text-sm font-medium transition-colors hover:text-orange-600 ${
                       location.pathname === link.path
-                        ? "text-blue-600"
+                        ? "text-orange-600"
                         : "text-gray-700"
                     }`}
                   >
@@ -95,7 +95,7 @@ const Navbar = () => {
                 <Link to="/user-auth">
                   <CustomButton
                     title="Sign In"
-                    containerStyles="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
+                    containerStyles="bg-orange-600 text-white px-6 py-2 rounded-full hover:bg-orange-700 transition-colors"
                   />
                 </Link>
               ) : (
@@ -127,9 +127,9 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 onClick={handleCloseNavbar}
-                className={`block py-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                className={`block py-2 text-sm font-medium transition-colors hover:text-orange-600 ${
                   location.pathname === link.path
-                    ? "text-blue-600"
+                    ? "text-orange-600"
                     : "text-gray-700"
                 }`}
               >
@@ -145,7 +145,7 @@ const Navbar = () => {
               >
                 <CustomButton
                   title="Sign In"
-                  containerStyles="w-full bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700 transition-colors text-center"
+                  containerStyles="w-full bg-orange-600 text-white py-2 rounded-full hover:bg-orange-700 transition-colors text-center"
                 />
               </Link>
             )}
