@@ -1,158 +1,99 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { AiOutlineClose } from "react-icons/ai";
-import { HiMenuAlt3 } from "react-icons/hi";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import CustomButton from "./CustomButton";
-import MenuList from "./MenuList";
+import { useState } from "react";
+import { BiCar } from "react-icons/bi";
+import { HiMenu, HiX } from "react-icons/hi";
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const auth = JSON.parse(localStorage.getItem("userInfo"));
   const [isOpen, setIsOpen] = useState(false);
-  const [LoggedIn, setLoggedIn] = useState(null);
-
-  useEffect(() => {
-    if (auth) {
-      setLoggedIn(auth);
-    } else {
-      setLoggedIn(null);
-    }
-  }, [auth?.token, auth?.user?.accountType]);
-
-  const user = LoggedIn;
-  const isDriver = user?.user?.accountType === "driver";
-
-  const handleCloseNavbar = () => {
-    setIsOpen(false);
-  };
-
-  const navLinks = [
-    {
-      name: isDriver ? "My Profile" : "Find Jobs",
-      path: isDriver ? "/driver-profile" : "/find-jobs",
-      show: true,
-    },
-    {
-      name: "Find Drivers",
-      path: "/find-drivers",
-      show: !isDriver,
-    },
-    {
-      name: "Companies",
-      path: "/companies",
-      show: !isDriver,
-    },
-    {
-      name: "Upload Job",
-      path: "/upload-job",
-      show: user?.user?.accountType === "company",
-    },
-    {
-      name: "About",
-      path: "/about-us",
-      show: true,
-    },
-  ].filter((link) => link.show);
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 bg-white shadow-md z-50"
-    >
+    <nav className="bg-white/90 backdrop-blur-md shadow-sm fixed w-full top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-2 rounded-lg">
-              <span className="text-white font-bold text-xl">shoferi</span>
-              <span className="text-orange-200 font-bold text-xl">.com</span>
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <BiCar className="text-white text-lg font-bold" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">SHOFERI</span>
             </div>
-          </Link>
+          </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <ul className="flex space-x-8">
-              {navLinks.map((link) => (
-                <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className={`text-sm font-medium transition-colors hover:text-orange-600 ${
-                      location.pathname === link.path
-                        ? "text-orange-600"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <a
+              href="#home"
+              className="text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              Home
+            </a>
+            <a
+              href="#features"
+              className="text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#jobs"
+              className="text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              Jobs
+            </a>
+            <a
+              href="#about"
+              className="text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              About
+            </a>
+            <a
+              href="#contact"
+              className="text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              Contact
+            </a>
+            <button className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition-all">
+              Get Started
+            </button>
+          </div>
 
-            <div className="flex items-center space-x-4">
-              {!user?.token ? (
-                <Link to="/user-auth">
-                  <CustomButton
-                    title="Sign In"
-                    containerStyles="bg-orange-600 text-white px-6 py-2 rounded-full hover:bg-orange-700 transition-colors"
-                  />
-                </Link>
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700"
+            >
+              {isOpen ? (
+                <HiX className="w-6 h-6" />
               ) : (
-                <MenuList user={user?.user} />
+                <HiMenu className="w-6 h-6" />
               )}
+            </button>
+          </div>
+        </div>
+
+        {isOpen && (
+          <div className="md:hidden bg-white border-t">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <a href="#home" className="block px-3 py-2 text-gray-700">
+                Home
+              </a>
+              <a href="#features" className="block px-3 py-2 text-gray-700">
+                Features
+              </a>
+              <a href="#jobs" className="block px-3 py-2 text-gray-700">
+                Jobs
+              </a>
+              <a href="#about" className="block px-3 py-2 text-gray-700">
+                About
+              </a>
+              <a href="#contact" className="block px-3 py-2 text-gray-700">
+                Contact
+              </a>
+              <button className="block w-full text-left px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg mt-2">
+                Get Started
+              </button>
             </div>
           </div>
-
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <AiOutlineClose size={24} /> : <HiMenuAlt3 size={24} />}
-          </button>
-        </div>
+        )}
       </div>
-
-      {/* Mobile Menu */}
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="md:hidden bg-white border-t"
-        >
-          <div className="container mx-auto px-4 py-4 space-y-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={handleCloseNavbar}
-                className={`block py-2 text-sm font-medium transition-colors hover:text-orange-600 ${
-                  location.pathname === link.path
-                    ? "text-orange-600"
-                    : "text-gray-700"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-
-            {!user?.token && (
-              <Link
-                to="/user-auth"
-                onClick={handleCloseNavbar}
-                className="block mt-4"
-              >
-                <CustomButton
-                  title="Sign In"
-                  containerStyles="w-full bg-orange-600 text-white py-2 rounded-full hover:bg-orange-700 transition-colors text-center"
-                />
-              </Link>
-            )}
-          </div>
-        </motion.div>
-      )}
-    </motion.nav>
+    </nav>
   );
 };
 

@@ -1,59 +1,22 @@
-import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
-
-import { Footer, Navbar } from "./components";
-import {
-  About,
-  AuthPage,
-  Companies,
-  CompanyProfile,
-  FindJobs,
-  JobDetail,
-  UploadJob,
-  UserProfile,
-  DriverRegistration,
-  DriverProfile,
-  FindDrivers,
-} from "./pages";
-import { useSelector } from "react-redux";
+import { Outlet, Navigate, Route, Routes } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import LandingPage from "./pages/LandingPage";
+import Footer from "./components/Footer";
 
 function Layout() {
-  const auth = useSelector((store) => store.user);
-  return auth ? <Outlet /> : <Navigate to="/user-auth" />;
+  const auth = true;
+  return auth ? <Outlet /> : <Navigate to="/auth" />;
 }
 
 function App() {
-  const { auth: user } = useSelector((state) => state.user);
-  const isDriver = user?.user?.accountType === "driver";
-
   return (
     <main className="bg-[#fffaf5] min-h-screen pt-10">
       <Navbar />
 
       <Routes>
         <Route element={<Layout />}>
-          <Route
-            path="/"
-            element={
-              <Navigate
-                to={isDriver ? "/driver-profile" : "/find-jobs"}
-                replace={true}
-              />
-            }
-          />
-          <Route path="/find-jobs" element={<FindJobs />} />
-          <Route path="/find-drivers" element={<FindDrivers />} />
-          <Route path="/companies" element={<Companies />} />
-          <Route path="/user-profile" element={<UserProfile />} />
-          <Route path="/driver-registration" element={<DriverRegistration />} />
-          <Route path="/driver-profile" element={<DriverProfile />} />
-          <Route path={"/company-profile"} element={<CompanyProfile />} />
-          <Route path={"/company-profile/:id"} element={<CompanyProfile />} />
-          <Route path={"/upload-job"} element={<UploadJob />} />
-          <Route path={"/job-detail/:id"} element={<JobDetail />} />
+          <Route path="/" element={<LandingPage />} />
         </Route>
-
-        <Route path="/about-us" element={<About />} />
-        <Route path="/user-auth" element={<AuthPage />} />
       </Routes>
       {<Footer />}
     </main>

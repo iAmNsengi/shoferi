@@ -1,131 +1,88 @@
-import { Link } from "react-router-dom";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { BiCar } from "react-icons/bi";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white mt-20">
-      <div className="container mx-auto px-4 py-12">
+    <footer className="bg-gray-900 text-white py-12">
+      <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* About Section */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold text-orange-500">Shoferi</h3>
-            <p className="text-gray-300">
-              Shoferi is Rwanda's premier platform connecting skilled drivers
-              with opportunities. We're revolutionizing the transportation
-              industry by creating a seamless bridge between professional
-              drivers and those seeking reliable transportation services.
-            </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-orange-500">
-                <FaFacebook size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-orange-500">
-                <FaTwitter size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-orange-500">
-                <FaInstagram size={20} />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-orange-500">
-                <FaLinkedin size={20} />
-              </a>
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <BiCar className="text-white text-lg font-bold" />
+              </div>
+              <span className="text-xl font-bold">SHOFERI</span>
             </div>
+            <p className="text-gray-400">
+              Connecting drivers with opportunities across Rwanda.
+            </p>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-orange-500">
-              Quick Links
-            </h3>
-            <ul className="space-y-2">
+            <h4 className="font-semibold mb-4">For Drivers</h4>
+            <ul className="space-y-2 text-gray-400">
               <li>
-                <Link
-                  to="/find-jobs"
-                  className="text-gray-300 hover:text-orange-500"
-                >
+                <a href="#" className="hover:text-white transition-colors">
                   Find Jobs
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
-                  to="/find-drivers"
-                  className="text-gray-300 hover:text-orange-500"
-                >
+                <a href="#" className="hover:text-white transition-colors">
+                  Create Profile
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Training
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">For Companies</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Post Jobs
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
                   Find Drivers
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
-                  to="/companies"
-                  className="text-gray-300 hover:text-orange-500"
-                >
-                  Companies
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/about-us"
-                  className="text-gray-300 hover:text-orange-500"
-                >
-                  About Us
-                </Link>
+                <a href="#" className="hover:text-white transition-colors">
+                  Pricing
+                </a>
               </li>
             </ul>
           </div>
 
-          {/* Services */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-orange-500">
-              Our Services
-            </h3>
-            <ul className="space-y-2">
-              <li className="text-gray-300">Driver Recruitment</li>
-              <li className="text-gray-300">Job Matching</li>
-              <li className="text-gray-300">Driver Verification</li>
-              <li className="text-gray-300">Booking Management</li>
-              <li className="text-gray-300">Rating & Reviews</li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-orange-500">
-              Contact Us
-            </h3>
-            <ul className="space-y-2">
-              <li className="text-gray-300">Email: info@shoferi.com</li>
-              <li className="text-gray-300">Phone: +250 788 123 456</li>
-              <li className="text-gray-300">Address: Kigali, Rwanda</li>
+            <h4 className="font-semibold mb-4">Support</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Help Center
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Contact Us
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">
+                  Privacy Policy
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-300 text-sm">
-              © {new Date().getFullYear()} Shoferi. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link
-                to="/privacy"
-                className="text-gray-300 hover:text-orange-500 text-sm"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                to="/terms"
-                className="text-gray-300 hover:text-orange-500 text-sm"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                to="/faq"
-                className="text-gray-300 hover:text-orange-500 text-sm"
-              >
-                FAQ
-              </Link>
-            </div>
-          </div>
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <p>&copy; 2024 Shoferi. All rights reserved.</p>
         </div>
       </div>
     </footer>
