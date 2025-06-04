@@ -1,7 +1,7 @@
 import { Outlet, Navigate, Route, Routes } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/shared/Navbar";
 import LandingPage from "./pages/LandingPage";
-import Footer from "./components/Footer";
+import Footer from "./components/shared/Footer";
 
 function Layout() {
   const auth = true;
