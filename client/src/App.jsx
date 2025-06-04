@@ -4,6 +4,7 @@ import LandingPage from "./pages/LandingPage";
 import Footer from "./components/shared/Footer";
 import FindJobs from "./pages/FindJobs";
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 function Layout() {
   const auth = true;
@@ -20,6 +21,7 @@ function App() {
           <Route path="/jobs" element={<FindJobs />} />
           {/* auth */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Route>
       </Routes>
       <Footer />
