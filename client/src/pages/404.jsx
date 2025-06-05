@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 
 const NotFound = () => {
   return (
-    <div className="relative min-h-screen bg-gradient-to-br pt-40  from-purple-600 via-purple-700 to-indigo-800 overflow-hidden flex items-center justify-center">
+    <div className="relative min-h-screen bg-gradient-to-br pt-40  from-purple-600 via-purple-700 to-indigo-800 overflow-hidden flex items-center justify-center pb-10">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-24 left-10 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
