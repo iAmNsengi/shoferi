@@ -1,6 +1,8 @@
+import { ChartArea, GitCompareArrows, HomeIcon, Wallet } from "lucide-react";
 import { useState } from "react";
 import { BiCar } from "react-icons/bi";
-import { HiMenu, HiX } from "react-icons/hi";
+import { BsGear } from "react-icons/bs";
+import { HiMenu, HiOfficeBuilding, HiX } from "react-icons/hi";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
@@ -22,33 +24,32 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               to="/"
-              className="text-white hover:text-indigo-200 transition-colors"
+              className="text-white hover:text-indigo-200 transition-colors flex gap-2"
             >
+              <HomeIcon />
               Home
             </Link>
             <Link
               to="/jobs"
-              className="text-white hover:text-indigo-100 transition-colors"
+              className="text-white hover:text-indigo-100 transition-colors flex gap-2 "
             >
+              <Wallet />
               Jobs
             </Link>
             <Link
               to="/feed"
-              className="text-white hover:text-indigo-100 transition-colors"
+              className="text-white hover:text-indigo-100 transition-colors flex gap-2"
             >
+              <ChartArea />
               Feed
             </Link>
-            <Link
-              to="/login"
-              className="text-white hover:text-indigo-100 transition-colors"
-            >
-              Login
-            </Link>
+
             <Link
               to="/register"
-              className="text-white hover:text-indigo-100 transition-colors"
+              className="text-white hover:text-indigo-100 transition-colors flex gap-2"
             >
-              Register
+              <GitCompareArrows />
+              Settings
             </Link>
             <Link
               to="/register"
