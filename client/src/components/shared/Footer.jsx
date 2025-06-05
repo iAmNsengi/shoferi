@@ -1,4 +1,5 @@
 import { BiCar } from "react-icons/bi";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -21,19 +22,25 @@ const Footer = () => {
             <h4 className="font-semibold mb-4">For Drivers</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link to="/jobs" className="hover:text-white transition-colors">
                   Find Jobs
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link
+                  to="/settings"
+                  className="hover:text-white transition-colors"
+                >
                   Create Profile
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link
+                  to="/learn"
+                  className="hover:text-white transition-colors"
+                >
                   Training
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
