@@ -54,22 +54,6 @@ const Login = () => {
               <BsGoogle className="text-xl" />
               Continue with Google
             </button>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => handleSocialLogin("Facebook")}
-                className="bg-white/20 backdrop-blur-sm border border-white/30 text-white py-3 px-4 rounded-xl hover:bg-white/30 transition-all flex items-center justify-center gap-2"
-              >
-                <BsFacebook className="text-xl" />
-                Facebook
-              </button>
-              <button
-                onClick={() => handleSocialLogin("Apple")}
-                className="bg-white/20 backdrop-blur-sm border border-white/30 text-white py-3 px-4 rounded-xl hover:bg-white/30 transition-all flex items-center justify-center gap-2"
-              >
-                <BsApple className="text-xl" />
-                Apple
-              </button>
-            </div>
           </div>
 
           {/* Divider */}
