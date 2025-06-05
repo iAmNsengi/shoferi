@@ -172,9 +172,9 @@ const FindJobs = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50 pt-20 -mt-[100px]">
       {/* Hero Search Section */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 py-16">
+      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 py-16 pt-60">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">

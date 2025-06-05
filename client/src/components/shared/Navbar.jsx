@@ -15,7 +15,7 @@ const Navbar = () => {
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                 <BiCar className="text-white text-lg font-bold" />
               </div>
-              <span className="text-xl font-bold text-white">SHOFERI</span>
+              <span className="text-xl font-black text-white">Shoferi</span>
             </Link>
           </div>
 
@@ -44,7 +44,7 @@ const Navbar = () => {
             >
               Register
             </Link>
-            <Link 
+            <Link
               to="/register"
               className="bg-gradient-to-r border border-white text-white px-6 py-2 rounded-full hover:shadow-lg transition-all"
             >
@@ -53,10 +53,7 @@ const Navbar = () => {
           </div>
 
           <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-white"
-            >
+            <button onClick={() => setIsOpen(!isOpen)} className="text-white">
               {isOpen ? (
                 <HiX className="w-6 h-6" />
               ) : (
@@ -81,7 +78,7 @@ const Navbar = () => {
               <Link to="/register" className="block px-3 py-2 text-gray-700">
                 Register
               </Link>
-              <Link 
+              <Link
                 to="/register"
                 className="block w-full text-left px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg mt-2"
               >
