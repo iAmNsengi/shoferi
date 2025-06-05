@@ -9,6 +9,7 @@ import {
 import { BsStarFill, BsClock, BsGeoAlt } from "react-icons/bs";
 import { HiOutlineAdjustments } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
+import DownloadApp from "../../components/sections/DownloadApp";
 
 const FindJobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -404,24 +405,7 @@ const FindJobs = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-700 py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">1000+</div>
-              <div className="text-purple-200">Active Job Listings</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">500+</div>
-              <div className="text-purple-200">Verified Companies</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-white mb-2">2000+</div>
-              <div className="text-purple-200">Successful Hires</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DownloadApp />
     </div>
   );
 };
