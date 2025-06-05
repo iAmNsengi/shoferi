@@ -8,6 +8,7 @@ import Register from "./pages/auth/Register";
 import Feeds from "./pages/Feed";
 import NotFound from "./pages/404";
 import JobDetails from "./pages/jobs/JobDetails";
+import Learn from "./pages/Learn";
 
 function Layout() {
   const auth = true;
@@ -25,6 +26,7 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetails />} />
 
           <Route path="/feed" element={<Feeds />} />
+          <Route path="/learn" element={<Learn />} />
 
           {/* auth */}
           <Route path="/login" element={<Login />} />

@@ -1,4 +1,10 @@
-import { ChartArea, GitCompareArrows, HomeIcon, Wallet } from "lucide-react";
+import {
+  Book,
+  ChartArea,
+  GitCompareArrows,
+  HomeIcon,
+  Wallet,
+} from "lucide-react";
 import { useState } from "react";
 import { BiCar } from "react-icons/bi";
 import { BsGear } from "react-icons/bs";
@@ -9,7 +15,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-purple-500 backdrop-blur-md shadow-sm fixed w-full top-0 z-50 py-5 rounded-b-[50px]">
+    <nav className="bg-purple-500 backdrop-blur-md shadow-sm fixed w-full top-0 z-50 py-4 rounded-b-[50px]">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -42,6 +48,13 @@ const Navbar = () => {
             >
               <ChartArea />
               Feed
+            </Link>
+            <Link
+              to="/learn"
+              className="text-white hover:text-indigo-100 transition-colors flex gap-2"
+            >
+              <Book />
+              Learn
             </Link>
 
             <Link
