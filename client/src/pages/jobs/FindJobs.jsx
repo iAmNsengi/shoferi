@@ -8,6 +8,7 @@ import {
 } from "react-icons/bi";
 import { BsStarFill, BsClock, BsGeoAlt } from "react-icons/bs";
 import { HiOutlineAdjustments } from "react-icons/hi";
+import { Link, useNavigate } from "react-router-dom";
 
 const FindJobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +16,8 @@ const FindJobs = () => {
   const [jobType, setJobType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState([]);
+
+  const navigate = useNavigate();
 
   const toggleSaveJob = (jobId) => {
     setSavedJobs((prev) =>
@@ -374,10 +377,17 @@ const FindJobs = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <button className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-xl hover:shadow-lg transition-all font-semibold">
+                <button
+                  onClick={() => navigate("/jobs/1")}
+                  to={"/jobs/1"}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-xl hover:shadow-lg transition-all font-semibold"
+                >
                   Apply Now
                 </button>
-                <button className="bg-gray-100 text-gray-700 py-2 px-4 rounded-xl hover:bg-gray-200 transition-colors">
+                <button
+                  onClick={() => navigate("/jobs/1")}
+                  className="bg-gray-100 text-gray-700 py-2 px-4 rounded-xl hover:bg-gray-200 transition-colors"
+                >
                   View Details
                 </button>
               </div>

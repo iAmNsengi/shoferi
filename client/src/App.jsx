@@ -2,11 +2,12 @@ import { Outlet, Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/shared/Navbar";
 import LandingPage from "./pages/LandingPage";
 import Footer from "./components/shared/Footer";
-import FindJobs from "./pages/FindJobs";
+import FindJobs from "./pages/jobs/FindJobs";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Feeds from "./pages/Feed";
 import NotFound from "./pages/404";
+import JobDetails from "./pages/jobs/JobDetails";
 
 function Layout() {
   const auth = true;
@@ -21,6 +22,8 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/jobs" element={<FindJobs />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
+
           <Route path="/feed" element={<Feeds />} />
 
           {/* auth */}
