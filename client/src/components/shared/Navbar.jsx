@@ -33,6 +33,12 @@ const Navbar = () => {
               Jobs
             </Link>
             <Link
+              to="/feed"
+              className="text-white hover:text-indigo-100 transition-colors"
+            >
+              Feed
+            </Link>
+            <Link
               to="/login"
               className="text-white hover:text-indigo-100 transition-colors"
             >
