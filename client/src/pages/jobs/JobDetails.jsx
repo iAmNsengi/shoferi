@@ -3,23 +3,22 @@ import {
   BiArrowBack,
   BiBookmark,
   BiDollar,
-  BiTime,
-  BiLocationPlus,
   BiShare,
-  BiBuilding,
   BiUser,
   BiCalendar,
   BiCheck,
 } from "react-icons/bi";
 import { BsStarFill, BsClock, BsGeoAlt, BsPeople } from "react-icons/bs";
 import { HiOutlineOfficeBuilding, HiOutlineBadgeCheck } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
 
 const JobDetails = ({ jobId, onBack }) => {
   const [isApplying, setIsApplying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const navigate = useNavigate();
 
-  // Sample job data - in real app, this would come from props or API
+  // Sample job data
   const jobData = {
     id: 1,
     title: "Professional Taxi Driver",
@@ -105,13 +104,13 @@ As a professional taxi driver, you will be responsible for providing safe, relia
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-14">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
-              onClick={onBack}
+              onClick={() => navigate("/jobs")}
               className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
             >
               <BiArrowBack className="text-xl" />

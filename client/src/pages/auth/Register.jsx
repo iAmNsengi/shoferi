@@ -5,35 +5,19 @@ import {
   BiShow,
   BiHide,
   BiCar,
-  BiPhone,
-  BiMapPin,
   BiBuilding,
-  BiIdCard,
-  BiFile,
 } from "react-icons/bi";
-import { BsGoogle, BsFacebook, BsApple } from "react-icons/bs";
+import { BsGoogle } from "react-icons/bs";
 import { Link } from "react-router-dom";
 
 const Register = () => {
   const [userType, setUserType] = useState("driver"); // "driver" or "company"
   const [formData, setFormData] = useState({
-    // Common fields
     email: "",
     password: "",
     confirmPassword: "",
-    phone: "",
-    location: "",
-    // Driver specific
     fullName: "",
-    licenseNumber: "",
-    vehicleType: "",
-    yearsExperience: "",
-    // Company specific
     companyName: "",
-    companyRegistration: "",
-    contactPerson: "",
-    industry: "",
-    companySize: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

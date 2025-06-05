@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BiUser, BiLock, BiShow, BiHide, BiCar } from "react-icons/bi";
-import { BsGoogle, BsFacebook, BsApple } from "react-icons/bs";
+import { BsGoogle } from "react-icons/bs";
 import { Link } from "react-router-dom";
 
 const Login = () => {
