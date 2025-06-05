@@ -7,8 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BiCar } from "react-icons/bi";
-import { BsGear } from "react-icons/bs";
-import { HiMenu, HiOfficeBuilding, HiX } from "react-icons/hi";
+import { HiMenu, HiX } from "react-icons/hi";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
@@ -92,11 +91,11 @@ const Navbar = () => {
               <Link to="/jobs" className="block px-3 py-2 text-gray-700">
                 Jobs
               </Link>
-              <Link to="/login" className="block px-3 py-2 text-gray-700">
-                Login
+              <Link to="/learn" className="block px-3 py-2 text-gray-700">
+                Learn
               </Link>
-              <Link to="/register" className="block px-3 py-2 text-gray-700">
-                Register
+              <Link to="/settings" className="block px-3 py-2 text-gray-700">
+                Settings
               </Link>
               <Link
                 to="/register"

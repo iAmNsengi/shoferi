@@ -10,6 +10,7 @@ import NotFound from "./pages/404";
 import JobDetails from "./pages/jobs/JobDetails";
 import Learn from "./pages/Learn";
 import { useEffect } from "react";
+import SettingsPage from "./pages/Settings";
 
 function Layout() {
   const location = useLocation();
@@ -28,11 +29,13 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<LandingPage />} />
+
           <Route path="/jobs" element={<FindJobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
 
           <Route path="/feed" element={<Feeds />} />
           <Route path="/learn" element={<Learn />} />
+          <Route path="/settings" element={<SettingsPage />} />
 
           {/* auth */}
           <Route path="/login" element={<Login />} />
