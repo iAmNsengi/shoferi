@@ -211,7 +211,7 @@ const FindJobs = () => {
               </div>
 
               <button className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all font-semibold">
-                Search Jobs
+                <h2>Search Jobs</h2>
               </button>
             </div>
 
@@ -221,7 +221,7 @@ const FindJobs = () => {
                 className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors"
               >
                 <HiOutlineAdjustments />
-                Filters
+                <h3>Filters</h3>
               </button>
               <button
                 onClick={() =>
@@ -233,7 +233,7 @@ const FindJobs = () => {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                Full-time
+                <h3>Full-time</h3>
               </button>
               <button
                 onClick={() =>
@@ -245,7 +245,7 @@ const FindJobs = () => {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                Part-time
+                <h3>Part-time</h3>
               </button>
               <button
                 onClick={() =>
@@ -257,7 +257,7 @@ const FindJobs = () => {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                Flexible
+                <h3>Flexible</h3>
               </button>
             </div>
           </div>
