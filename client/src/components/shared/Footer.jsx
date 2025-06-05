@@ -12,9 +12,9 @@ const Footer = () => {
               </div>
               <span className="text-xl font-bold">SHOFERI</span>
             </div>
-            <p className="text-gray-400">
+            <h2 className="text-gray-400">
               Connecting drivers with opportunities across Rwanda.
-            </p>
+            </h2>
           </div>
 
           <div>
