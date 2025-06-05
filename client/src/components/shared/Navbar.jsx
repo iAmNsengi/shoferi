@@ -53,7 +53,7 @@ const Navbar = () => {
             </Link>
             <Link
               to="/register"
-              className="bg-gradient-to-r font-black border border-white text-white px-6 py-2 rounded-full hover:shadow-lg transition-all animate-pulse"
+              className="bg-gradient-to-r font-black border border-black border-r-[6px] text-white px-6 py-2 rounded-full hover:shadow-lg transition-all "
             >
               Get Started
             </Link>

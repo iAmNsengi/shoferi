@@ -12,6 +12,7 @@ import {
   BiFile,
 } from "react-icons/bi";
 import { BsGoogle, BsFacebook, BsApple } from "react-icons/bs";
+import { Link } from "react-router-dom";
 
 const Register = () => {
   const [userType, setUserType] = useState("driver"); // "driver" or "company"
@@ -542,14 +543,14 @@ const Register = () => {
 
           {/* Sign In Link */}
           <div className="text-center mt-6">
-            <p className="text-purple-100">
+            <p className="text-purple-100 py-4">
               Already have an account?{" "}
-              <a
-                href="#"
-                className="text-white font-semibold hover:text-purple-200 transition-colors"
+              <Link
+                to="/login"
+                className="text-white font-semibold hover:text-purple-200 transition-colors underline "
               >
-                Sign in here
-              </a>
+                Sign in <span className="text-orange-500 font-bold">here</span>
+              </Link>
             </p>
           </div>
         </div>

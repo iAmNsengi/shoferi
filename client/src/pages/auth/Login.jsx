@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BiUser, BiLock, BiShow, BiHide, BiCar } from "react-icons/bi";
 import { BsGoogle, BsFacebook, BsApple } from "react-icons/bs";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -172,12 +173,12 @@ const Login = () => {
           <div className="text-center mt-6">
             <p className="text-purple-100">
               Don't have an account?{" "}
-              <a
-                href="#"
-                className="text-white font-semibold hover:text-purple-200 transition-colors"
+              <Link
+                to="/register"
+                className="text-white font-semibold hover:text-purple-200 transition-colors underline "
               >
-                Sign up here
-              </a>
+                Sign Up <span className="text-orange-500 font-bold">here</span>
+              </Link>
             </p>
           </div>
         </div>

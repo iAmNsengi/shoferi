@@ -6,10 +6,11 @@ import {
   BiArrowToLeft,
 } from "react-icons/bi";
 import { BsArrowRight } from "react-icons/bs";
+import { Link } from "react-router-dom";
 
 const NotFound = () => {
   return (
-    <div className="relative min-h-screen bg-gradient-to-br  from-purple-600 via-purple-700 to-indigo-800 overflow-hidden flex items-center justify-center">
+    <div className="relative min-h-screen bg-gradient-to-br pt-40  from-purple-600 via-purple-700 to-indigo-800 overflow-hidden flex items-center justify-center">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-24 left-10 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse"></div>
@@ -24,7 +25,7 @@ const NotFound = () => {
         <div className="absolute bottom-1/3 left-0 w-full h-2 bg-white transform rotate-3"></div>
       </div>
 
-      <div className="relative container mx-auto px-4 text-center pt-40">
+      <div className="relative container mx-auto px-4 text-center">
         {/* Animated Car Icon */}
         <div className="mb-8 relative">
           <div className="inline-flex items-center justify-center w-32 h-32 bg-white/10 backdrop-blur-lg rounded-full border border-white/20 shadow-2xl mb-6 animate-bounce">
@@ -70,11 +71,17 @@ const NotFound = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <button className="bg-white text-purple-700 px-8 py-4 rounded-full font-semibold hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-2">
+            <Link
+              to={"/"}
+              className="bg-white text-purple-700 px-8 py-4 rounded-full font-semibold hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-2"
+            >
               <BiHome className="text-xl" />
               Go Home
-            </button>
-            <button className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-purple-700 transition-all">
+            </Link>
+            <button
+              className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-purple-700 transition-all"
+              onClick={() => history.back()}
+            >
               <BiArrowToLeft className="text-xl" />
               Go Back
             </button>
