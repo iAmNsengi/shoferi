@@ -1,61 +1,42 @@
-import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
-
-import { Footer, Navbar } from "./components";
-import {
-  About,
-  AuthPage,
-  Companies,
-  CompanyProfile,
-  FindJobs,
-  JobDetail,
-  UploadJob,
-  UserProfile,
-  DriverRegistration,
-  DriverProfile,
-  FindDrivers,
-} from "./pages";
-import { useSelector } from "react-redux";
+import { Outlet, Navigate, Route, Routes } from "react-router-dom";
+import Navbar from "./components/shared/Navbar";
+import LandingPage from "./pages/LandingPage";
+import Footer from "./components/shared/Footer";
+import FindJobs from "./pages/jobs/FindJobs";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Feeds from "./pages/Feed";
+import NotFound from "./pages/404";
+import JobDetails from "./pages/jobs/JobDetails";
+import Learn from "./pages/Learn";
 
 function Layout() {
-  const auth = useSelector((store) => store.user);
-  return auth ? <Outlet /> : <Navigate to="/user-auth" />;
+  const auth = true;
+  return auth ? <Outlet /> : <Navigate to="/auth" />;
 }
 
 function App() {
-  const { auth: user } = useSelector((state) => state.user);
-  const isDriver = user?.user?.accountType === "driver";
-
   return (
     <main className="bg-[#fffaf5] min-h-screen pt-10">
       <Navbar />
-
       <Routes>
         <Route element={<Layout />}>
-          <Route
-            path="/"
-            element={
-              <Navigate
-                to={isDriver ? "/driver-profile" : "/find-jobs"}
-                replace={true}
-              />
-            }
-          />
-          <Route path="/find-jobs" element={<FindJobs />} />
-          <Route path="/find-drivers" element={<FindDrivers />} />
-          <Route path="/companies" element={<Companies />} />
-          <Route path="/user-profile" element={<UserProfile />} />
-          <Route path="/driver-registration" element={<DriverRegistration />} />
-          <Route path="/driver-profile" element={<DriverProfile />} />
-          <Route path={"/company-profile"} element={<CompanyProfile />} />
-          <Route path={"/company-profile/:id"} element={<CompanyProfile />} />
-          <Route path={"/upload-job"} element={<UploadJob />} />
-          <Route path={"/job-detail/:id"} element={<JobDetail />} />
-        </Route>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/jobs" element={<FindJobs />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
 
-        <Route path="/about-us" element={<About />} />
-        <Route path="/user-auth" element={<AuthPage />} />
+          <Route path="/feed" element={<Feeds />} />
+          <Route path="/learn" element={<Learn />} />
+
+          {/* auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* 404 */}
+          <Route path="/*" element={<NotFound />} />
+        </Route>
       </Routes>
-      {<Footer />}
+      <Footer />
     </main>
   );
 }
