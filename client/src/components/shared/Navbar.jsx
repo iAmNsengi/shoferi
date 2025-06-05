@@ -45,7 +45,7 @@ const Navbar = () => {
             </Link>
 
             <Link
-              to="/register"
+              to="/settings"
               className="text-white hover:text-indigo-100 transition-colors flex gap-2"
             >
               <GitCompareArrows />
@@ -53,7 +53,7 @@ const Navbar = () => {
             </Link>
             <Link
               to="/register"
-              className="bg-gradient-to-r border border-white text-white px-6 py-2 rounded-full hover:shadow-lg transition-all"
+              className="bg-gradient-to-r font-black border border-white text-white px-6 py-2 rounded-full hover:shadow-lg transition-all animate-pulse"
             >
               Get Started
             </Link>

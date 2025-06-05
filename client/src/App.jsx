@@ -6,6 +6,7 @@ import FindJobs from "./pages/FindJobs";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Feeds from "./pages/Feed";
+import NotFound from "./pages/404";
 
 function Layout() {
   const auth = true;
@@ -25,6 +26,9 @@ function App() {
           {/* auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* 404 */}
+          <Route path="/*" element={<NotFound />} />
         </Route>
       </Routes>
       <Footer />
