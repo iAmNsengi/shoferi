@@ -3,6 +3,8 @@ import ServicesSection from "../components/sections/ServicesSection";
 import StatsSection from "../components/sections/StatsSection";
 import TestimonialsSection from "../components/sections/TestimonialSection";
 import CTASection from "../components/sections/CTASection";
+import CompaniesPricing from "../components/sections/CompaniesPricing";
+import DownloadApp from "../components/sections/DownloadApp";
 
 const LandingPage = () => {
   return (
@@ -12,6 +14,8 @@ const LandingPage = () => {
       <StatsSection />
       <TestimonialsSection />
       <CTASection />
+      <CompaniesPricing />
+      <DownloadApp />
     </div>
   );
 };
