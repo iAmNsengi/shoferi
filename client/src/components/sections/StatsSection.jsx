@@ -15,7 +15,10 @@ const StatsSection = () => {
               <div className="text-4xl md:text-5xl font-bold text-white mb-2">
                 {stat.number}
               </div>
-              <div className="text-purple-200 text-lg">{stat.label}</div>
+              <div className="text-purple-200 text-lg">
+                {" "}
+                <h2>{stat.label}</h2>{" "}
+              </div>
             </div>
           ))}
         </div>

@@ -69,13 +69,17 @@ const HeroSection = () => {
                     <div className="text-2xl font-bold text-white mb-1">
                       1000+
                     </div>
-                    <div className="text-purple-100 text-sm">Active Jobs</div>
+                    <div className="text-purple-100 text-sm">
+                      <h2>Active Jobs</h2>{" "}
+                    </div>
                   </div>
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-white mb-1">
                       500+
                     </div>
-                    <div className="text-purple-100 text-sm">Companies</div>
+                    <div className="text-purple-100 text-sm">
+                      <h2>Companies</h2>{" "}
+                    </div>
                   </div>
                 </div>
               </div>

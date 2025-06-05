@@ -82,7 +82,22 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 Shoferi. All rights reserved.</p>
+          <p>
+            &copy; 2024 - {new Date().getFullYear()} <b>Shoferi</b> . All rights
+            reserved.
+          </p>
+          <p className="py-4">
+            Developed at{" "}
+            <b>
+              <a
+                href="https://keyypress.com"
+                target="_blank"
+                className="underline"
+              >
+                Keyy<span className="text-orange-500">Press</span>
+              </a>
+            </b>
+          </p>
         </div>
       </div>
     </footer>
