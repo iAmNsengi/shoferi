@@ -244,7 +244,7 @@ const SettingsPage = () => {
                       </label>
                       <input
                         type="text"
-                        value="Jean Damascene Uwimana"
+                        value="Eliezer Nsengi"
                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         disabled={!isEditing}
                       />
@@ -266,7 +266,7 @@ const SettingsPage = () => {
                       </label>
                       <input
                         type="email"
-                        value="jean.uwimana@email.com"
+                        value="iamnsengi@gmail.com"
                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         disabled={!isEditing}
                       />
