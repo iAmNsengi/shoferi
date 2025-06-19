@@ -1,5 +1,5 @@
 import express from "express";
-import { userAuth } from "../middlewares/authMiddleware.js";
+import userAuth from "../middlewares/authMiddleware.js";
 import {
   registerDriver,
   getDriverProfile,
@@ -15,6 +15,7 @@ const router = express.Router();
 router.post("/register", userAuth, registerDriver);
 router.get("/profile", userAuth, getDriverProfile);
 router.put("/profile", userAuth, updateDriverProfile);
+router.post("/availability/toggle", userAuth, toggleAvailability);
 router.put("/toggle-availability", userAuth, toggleAvailability);
 
 // Driver search routes

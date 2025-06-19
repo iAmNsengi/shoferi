@@ -15,5 +15,6 @@ const router = express.Router();
 // Register routes
 router.post("/register", limiter, register);
 router.post("/login", signIn);
+router.post("/sign-in", signIn);
 
 export default router;
