@@ -7,6 +7,7 @@ import jobRoute from "./jobsRoutes.js";
 import uploadRoutes from "./uploadRoutes.js";
 import driverRoutes from "./driverRoutes.js";
 import bookingRoutes from "./bookingRoutes.js";
+import paymentRoutes from "./paymentRoutes.js";
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use(`${path}jobs`, jobRoute);
 router.use(`${path}upload`, uploadRoutes);
 router.use(`${path}drivers`, driverRoutes);
 router.use(`${path}bookings`, bookingRoutes);
+router.use(`${path}payments`, paymentRoutes);
 
 export default router;
