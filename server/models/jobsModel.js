@@ -38,7 +38,7 @@ const jobSchema = new mongoose.Schema(
       required: [true, "Location is required"],
     },
     coordinates: {
-      type: { type: String, default: "Point" },
+      type: { type: String },
       coordinates: [Number], // [longitude, latitude]
     },
     workRadius: { type: Number, default: 10 }, // km radius from base location
@@ -127,7 +127,7 @@ const jobSchema = new mongoose.Schema(
 );
 
 // Indexes for better performance
-jobSchema.index({ coordinates: "2dsphere" });
+// jobSchema.index({ coordinates: "2dsphere" }); // Temporarily commented out for seeding
 jobSchema.index({ category: 1 });
 jobSchema.index({ jobType: 1 });
 jobSchema.index({ status: 1 });

@@ -9,55 +9,72 @@ export const createJob = async (req, res, next) => {
     const {
       jobTitle,
       jobType,
+      category,
       location,
       salary,
+      salaryType,
       vacancies,
       experience,
-      desc,
+      details,
+      vehicleRequirements,
       requirements,
+      schedule,
+      priority,
+      benefits,
     } = req.body;
 
     if (
       !jobTitle ||
       !jobType ||
+      !category ||
       !location ||
       !salary ||
-      !requirements ||
-      !desc
+      !details ||
+      !details[0]?.desc ||
+      !details[0]?.requirements
     ) {
-      next("Please Provide All Required Fields");
-      return;
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields",
+      });
     }
 
     const jobPost = {
       jobTitle,
       jobType,
+      category,
       location,
-      salary,
-      vacancies,
-      experience,
-      detail: { desc, requirements },
+      salary: Number(salary),
+      salaryType: salaryType || "monthly",
+      vacancies: Number(vacancies) || 1,
+      experience: Number(experience) || 0,
+      details,
+      vehicleRequirements: vehicleRequirements || {},
+      requirements: requirements || {},
+      schedule: schedule || "flexible",
+      priority: priority || "normal",
+      benefits: benefits || [],
       company: req?.user?.userId,
+      status: "active",
     };
 
-    //Get company with given ID
+    // Get company with given ID
     const company = await Companies.findById(req?.user?.userId);
-    if (!company)
-      return res.status(400).send("You are not logged in as a company!");
+    if (!company) {
+      return res.status(400).json({
+        success: false,
+        message: "You are not logged in as a company!",
+      });
+    }
 
     const job = new Jobs(jobPost);
     await job.save();
 
-    console.log(company);
-
+    // Add job to company's jobPosts array
     company.jobPosts.push(job._id);
-    const updateCompany = await Companies.findByIdAndUpdate(
-      req?.user?.userId,
-      company,
-      {
-        new: true,
-      }
-    );
+    await Companies.findByIdAndUpdate(req?.user?.userId, company, {
+      new: true,
+    });
 
     res.status(200).json({
       success: true,
@@ -66,7 +83,10 @@ export const createJob = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -206,15 +226,23 @@ export const getJobPosts = async (req, res, next) => {
 
 export const getJobById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { jobId } = req.params;
 
-    const job = await Jobs.findById({ _id: id }).populate({
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID format",
+      });
+    }
+
+    const job = await Jobs.findById(jobId).populate({
       path: "company",
       select: "-password",
     });
 
     if (!job) {
-      return res.status(200).send({
+      return res.status(404).json({
         message: "Job Post Not Found",
         success: false,
       });
@@ -222,9 +250,15 @@ export const getJobById = async (req, res, next) => {
 
     //GET SIMILAR JOB POST
     const searchQuery = {
-      $or: [
-        { jobTitle: { $regex: job?.jobTitle, $options: "i" } },
-        { jobType: { $regex: job?.jobType, $options: "i" } },
+      $and: [
+        { _id: { $ne: jobId } }, // Exclude current job
+        {
+          $or: [
+            { jobTitle: { $regex: job?.jobTitle, $options: "i" } },
+            { jobType: { $regex: job?.jobType, $options: "i" } },
+            { category: job?.category },
+          ],
+        },
       ],
     };
 
@@ -251,13 +285,21 @@ export const getJobById = async (req, res, next) => {
 
 export const deleteJobPost = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { jobId } = req.params;
 
-    await Jobs.findByIdAndDelete(id);
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID format",
+      });
+    }
 
-    res.status(200).send({
+    await Jobs.findByIdAndDelete(jobId);
+
+    res.status(200).json({
       success: true,
-      messsage: "Job Post Delted Successfully.",
+      message: "Job Post Deleted Successfully.",
     });
   } catch (error) {
     console.log(error);
@@ -267,8 +309,16 @@ export const deleteJobPost = async (req, res, next) => {
 
 export const applyJob = async (req, res, next) => {
   try {
-    const { id } = req.params; // Job ID from the URL params
+    const { jobId } = req.params; // Job ID from the URL params
     const userId = req.user.userId; // User ID from the request body
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID format",
+      });
+    }
 
     // Check if the user exists
     const userExist = await Users.findById(userId);
@@ -280,7 +330,7 @@ export const applyJob = async (req, res, next) => {
     }
 
     // Check if the job post exists
-    const job = await Jobs.findById(id);
+    const job = await Jobs.findById(jobId);
     if (!job) {
       return res.status(400).json({
         message: "Job post with the given ID not found",
