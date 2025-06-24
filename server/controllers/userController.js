@@ -72,7 +72,15 @@ export const getUser = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const user = await Users.findById({ _id: id });
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID format",
+      });
+    }
+
+    const user = await Users.findById(id);
 
     if (!user) {
       return res.status(404).json({

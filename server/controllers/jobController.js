@@ -104,6 +104,14 @@ export const updateJob = async (req, res, next) => {
     } = req.body;
     const { jobId } = req.params;
 
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid job ID format"
+      });
+    }
+
     if (
       !jobTitle ||
       !jobType ||
@@ -112,13 +120,20 @@ export const updateJob = async (req, res, next) => {
       !desc ||
       !requirements
     ) {
-      next("Please Provide All Required Fields");
-      return;
+      return res.status(400).json({
+        success: false,
+        message: "Please Provide All Required Fields"
+      });
     }
-    const id = req.body.user.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).send(`No Company with id: ${id}`);
+    const userId = req.user.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid user ID: ${userId}`
+      });
+    }
 
     const jobPost = {
       jobTitle,
@@ -127,20 +142,29 @@ export const updateJob = async (req, res, next) => {
       salary,
       vacancies,
       experience,
-      detail: { desc, requirements },
-      _id: jobId,
+      details: [{ desc, requirements }], // Fixed: should be 'details' array, not 'detail'
     };
 
-    await Jobs.findByIdAndUpdate(jobId, jobPost, { new: true });
+    const updatedJob = await Jobs.findByIdAndUpdate(jobId, jobPost, { new: true });
+
+    if (!updatedJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found"
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: "Job Post Updated SUccessfully",
-      jobPost,
+      message: "Job Post Updated Successfully",
+      job: updatedJob,
     });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 

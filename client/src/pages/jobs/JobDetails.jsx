@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BiArrowBack,
   BiBookmark,
@@ -7,101 +7,139 @@ import {
   BiUser,
   BiCalendar,
   BiCheck,
+  BiLoader,
 } from "react-icons/bi";
 import { BsStarFill, BsClock, BsGeoAlt, BsPeople } from "react-icons/bs";
 import { HiOutlineOfficeBuilding, HiOutlineBadgeCheck } from "react-icons/hi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchJobById,
+  applyForJob,
+  trackJobView,
+} from "../../store/slices/jobSlice";
+import toast from "react-hot-toast";
 
-const JobDetails = ({ jobId, onBack }) => {
+const JobDetails = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { id: jobId } = useParams();
 
-  // Sample job data
-  const jobData = {
-    id: 1,
-    title: "Professional Taxi Driver",
-    company: "Kigali Transport Co.",
-    location: "Kigali, Rwanda",
-    salary: "150,000 - 200,000 RWF",
-    type: "Full-time",
-    posted: "2 days ago",
-    applicants: 45,
-    description: `We are looking for a professional taxi driver with clean driving record and excellent customer service skills. This is an excellent opportunity to join Rwanda's leading transportation company with competitive benefits and growth opportunities.
+  const { currentJob: jobData, loading } = useSelector((state) => state.jobs);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
-As a professional taxi driver, you will be responsible for providing safe, reliable, and courteous transportation services to our valued customers. You will operate company vehicles in accordance with all traffic laws and company policies while maintaining the highest standards of customer service.`,
-    requirements: [
-      "Valid driving license (minimum 2 years)",
-      "2+ years of professional driving experience",
-      "Clean driving record with no major violations",
-      "Excellent customer service and communication skills",
-      "Knowledge of Kigali roads and traffic patterns",
-      "Ability to work flexible hours including weekends",
-      "Basic English and Kinyarwanda proficiency",
-      "Physical fitness and good health",
-    ],
-    responsibilities: [
-      "Safely transport passengers to their destinations",
-      "Maintain cleanliness and condition of assigned vehicle",
-      "Follow all traffic laws and company safety protocols",
-      "Provide excellent customer service at all times",
-      "Handle cash transactions and maintain accurate records",
-      "Report any vehicle issues or incidents immediately",
-      "Assist passengers with luggage when needed",
-      "Maintain professional appearance and demeanor",
-    ],
-    benefits: [
-      "Competitive salary with performance bonuses",
-      "Comprehensive health insurance coverage",
-      "Fuel allowance and vehicle maintenance covered",
-      "Paid vacation and sick leave",
-      "Professional development opportunities",
-      "Employee recognition programs",
-      "Flexible scheduling options",
-      "Company uniform provided",
-    ],
-    companyInfo: {
-      name: "Kigali Transport Co.",
-      logo: "KT",
-      rating: 4.8,
-      reviews: 124,
-      employees: "200-500",
-      founded: "2015",
-      industry: "Transportation & Logistics",
-      website: "www.kigalitransport.rw",
-      description:
-        "Leading transportation company in Rwanda providing reliable taxi and logistics services across the country.",
-    },
-    applicationDeadline: "June 30, 2025",
-    startDate: "July 15, 2025",
-  };
+  useEffect(() => {
+    if (jobId) {
+      dispatch(fetchJobById(jobId));
+      dispatch(trackJobView(jobId));
+    }
+  }, [dispatch, jobId]);
 
-  const handleApply = () => {
+  const handleApply = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to apply for jobs");
+      navigate("/login");
+      return;
+    }
+
     setIsApplying(true);
-    // Simulate application process
-    setTimeout(() => {
+    try {
+      await dispatch(applyForJob(jobId)).unwrap();
+    } catch (error) {
+      console.error("Application failed:", error);
+    } finally {
       setIsApplying(false);
-      alert("Application submitted successfully!");
-    }, 2000);
+    }
   };
 
   const toggleSave = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to save jobs");
+      navigate("/login");
+      return;
+    }
     setIsSaved(!isSaved);
+    toast.success(
+      isSaved ? "Job removed from saved" : "Job saved successfully"
+    );
   };
 
   const shareJob = () => {
     if (navigator.share) {
       navigator.share({
-        title: `${jobData.title} at ${jobData.company}`,
-        text: `Check out this job opportunity: ${jobData.title}`,
+        title: `${jobData?.jobTitle} at ${jobData?.company?.name}`,
+        text: `Check out this job opportunity: ${jobData?.jobTitle}`,
         url: window.location.href,
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Job link copied to clipboard!");
+      toast.success("Job link copied to clipboard!");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-14 flex items-center justify-center">
+        <div className="text-center">
+          <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading job details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!jobData) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-14 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Job Not Found
+          </h2>
+          <p className="text-gray-600 mb-4">
+            The job you're looking for doesn't exist.
+          </p>
+          <button
+            onClick={() => navigate("/jobs")}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            Back to Jobs
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const formatSalary = (salary, salaryType) => {
+    if (!salary) return "Salary not specified";
+    const formattedAmount = salary.toLocaleString();
+    const typeMap = {
+      hourly: "per hour",
+      daily: "per day",
+      weekly: "per week",
+      monthly: "per month",
+      per_trip: "per trip",
+      commission: "commission-based",
+    };
+    return `${formattedAmount} RWF ${typeMap[salaryType] || ""}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not specified";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const isJobExpired =
+    jobData.expiresAt && new Date(jobData.expiresAt) < new Date();
+  const hasApplied =
+    jobData.hasApplied ||
+    jobData.applications?.some((app) => app.user === user?._id);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-14">
@@ -146,32 +184,42 @@ As a professional taxi driver, you will be responsible for providing safe, relia
             <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
               <div className="flex items-start gap-6 mb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
-                  {jobData.companyInfo.logo}
+                  {jobData.company?.profileUrl ? (
+                    <img
+                      src={jobData.company.profileUrl}
+                      alt={jobData.company.name}
+                      className="w-full h-full rounded-2xl object-cover"
+                    />
+                  ) : (
+                    jobData.company?.name?.charAt(0) || "C"
+                  )}
                 </div>
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    {jobData.title}
+                    {jobData.jobTitle}
                   </h1>
                   <div className="flex items-center gap-4 mb-4">
                     <h2 className="text-xl text-purple-600 font-semibold">
-                      {jobData.company}
+                      {jobData.company?.name || "Company"}
                     </h2>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <BsStarFill
-                          key={i}
-                          className={
-                            i < Math.floor(jobData.companyInfo.rating)
-                              ? "text-yellow-400"
-                              : "text-gray-200"
-                          }
-                        />
-                      ))}
-                      <span className="text-sm text-gray-600 ml-1">
-                        {jobData.companyInfo.rating} (
-                        {jobData.companyInfo.reviews} reviews)
-                      </span>
-                    </div>
+                    {jobData.company?.rating && (
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <BsStarFill
+                            key={i}
+                            className={
+                              i < Math.floor(jobData.company.rating)
+                                ? "text-yellow-400"
+                                : "text-gray-200"
+                            }
+                          />
+                        ))}
+                        <span className="text-sm text-gray-600 ml-1">
+                          {jobData.company.rating} (
+                          {jobData.company.reviews || 0} reviews)
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="flex items-center gap-2">
@@ -183,200 +231,119 @@ As a professional taxi driver, you will be responsible for providing safe, relia
                     <div className="flex items-center gap-2">
                       <BiDollar className="text-gray-400" />
                       <span className="text-gray-600 text-sm">
-                        {jobData.salary}
+                        {formatSalary(jobData.salary, jobData.salaryType)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <BsClock className="text-gray-400" />
-                      <span className="text-gray-600 text-sm">
-                        {jobData.type}
+                      <span className="text-gray-600 text-sm capitalize">
+                        {jobData.jobType}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <BsPeople className="text-gray-400" />
                       <span className="text-gray-600 text-sm">
-                        {jobData.applicants} applicants
+                        {jobData.applicationCount ||
+                          jobData.applications?.length ||
+                          0}{" "}
+                        applicants
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={handleApply}
-                  disabled={isApplying}
-                  className="flex-1 min-w-[200px] bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50"
-                >
-                  {isApplying ? "Applying..." : "Apply Now"}
-                </button>
-                <button className="bg-purple-50 text-purple-600 py-3 px-6 rounded-xl hover:bg-purple-100 transition-colors font-semibold">
-                  Save for Later
-                </button>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="border-b border-gray-200">
-                <nav className="flex">
-                  {[
-                    { id: "overview", label: "Overview" },
-                    { id: "requirements", label: "Requirements" },
-                    { id: "company", label: "Company" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-4 font-medium text-sm transition-colors ${
-                        activeTab === tab.id
-                          ? "text-purple-600 border-b-2 border-purple-600"
-                          : "text-gray-500 hover:text-gray-700"
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
+              {/* Apply Now Button for Mobile */}
+              <div className="lg:hidden mb-6">
+                {isJobExpired ? (
+                  <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-red-800 font-medium">Job Expired</p>
+                  </div>
+                ) : hasApplied ? (
+                  <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                    <BiCheck className="text-2xl text-green-600 mx-auto mb-2" />
+                    <p className="text-green-800 font-medium">Applied</p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleApply}
+                    disabled={isApplying}
+                    className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all disabled:opacity-50"
+                  >
+                    {isApplying ? "Applying..." : "Apply Now"}
+                  </button>
+                )}
               </div>
 
-              <div className="p-8">
-                {/* Overview Tab */}
-                {activeTab === "overview" && (
-                  <div className="space-y-8">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">
-                        Job Description
-                      </h3>
-                      <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                        {jobData.description}
-                      </div>
-                    </div>
+              {/* Job Description */}
+              <div className="prose max-w-none">
+                <h3 className="text-lg font-semibold mb-4">Job Description</h3>
+                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {jobData.details?.[0]?.desc ||
+                    "Join our team and be part of Rwanda's growing transportation industry. We offer competitive compensation and excellent growth opportunities for professional drivers."}
+                </div>
 
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">
-                        Key Responsibilities
-                      </h3>
-                      <ul className="space-y-3">
-                        {jobData.responsibilities.map(
-                          (responsibility, index) => (
-                            <li key={index} className="flex items-start gap-3">
-                              <BiCheck className="text-green-500 text-xl mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-700">
-                                {responsibility}
-                              </span>
-                            </li>
-                          )
-                        )}
-                      </ul>
+                {jobData.details?.[0]?.requirements && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold mb-2">Requirements</h4>
+                    <div className="text-gray-700 whitespace-pre-wrap">
+                      {jobData.details[0].requirements}
                     </div>
+                  </div>
+                )}
 
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">
-                        Benefits & Perks
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {jobData.benefits.map((benefit, index) => (
-                          <div
+                {/* Vehicle Requirements */}
+                {jobData.vehicleRequirements?.vehicleType?.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold mb-2">
+                      Vehicle Requirements
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {jobData.vehicleRequirements.vehicleType.map(
+                        (type, index) => (
+                          <span
                             key={index}
-                            className="flex items-center gap-3 bg-green-50 p-3 rounded-lg"
+                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm capitalize"
                           >
-                            <BiCheck className="text-green-500 text-xl" />
-                            <span className="text-gray-700">{benefit}</span>
-                          </div>
-                        ))}
-                      </div>
+                            {type}
+                          </span>
+                        )
+                      )}
                     </div>
+                    {jobData.vehicleRequirements.minYear && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        Minimum vehicle year:{" "}
+                        {jobData.vehicleRequirements.minYear}
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {/* Requirements Tab */}
-                {activeTab === "requirements" && (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">
-                        Required Qualifications
-                      </h3>
-                      <ul className="space-y-3">
-                        {jobData.requirements.map((requirement, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <HiOutlineBadgeCheck className="text-purple-500 text-xl mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700">{requirement}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="bg-purple-50 p-6 rounded-xl">
-                      <h4 className="font-semibold text-purple-900 mb-2">
-                        Application Tips
-                      </h4>
-                      <ul className="text-purple-700 text-sm space-y-1">
-                        <li>
-                          • Ensure your driving license is valid and up to date
-                        </li>
-                        <li>• Highlight your customer service experience</li>
-                        <li>• Include references from previous employers</li>
-                        <li>
-                          • Mention your knowledge of local roads and areas
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {/* Company Tab */}
-                {activeTab === "company" && (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
-                        {jobData.companyInfo.logo}
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900">
-                          {jobData.companyInfo.name}
-                        </h3>
-                        <p className="text-gray-600">
-                          {jobData.companyInfo.industry}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-700 leading-relaxed">
-                      {jobData.companyInfo.description}
+                {/* Schedule Information */}
+                {jobData.schedule && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold mb-2">
+                      Work Schedule
+                    </h4>
+                    <p className="text-gray-700 capitalize">
+                      {jobData.schedule}
                     </p>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div className="text-center">
-                        <BiUser className="text-3xl text-purple-500 mx-auto mb-2" />
-                        <div className="font-semibold text-gray-900">
-                          {jobData.companyInfo.employees}
-                        </div>
-                        <div className="text-sm text-gray-600">Employees</div>
+                    {jobData.workingHours && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        {jobData.workingHours.startTime &&
+                          jobData.workingHours.endTime && (
+                            <p>
+                              Hours: {jobData.workingHours.startTime} -{" "}
+                              {jobData.workingHours.endTime}
+                            </p>
+                          )}
+                        {jobData.workingHours.daysOfWeek?.length > 0 && (
+                          <p>
+                            Days: {jobData.workingHours.daysOfWeek.join(", ")}
+                          </p>
+                        )}
                       </div>
-                      <div className="text-center">
-                        <BiCalendar className="text-3xl text-purple-500 mx-auto mb-2" />
-                        <div className="font-semibold text-gray-900">
-                          {jobData.companyInfo.founded}
-                        </div>
-                        <div className="text-sm text-gray-600">Founded</div>
-                      </div>
-                      <div className="text-center">
-                        <BsStarFill className="text-3xl text-yellow-400 mx-auto mb-2" />
-                        <div className="font-semibold text-gray-900">
-                          {jobData.companyInfo.rating}
-                        </div>
-                        <div className="text-sm text-gray-600">Rating</div>
-                      </div>
-                      <div className="text-center">
-                        <HiOutlineOfficeBuilding className="text-3xl text-purple-500 mx-auto mb-2" />
-                        <div className="font-semibold text-gray-900">
-                          Transport
-                        </div>
-                        <div className="text-sm text-gray-600">Industry</div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -384,77 +351,148 @@ As a professional taxi driver, you will be responsible for providing safe, relia
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Apply Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Quick Apply
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Application Deadline</span>
-                  <span className="font-semibold text-gray-900">
-                    {jobData.applicationDeadline}
-                  </span>
+          <div>
+            {/* Apply Card */}
+            <div className="hidden lg:block bg-white rounded-2xl shadow-lg p-6 mb-6 sticky top-24">
+              <div className="text-center mb-6">
+                <div className="text-3xl font-bold text-purple-600 mb-1">
+                  {formatSalary(jobData.salary, jobData.salaryType)}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Start Date</span>
-                  <span className="font-semibold text-gray-900">
-                    {jobData.startDate}
-                  </span>
+                <div className="text-gray-600 text-sm capitalize">
+                  {jobData.jobType} • {jobData.category?.replace("_", " ")}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Applicants</span>
-                  <span className="font-semibold text-gray-900">
-                    {jobData.applicants}
+                {jobData.commission?.percentage && (
+                  <div className="text-sm text-green-600 mt-1">
+                    + {jobData.commission.percentage}% Commission
+                  </div>
+                )}
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-2 mb-4 justify-center">
+                {jobData.featured && (
+                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                    ⭐ Featured
                   </span>
+                )}
+                {jobData.urgent && (
+                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
+                    🔥 Urgent
+                  </span>
+                )}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                    jobData.priority === "high"
+                      ? "bg-orange-100 text-orange-800"
+                      : jobData.priority === "urgent"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {jobData.priority} Priority
+                </span>
+              </div>
+
+              {isJobExpired ? (
+                <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-red-800 font-medium">Job Expired</p>
+                  <p className="text-red-600 text-sm">
+                    Expired on {formatDate(jobData.expiresAt)}
+                  </p>
+                </div>
+              ) : hasApplied ? (
+                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                  <BiCheck className="text-2xl text-green-600 mx-auto mb-2" />
+                  <p className="text-green-800 font-medium">
+                    Application Submitted
+                  </p>
+                  <p className="text-green-600 text-sm">
+                    You have already applied for this position
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={handleApply}
+                  disabled={isApplying}
+                  className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isApplying ? (
+                    <>
+                      <BiLoader className="animate-spin" />
+                      Applying...
+                    </>
+                  ) : (
+                    "Apply Now"
+                  )}
+                </button>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900">
+                    {jobData.applicationCount ||
+                      jobData.applications?.length ||
+                      0}
+                  </div>
+                  <div className="text-gray-600">Applicants</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900">
+                    {jobData.analytics?.views || 0}
+                  </div>
+                  <div className="text-gray-600">Views</div>
                 </div>
               </div>
-              <button
-                onClick={handleApply}
-                disabled={isApplying}
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-4 rounded-xl hover:shadow-lg transition-all font-semibold mt-6 disabled:opacity-50"
-              >
-                {isApplying ? "Applying..." : "Apply Now"}
-              </button>
             </div>
 
-            {/* Similar Jobs */}
+            {/* Job Info */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Similar Jobs
-              </h3>
-              <div className="space-y-4">
-                {[
-                  {
-                    title: "Delivery Driver",
-                    company: "Rwanda Express",
-                    salary: "120K - 180K RWF",
-                  },
-                  {
-                    title: "Corporate Chauffeur",
-                    company: "Executive Transport",
-                    salary: "200K - 280K RWF",
-                  },
-                  {
-                    title: "School Bus Driver",
-                    company: "Safe Schools",
-                    salary: "140K - 170K RWF",
-                  },
-                ].map((job, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    <h4 className="font-semibold text-gray-900 mb-1">
-                      {job.title}
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-2">{job.company}</p>
-                    <p className="text-purple-600 text-sm font-medium">
-                      {job.salary}
-                    </p>
+              <h3 className="text-lg font-semibold mb-4">Job Information</h3>
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Posted</span>
+                  <span className="font-medium">
+                    {formatDate(jobData.createdAt)}
+                  </span>
+                </div>
+                {jobData.expiresAt && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Expires</span>
+                    <span className="font-medium">
+                      {formatDate(jobData.expiresAt)}
+                    </span>
                   </div>
-                ))}
+                )}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Experience</span>
+                  <span className="font-medium">
+                    {jobData.experience > 0
+                      ? `${jobData.experience} years`
+                      : "Entry level"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Vacancies</span>
+                  <span className="font-medium">{jobData.vacancies || 1}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Category</span>
+                  <span className="font-medium capitalize">
+                    {jobData.category?.replace("_", " ")}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status</span>
+                  <span
+                    className={`font-medium capitalize ${
+                      jobData.status === "active"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {jobData.status}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

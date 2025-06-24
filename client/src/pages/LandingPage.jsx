@@ -1,6 +1,7 @@
 import HeroSection from "../components/sections/HeroSection";
 import ServicesSection from "../components/sections/ServicesSection";
 import StatsSection from "../components/sections/StatsSection";
+import FeaturedJobsSection from "../components/sections/FeaturedJobsSection";
 import TestimonialsSection from "../components/sections/TestimonialSection";
 import CTASection from "../components/sections/CTASection";
 import CompaniesPricing from "../components/sections/CompaniesPricing";
@@ -12,6 +13,7 @@ const LandingPage = () => {
       <HeroSection />
       <ServicesSection />
       <StatsSection />
+      <FeaturedJobsSection />
       <TestimonialsSection />
       <CTASection />
       <CompaniesPricing />

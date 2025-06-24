@@ -1,5 +1,8 @@
 import { Eye, Languages } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserProfile, updateUserProfile } from "../store/slices/userSlice";
+import toast from "react-hot-toast";
 import {
   BiUser,
   BiCog,
@@ -23,12 +26,60 @@ import {
   BiStar,
   BiMailSend,
   BiBullseye,
+  BiLoader,
+  BiSave,
 } from "react-icons/bi";
 import { BsArrowRight, BsThreeDots } from "react-icons/bs";
 
 const SettingsPage = () => {
+  const dispatch = useDispatch();
+  const { profile, loading, error } = useSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    contact: "",
+    location: "",
+    jobTitle: "",
+    aboutMe: "",
+  });
+
+  useEffect(() => {
+    dispatch(fetchUserProfile());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        email: profile.email || "",
+        contact: profile.contact || "",
+        location: profile.location || "",
+        jobTitle: profile.jobTitle || "",
+        aboutMe: profile.aboutMe || "",
+      });
+    }
+  }, [profile]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await dispatch(updateUserProfile(formData)).unwrap();
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    }
+  };
 
   const tabs = [
     { id: "profile", label: "Profile", icon: BiUser },
@@ -66,62 +117,43 @@ const SettingsPage = () => {
     },
   ];
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "interview_scheduled":
-        return "bg-blue-100 text-blue-800";
-      case "under_review":
-        return "bg-yellow-100 text-yellow-800";
-      case "accepted":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "interview_scheduled":
-        return "Interview Scheduled";
-      case "under_review":
-        return "Under Review";
-      case "accepted":
-        return "Accepted";
-      case "rejected":
-        return "Rejected";
-      default:
-        return "Applied";
-    }
-  };
+  if (loading && !profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 ">
-      {/* Cover Photo Section */}
-      <div className="relative h-60 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 overflow-hidden ">
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-20 w-32 h-32 bg-white rounded-full blur-2xl"></div>
-          <div className="absolute top-20 right-16 w-48 h-48 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 left-1/3 w-24 h-24 bg-white rounded-full blur-xl"></div>
-        </div>
-
-        {/* Cover Photo Actions */}
-        <div className="absolute top-4 right-4 flex gap-2 pt-14">
-          <button className="bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-all">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with Cover Photo */}
+      <div className="relative h-64 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-500 overflow-hidden">
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div className="absolute top-4 right-4">
+          <button className="bg-white bg-opacity-20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-opacity-30 transition-all">
             <BiCamera className="text-lg" />
-          </button>
-          <button className="bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-all">
-            <BiEdit className="text-lg" />
           </button>
         </div>
 
         {/* Profile Picture */}
         <div className="absolute bottom-10 left-8">
           <div className="relative">
-            <div className="w-32 h-32   bg-white rounded-full border-4 border-white shadow-xl flex items-center justify-center text-4xl font-bold text-purple-600">
-              EN
+            <div className="w-32 h-32 bg-white rounded-full border-4 border-white shadow-xl flex items-center justify-center text-4xl font-bold text-purple-600">
+              {profile?.profileUrl ? (
+                <img
+                  src={profile.profileUrl}
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                `${profile?.firstName?.charAt(0) || ""}${
+                  profile?.lastName?.charAt(0) || ""
+                }`
+              )}
             </div>
             <button className="absolute bottom-2 right-2 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition-all shadow-lg">
               <BiCamera className="text-sm" />
@@ -131,10 +163,14 @@ const SettingsPage = () => {
 
         {/* Profile Info */}
         <div className="absolute bottom-20 left-48">
-          <h1 className="text-2xl font-bold text-white mb-1">Eliezer Nsengi</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">
+            {profile
+              ? `${profile.firstName} ${profile.lastName}`
+              : "Loading..."}
+          </h1>
           <p className="text-purple-200 flex items-center gap-2">
             <BiMapPin className="text-sm" />
-            Kigali, Rwanda
+            {profile?.location || "Location not set"}
           </p>
         </div>
       </div>
@@ -163,32 +199,52 @@ const SettingsPage = () => {
               <div className="text-sm text-gray-500">Years Experience</div>
             </div>
           </div>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg transition-all flex items-center gap-2"
-          >
-            <BiEdit className="text-sm" />
-            Edit Profile
-          </button>
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="bg-gray-500 text-white px-6 py-2 rounded-full font-medium hover:bg-gray-600 transition-all flex items-center gap-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? <BiLoader className="animate-spin" /> : <BiSave />}
+                  Save Changes
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg transition-all flex items-center gap-2"
+              >
+                <BiEdit className="text-sm" />
+                Edit Profile
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
-              <h3 className="font-semibold text-gray-800 mb-4">Settings</h3>
-              <div className="space-y-1">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Sidebar - Tabs */}
+          <div className="lg:w-80">
+            <div className="bg-white rounded-2xl shadow-sm p-4 sticky top-4">
+              <nav className="space-y-2">
                 {tabs.map((tab) => {
                   const IconComponent = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                         activeTab === tab.id
-                          ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                          ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg"
                           : "text-gray-600 hover:bg-gray-50"
                       }`}
                     >
@@ -197,325 +253,229 @@ const SettingsPage = () => {
                     </button>
                   );
                 })}
-              </div>
-
-              {/* Quick Actions */}
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <h4 className="font-semibold text-gray-800 mb-3">
-                  Quick Actions
-                </h4>
-                <div className="space-y-2">
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-all text-left">
-                    <BiBookmark className="text-sm" />
-                    <span className="text-sm">Saved Jobs</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-all text-left">
-                    <BiDollarCircle className="text-sm" />
-                    <span className="text-sm">Payment History</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all text-left">
-                    <BiLogOut className="text-sm" />
-                    <span className="text-sm">Sign Out</span>
-                  </button>
-                </div>
-              </div>
+              </nav>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
+          {/* Right Content */}
+          <div className="flex-1">
             {activeTab === "profile" && (
-              <div className="space-y-6">
-                {/* Personal Information */}
-                <div className="bg-white rounded-2xl shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-gray-800">
-                      Personal Information
-                    </h3>
-                    <button className="text-purple-600 hover:text-purple-700 transition-colors">
-                      <BiEdit className="text-lg" />
-                    </button>
-                  </div>
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Profile Information
+                  </h2>
+                </div>
 
+                <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name
+                        First Name
                       </label>
                       <input
                         type="text"
-                        value="Eliezer Nsengi"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
                         disabled={!isEditing}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                      />
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Phone Number
                       </label>
                       <input
                         type="tel"
-                        value="+250 788 123 456"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        name="contact"
+                        value={formData.contact}
+                        onChange={handleInputChange}
                         disabled={!isEditing}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value="iamnsengi@gmail.com"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        disabled={!isEditing}
-                      />
-                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Location
                       </label>
                       <input
                         type="text"
-                        value="Kigali, Rwanda"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
                         disabled={!isEditing}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </div>
-                  </div>
-                </div>
 
-                {/* Driver Information */}
-                <div className="bg-white rounded-2xl shadow-sm p-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                    Driver Information
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        License Number
+                        Job Title
                       </label>
                       <input
                         type="text"
-                        value="DL123456789"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        name="jobTitle"
+                        value={formData.jobTitle}
+                        onChange={handleInputChange}
                         disabled={!isEditing}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Experience
-                      </label>
-                      <select
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        disabled={!isEditing}
-                      >
-                        <option>2 Years</option>
-                        <option>1 Year</option>
-                        <option>3-5 Years</option>
-                        <option>5+ Years</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Vehicle Types
-                      </label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                          Cars
-                        </span>
-                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                          Vans
-                        </span>
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-                          + Add More
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Availability
-                      </label>
-                      <select
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        disabled={!isEditing}
-                      >
-                        <option>Full-time</option>
-                        <option>Part-time</option>
-                        <option>Weekends Only</option>
-                        <option>Flexible</option>
-                      </select>
-                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      About Me
+                    </label>
+                    <textarea
+                      name="aboutMe"
+                      value={formData.aboutMe}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      rows={4}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                      placeholder="Tell us about yourself, your experience, and what kind of opportunities you're looking for..."
+                    />
                   </div>
                 </div>
               </div>
             )}
 
             {activeTab === "activity" && (
-              <div className="space-y-6">
-                {/* Activity Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-xl p-6 text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <BiCar className="text-white text-xl" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-800 mb-1">
-                      24
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Total Applications
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <BiCheck className="text-white text-xl" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-800 mb-1">
-                      3
-                    </div>
-                    <div className="text-sm text-gray-500">Interviews</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <BiHeart className="text-white text-xl" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-800 mb-1">
-                      12
-                    </div>
-                    <div className="text-sm text-gray-500">Saved Jobs</div>
-                  </div>
-                  <div className="bg-white rounded-xl p-6 text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <Eye className="text-white text-xl" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-800 mb-1">
-                      156
-                    </div>
-                    <div className="text-sm text-gray-500">Profile Views</div>
-                  </div>
-                </div>
-
-                {/* Recent Job Applications */}
-                <div className="bg-white rounded-2xl shadow-sm p-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                    Recent Job Applications
-                  </h3>
-
-                  <div className="space-y-4">
-                    {recentJobs.map((job) => (
-                      <div
-                        key={job.id}
-                        className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold text-gray-800">
-                                {job.position}
-                              </h4>
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                  job.status
-                                )}`}
-                              >
-                                {getStatusLabel(job.status)}
-                              </span>
-                            </div>
-                            <p className="text-gray-600 mb-2">{job.company}</p>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span className="flex items-center gap-1">
-                                <BiTime className="text-xs" />
-                                Applied {job.appliedDate}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <BiDollarCircle className="text-xs" />
-                                {job.salary}
-                              </span>
-                            </div>
-                          </div>
-                          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                            <BsThreeDots className="text-gray-500" />
-                          </button>
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                  Recent Activity
+                </h2>
+                <div className="space-y-4">
+                  {recentJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-gray-800">
+                            {job.position}
+                          </h3>
+                          <p className="text-sm text-gray-600">{job.company}</p>
+                          <p className="text-sm text-purple-600">
+                            {job.salary}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              job.status === "interview_scheduled"
+                                ? "bg-blue-100 text-blue-800"
+                                : job.status === "under_review"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {job.status.replace("_", " ")}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {job.appliedDate}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="text-center mt-6">
-                    <button className="text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2 mx-auto">
-                      View All Applications
-                      <BsArrowRight />
-                    </button>
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {activeTab === "preferences" && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-2xl shadow-sm p-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                    App Preferences
-                  </h3>
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                  App Preferences
+                </h3>
 
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Languages className="text-purple-600 text-xl" />
-                        <div>
-                          <h4 className="font-medium text-gray-800">
-                            Language
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Choose your preferred language
-                          </p>
-                        </div>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Languages className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">Language</h4>
+                        <p className="text-sm text-gray-500">
+                          Choose your preferred language
+                        </p>
                       </div>
-                      <select className="p-2 border border-gray-200 rounded-lg">
-                        <option>English</option>
-                        <option>Kinyarwanda</option>
-                        <option>French</option>
-                      </select>
                     </div>
+                    <select className="p-2 border border-gray-200 rounded-lg">
+                      <option>English</option>
+                      <option>Kinyarwanda</option>
+                      <option>French</option>
+                    </select>
+                  </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <BiPalette className="text-purple-600 text-xl" />
-                        <div>
-                          <h4 className="font-medium text-gray-800">Theme</h4>
-                          <p className="text-sm text-gray-500">
-                            Customize your app appearance
-                          </p>
-                        </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <BiPalette className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">Theme</h4>
+                        <p className="text-sm text-gray-500">
+                          Customize your app appearance
+                        </p>
                       </div>
-                      <select className="p-2 border border-gray-200 rounded-lg">
-                        <option>Light</option>
-                        <option>Dark</option>
-                        <option>Auto</option>
-                      </select>
                     </div>
+                    <select className="p-2 border border-gray-200 rounded-lg">
+                      <option>Light</option>
+                      <option>Dark</option>
+                      <option>Auto</option>
+                    </select>
+                  </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <BiMapPin className="text-purple-600 text-xl" />
-                        <div>
-                          <h4 className="font-medium text-gray-800">
-                            Job Search Radius
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Maximum distance for job recommendations
-                          </p>
-                        </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <BiMapPin className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">
+                          Job Search Radius
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Maximum distance for job recommendations
+                        </p>
                       </div>
-                      <select className="p-2 border border-gray-200 rounded-lg">
-                        <option>5 km</option>
-                        <option>10 km</option>
-                        <option>25 km</option>
-                        <option>50 km</option>
-                        <option>Anywhere in Rwanda</option>
-                      </select>
                     </div>
+                    <select className="p-2 border border-gray-200 rounded-lg">
+                      <option>5 km</option>
+                      <option>10 km</option>
+                      <option>25 km</option>
+                      <option>50 km</option>
+                      <option>Anywhere in Rwanda</option>
+                    </select>
                   </div>
                 </div>
               </div>

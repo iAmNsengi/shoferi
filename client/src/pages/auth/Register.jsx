@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BiUser,
   BiLock,
@@ -8,21 +8,46 @@ import {
   BiBuilding,
 } from "react-icons/bi";
 import { BsGoogle } from "react-icons/bs";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser, clearError } from "../../store/slices/authSlice";
 
 const Register = () => {
-  const [userType, setUserType] = useState("driver"); // "driver" or "company"
+  const [userType, setUserType] = useState("user"); // "user" (passenger) or "driver"
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    fullName: "",
-    companyName: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { loading, error, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
+
+  const from = location.state?.from?.pathname || "/feed";
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+  useEffect(() => {
+    return () => {
+      if (error) {
+        dispatch(clearError());
+      }
+    };
+  }, [dispatch, error]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -31,7 +56,9 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords don't match!");
       return;
@@ -42,25 +69,34 @@ const Register = () => {
       return;
     }
 
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log("Registration attempted:", { userType, ...formData });
-      alert(
-        `${
-          userType === "driver" ? "Driver" : "Company"
-        } registration successful!`
-      );
-    }, 2000);
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.password
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    const userData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+      accountType: userType,
+    };
+
+    dispatch(registerUser(userData));
   };
 
   const handleSocialRegister = (provider) => {
-    console.log(`Register with ${provider} as ${userType}`);
+    console.log(`Register with ${provider} as ${userType} - Coming soon!`);
+    // TODO: Implement social registration
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br pt-20  from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br pt-20 from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center p-4">
       {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -87,37 +123,49 @@ const Register = () => {
           <div className="mb-8">
             <div className="grid grid-cols-2 gap-4">
               <button
+                type="button"
+                onClick={() => setUserType("user")}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  userType === "user"
+                    ? "bg-white/20 border-white text-white"
+                    : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
+                }`}
+                disabled={loading}
+              >
+                <BiUser className="text-2xl mx-auto mb-2" />
+                <div className="font-semibold">I'm a Passenger</div>
+                <div className="text-sm opacity-80">Looking for rides</div>
+              </button>
+              <button
+                type="button"
                 onClick={() => setUserType("driver")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "driver"
                     ? "bg-white/20 border-white text-white"
                     : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
                 }`}
+                disabled={loading}
               >
                 <BiCar className="text-2xl mx-auto mb-2" />
                 <div className="font-semibold">I'm a Driver</div>
                 <div className="text-sm opacity-80">Looking for jobs</div>
               </button>
-              <button
-                onClick={() => setUserType("company")}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  userType === "company"
-                    ? "bg-white/20 border-white text-white"
-                    : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
-                }`}
-              >
-                <BiBuilding className="text-2xl mx-auto mb-2" />
-                <div className="font-semibold">I'm a Company</div>
-                <div className="text-sm opacity-80">Hiring drivers</div>
-              </button>
             </div>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-100 text-center">
+              {error}
+            </div>
+          )}
 
           {/* Social Registration Options */}
           <div className="space-y-3 mb-6">
             <button
               onClick={() => handleSocialRegister("Google")}
               className="w-full bg-white/20 backdrop-blur-sm border border-white/30 text-white py-3 px-4 rounded-xl hover:bg-white/30 transition-all flex items-center justify-center gap-3"
+              disabled={loading}
             >
               <BsGoogle className="text-xl" />
               Continue with Google
@@ -137,39 +185,46 @@ const Register = () => {
           </div>
 
           {/* Registration Form */}
-          <div className="space-y-6">
-            {/* Name Field - Different for Driver vs Company */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                {userType === "driver" ? "Full Name" : "Company Name"}
-              </label>
-              <div className="relative">
-                {userType === "driver" ? (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  First Name
+                </label>
+                <div className="relative">
                   <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
-                ) : (
-                  <BiBuilding className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
-                )}
-                <input
-                  type="text"
-                  value={
-                    userType === "driver"
-                      ? formData.fullName
-                      : formData.companyName
-                  }
-                  onChange={(e) =>
-                    handleInputChange(
-                      userType === "driver" ? "fullName" : "companyName",
-                      e.target.value
-                    )
-                  }
-                  className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
-                  placeholder={
-                    userType === "driver"
-                      ? "Enter your full name"
-                      : "Enter company name"
-                  }
-                  required
-                />
+                  <input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
+                    className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    placeholder="Enter your first name"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
+                    className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    placeholder="Enter your last name"
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
 
@@ -187,6 +242,7 @@ const Register = () => {
                   className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
                   placeholder="Enter your email"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -208,11 +264,14 @@ const Register = () => {
                     className="w-full pl-12 pr-12 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
                     placeholder="Create password"
                     required
+                    minLength={6}
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                    disabled={loading}
                   >
                     {showPassword ? (
                       <BiHide className="text-xl" />
@@ -222,6 +281,7 @@ const Register = () => {
                   </button>
                 </div>
               </div>
+
               <div>
                 <label className="block text-white text-sm font-medium mb-2">
                   Confirm Password
@@ -237,11 +297,13 @@ const Register = () => {
                     className="w-full pl-12 pr-12 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
                     placeholder="Confirm password"
                     required
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                    disabled={loading}
                   >
                     {showConfirmPassword ? (
                       <BiHide className="text-xl" />
@@ -254,57 +316,65 @@ const Register = () => {
             </div>
 
             {/* Terms Agreement */}
-            <div className="flex items-start">
+            <div className="flex items-start space-x-3">
               <input
                 type="checkbox"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
                 className="w-4 h-4 text-purple-600 bg-white/20 border-white/30 rounded focus:ring-purple-500 mt-1"
+                required
+                disabled={loading}
               />
-              <span className="ml-3 text-sm text-white">
+              <div className="text-sm text-white">
                 I agree to the{" "}
                 <a
                   href="#"
-                  className="text-white font-semibold hover:text-purple-200 transition-colors"
+                  className="text-white hover:underline font-semibold"
                 >
                   Terms of Service
                 </a>{" "}
                 and{" "}
                 <a
                   href="#"
-                  className="text-white font-semibold hover:text-purple-200 transition-colors"
+                  className="text-white hover:underline font-semibold"
                 >
                   Privacy Policy
                 </a>
-              </span>
+              </div>
             </div>
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit}
-              disabled={isLoading || !agreeToTerms}
+              type="submit"
+              disabled={
+                loading ||
+                !agreeToTerms ||
+                formData.password !== formData.confirmPassword
+              }
               className="w-full bg-white text-purple-700 py-3 px-4 rounded-xl hover:bg-gray-100 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
                   Creating Account...
                 </div>
               ) : (
-                `Create ${userType === "driver" ? "Driver" : "Company"} Account`
+                `Create ${
+                  userType === "driver" ? "Driver" : "Passenger"
+                } Account`
               )}
             </button>
-          </div>
+          </form>
 
           {/* Sign In Link */}
           <div className="text-center mt-6">
-            <p className="text-purple-100 py-4">
+            <p className="text-purple-100">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-white font-semibold hover:text-purple-200 transition-colors underline "
+                className="text-white font-semibold hover:text-purple-200 transition-colors underline"
               >
-                Sign in <span className="text-orange-500 font-bold">here</span>
+                Sign In <span className="text-orange-500 font-bold">here</span>
               </Link>
             </p>
           </div>
