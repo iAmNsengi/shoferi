@@ -202,12 +202,13 @@ const jobSlice = createSlice({
     },
     filters: {
       category: "",
-      jobType: "",
+      jtype: "",
       location: "",
       salaryMin: "",
       salaryMax: "",
       experience: "",
       vehicleType: "",
+      sort: "newest",
     },
     searchQuery: "",
   },
@@ -221,12 +222,13 @@ const jobSlice = createSlice({
     clearFilters: (state) => {
       state.filters = {
         category: "",
-        jobType: "",
+        jtype: "",
         location: "",
         salaryMin: "",
         salaryMax: "",
         experience: "",
         vehicleType: "",
+        sort: "newest",
       };
     },
     setSearchQuery: (state, action) => {

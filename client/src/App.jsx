@@ -13,6 +13,8 @@ import JobDetails from "./pages/jobs/JobDetails";
 import Learn from "./pages/Learn";
 import SettingsPage from "./pages/Settings";
 import DriverDashboard from "./pages/DriverDashboard";
+import CompanyDashboard from "./pages/CompanyDashboard";
+import DashboardRouter from "./components/DashboardRouter";
 import { useEffect } from "react";
 
 function ProtectedRoute() {
@@ -64,6 +66,7 @@ function App() {
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardRouter />} />
           <Route path="/jobs" element={<FindJobs />} />
           <Route path="/jobs/create" element={<CreateJob />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
@@ -71,6 +74,7 @@ function App() {
           <Route path="/learn" element={<Learn />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/driver-dashboard" element={<DriverDashboard />} />
+          <Route path="/company-dashboard" element={<CompanyDashboard />} />
         </Route>
 
         {/* 404 */}

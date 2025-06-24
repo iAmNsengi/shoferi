@@ -7,16 +7,19 @@ import {
   BiCar,
   BiBuilding,
 } from "react-icons/bi";
-import { BsGoogle } from "react-icons/bs";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser, clearError } from "../../store/slices/authSlice";
 
 const Register = () => {
-  const [userType, setUserType] = useState("user"); // "user" (passenger) or "driver"
+  const [userType, setUserType] = useState("driver"); // "driver" or "company"
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    companyName: "",
+    industry: "",
+    companySize: "1-10",
+    website: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -69,30 +72,37 @@ const Register = () => {
       return;
     }
 
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.password
-    ) {
-      alert("Please fill in all required fields");
-      return;
+    // Validate based on account type
+    if (userType === "company") {
+      if (!formData.companyName || !formData.email || !formData.password) {
+        alert("Please fill in all required fields");
+        return;
+      }
+    } else {
+      if (
+        !formData.firstName ||
+        !formData.lastName ||
+        !formData.email ||
+        !formData.password
+      ) {
+        alert("Please fill in all required fields");
+        return;
+      }
     }
 
     const userData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      firstName: userType === "driver" ? formData.firstName : undefined,
+      lastName: userType === "driver" ? formData.lastName : undefined,
+      companyName: userType === "company" ? formData.companyName : undefined,
+      industry: userType === "company" ? formData.industry : undefined,
+      companySize: userType === "company" ? formData.companySize : undefined,
+      website: userType === "company" ? formData.website : undefined,
       email: formData.email,
       password: formData.password,
       accountType: userType,
     };
 
     dispatch(registerUser(userData));
-  };
-
-  const handleSocialRegister = (provider) => {
-    console.log(`Register with ${provider} as ${userType} - Coming soon!`);
-    // TODO: Implement social registration
   };
 
   return (
@@ -124,20 +134,6 @@ const Register = () => {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setUserType("user")}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  userType === "user"
-                    ? "bg-white/20 border-white text-white"
-                    : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
-                }`}
-                disabled={loading}
-              >
-                <BiUser className="text-2xl mx-auto mb-2" />
-                <div className="font-semibold">I'm a Passenger</div>
-                <div className="text-sm opacity-80">Looking for rides</div>
-              </button>
-              <button
-                type="button"
                 onClick={() => setUserType("driver")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "driver"
@@ -148,7 +144,21 @@ const Register = () => {
               >
                 <BiCar className="text-2xl mx-auto mb-2" />
                 <div className="font-semibold">I'm a Driver</div>
-                <div className="text-sm opacity-80">Looking for jobs</div>
+                <div className="text-sm opacity-80">Looking for driving jobs</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType("company")}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  userType === "company"
+                    ? "bg-white/20 border-white text-white"
+                    : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
+                }`}
+                disabled={loading}
+              >
+                <BiBuilding className="text-2xl mx-auto mb-2" />
+                <div className="font-semibold">I'm a Company</div>
+                <div className="text-sm opacity-80">Posting driving jobs</div>
               </button>
             </div>
           </div>
@@ -160,73 +170,74 @@ const Register = () => {
             </div>
           )}
 
-          {/* Social Registration Options */}
-          <div className="space-y-3 mb-6">
-            <button
-              onClick={() => handleSocialRegister("Google")}
-              className="w-full bg-white/20 backdrop-blur-sm border border-white/30 text-white py-3 px-4 rounded-xl hover:bg-white/30 transition-all flex items-center justify-center gap-3"
-              disabled={loading}
-            >
-              <BsGoogle className="text-xl" />
-              Continue with Google
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/30"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-transparent px-2 text-purple-100">
-                Or register with email
-              </span>
-            </div>
-          </div>
-
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Company Name (for companies) */}
+            {userType === "company" && (
               <div>
                 <label className="block text-white text-sm font-medium mb-2">
-                  First Name
+                  Company Name
                 </label>
                 <div className="relative">
-                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <BiBuilding className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
                   <input
                     type="text"
-                    value={formData.firstName}
+                    value={formData.companyName}
                     onChange={(e) =>
-                      handleInputChange("firstName", e.target.value)
+                      handleInputChange("companyName", e.target.value)
                     }
                     className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
-                    placeholder="Enter your first name"
+                    placeholder="Enter your company name"
                     required
                     disabled={loading}
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">
-                  Last Name
-                </label>
-                <div className="relative">
-                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
-                    }
-                    className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
-                    placeholder="Enter your last name"
-                    required
-                    disabled={loading}
-                  />
+            )}
+
+            {/* Name Fields (for drivers) */}
+            {userType === "driver" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    First Name
+                  </label>
+                  <div className="relative">
+                    <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
+                      className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                      placeholder="Enter your first name"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Last Name
+                  </label>
+                  <div className="relative">
+                    <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
+                      className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                      placeholder="Enter your last name"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Email Field */}
             <div>
@@ -246,6 +257,52 @@ const Register = () => {
                 />
               </div>
             </div>
+
+            {/* Company Details (for companies) */}
+            {userType === "company" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Industry
+                  </label>
+                  <select
+                    value={formData.industry}
+                    onChange={(e) =>
+                      handleInputChange("industry", e.target.value)
+                    }
+                    className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    disabled={loading}
+                  >
+                    <option value="" className="text-gray-900">Select Industry</option>
+                    <option value="transportation" className="text-gray-900">Transportation</option>
+                    <option value="logistics" className="text-gray-900">Logistics</option>
+                    <option value="delivery" className="text-gray-900">Delivery Services</option>
+                    <option value="rideshare" className="text-gray-900">Ride Sharing</option>
+                    <option value="freight" className="text-gray-900">Freight</option>
+                    <option value="other" className="text-gray-900">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Company Size
+                  </label>
+                  <select
+                    value={formData.companySize}
+                    onChange={(e) =>
+                      handleInputChange("companySize", e.target.value)
+                    }
+                    className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    disabled={loading}
+                  >
+                    <option value="1-10" className="text-gray-900">1-10 employees</option>
+                    <option value="11-50" className="text-gray-900">11-50 employees</option>
+                    <option value="51-200" className="text-gray-900">51-200 employees</option>
+                    <option value="201-500" className="text-gray-900">201-500 employees</option>
+                    <option value="500+" className="text-gray-900">500+ employees</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -360,7 +417,7 @@ const Register = () => {
                 </div>
               ) : (
                 `Create ${
-                  userType === "driver" ? "Driver" : "Passenger"
+                  userType === "driver" ? "Driver" : "Company"
                 } Account`
               )}
             </button>

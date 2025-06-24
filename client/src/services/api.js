@@ -45,6 +45,12 @@ export const authAPI = {
 export const userAPI = {
   getProfile: () => api.get("/users/get-user"),
   updateProfile: (userData) => api.put("/users/update-user", userData),
+  updatePreferences: (preferences) => api.put("/users/preferences", { preferences }),
+  updateNotifications: (notifications) => api.put("/users/notifications", { notifications }),
+  updatePrivacy: (privacy) => api.put("/users/privacy", { privacy }),
+  changePassword: (currentPassword, newPassword) => api.put("/users/change-password", { currentPassword, newPassword }),
+  deactivateAccount: (reason) => api.put("/users/deactivate", { reason }),
+  getStats: () => api.get("/users/stats"),
   uploadProfileImage: (imageData) => api.post("/upload", imageData),
 };
 

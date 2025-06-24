@@ -1,7 +1,15 @@
 import { Eye, Languages } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserProfile, updateUserProfile } from "../store/slices/userSlice";
+import { 
+  fetchUserProfile, 
+  updateUserProfile,
+  updateUserPreferences,
+  updateNotificationSettings,
+  updatePrivacySettings,
+  changePassword,
+  fetchUserStats
+} from "../store/slices/userSlice";
 import toast from "react-hot-toast";
 import {
   BiUser,
@@ -33,7 +41,7 @@ import { BsArrowRight, BsThreeDots } from "react-icons/bs";
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
-  const { profile, loading, error } = useSelector((state) => state.user);
+  const { profile, loading, error, preferences, actionLoading, stats } = useSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,11 +51,49 @@ const SettingsPage = () => {
     contact: "",
     location: "",
     jobTitle: "",
-    aboutMe: "",
+    about: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    gender: "",
+  });
+
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    email: true,
+    sms: true,
+    push: true,
+    jobAlerts: true,
+    marketing: false,
+  });
+
+  // Privacy settings state
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisibility: "public",
+    showEmail: false,
+    showPhone: false,
+    showLocation: true,
+  });
+
+  // Preferences state
+  const [userPreferences, setUserPreferences] = useState({
+    language: "en",
+    currency: "RWF",
+    theme: "light",
+    timezone: "Africa/Kigali",
+    notifications: notificationSettings,
+    privacy: privacySettings,
+  });
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   useEffect(() => {
     dispatch(fetchUserProfile());
+    dispatch(fetchUserStats());
   }, [dispatch]);
 
   useEffect(() => {
@@ -59,8 +105,32 @@ const SettingsPage = () => {
         contact: profile.contact || "",
         location: profile.location || "",
         jobTitle: profile.jobTitle || "",
-        aboutMe: profile.aboutMe || "",
+        about: profile.about || "",
+        phoneNumber: profile.phoneNumber || "",
+        dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split('T')[0] : "",
+        gender: profile.gender || "",
       });
+
+      if (profile.preferences) {
+        setUserPreferences({
+          ...userPreferences,
+          ...profile.preferences,
+        });
+        
+        if (profile.preferences.notifications) {
+          setNotificationSettings({
+            ...notificationSettings,
+            ...profile.preferences.notifications,
+          });
+        }
+        
+        if (profile.preferences.privacy) {
+          setPrivacySettings({
+            ...privacySettings,
+            ...profile.preferences.privacy,
+          });
+        }
+      }
     }
   }, [profile]);
 
@@ -72,12 +142,91 @@ const SettingsPage = () => {
     }));
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSaveProfile = async () => {
     try {
       await dispatch(updateUserProfile(formData)).unwrap();
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
+    }
+  };
+
+  const handlePreferenceChange = async (key, value) => {
+    const updatedPreferences = {
+      ...userPreferences,
+      [key]: value,
+    };
+    setUserPreferences(updatedPreferences);
+    
+    try {
+      await dispatch(updateUserPreferences(updatedPreferences)).unwrap();
+    } catch (error) {
+      console.error("Failed to update preferences:", error);
+    }
+  };
+
+  const handleNotificationToggle = async (key) => {
+    const updatedNotifications = {
+      ...notificationSettings,
+      [key]: !notificationSettings[key],
+    };
+    setNotificationSettings(updatedNotifications);
+    
+    try {
+      await dispatch(updateNotificationSettings(updatedNotifications)).unwrap();
+    } catch (error) {
+      console.error("Failed to update notifications:", error);
+    }
+  };
+
+  const handlePrivacyChange = async (key, value) => {
+    const updatedPrivacy = {
+      ...privacySettings,
+      [key]: value,
+    };
+    setPrivacySettings(updatedPrivacy);
+    
+    try {
+      await dispatch(updatePrivacySettings(updatedPrivacy)).unwrap();
+    } catch (error) {
+      console.error("Failed to update privacy:", error);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords don't match");
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
+    try {
+      await dispatch(changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      })).unwrap();
+      
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Failed to change password:", error);
     }
   };
 
@@ -359,8 +508,8 @@ const SettingsPage = () => {
                       About Me
                     </label>
                     <textarea
-                      name="aboutMe"
-                      value={formData.aboutMe}
+                      name="about"
+                      value={formData.about}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       rows={4}
@@ -433,10 +582,14 @@ const SettingsPage = () => {
                         </p>
                       </div>
                     </div>
-                    <select className="p-2 border border-gray-200 rounded-lg">
-                      <option>English</option>
-                      <option>Kinyarwanda</option>
-                      <option>French</option>
+                    <select
+                      value={userPreferences.language}
+                      onChange={(e) => handlePreferenceChange("language", e.target.value)}
+                      className="p-2 border border-gray-200 rounded-lg"
+                    >
+                      <option value="en">English</option>
+                      <option value="rw">Kinyarwanda</option>
+                      <option value="fr">French</option>
                     </select>
                   </div>
 
@@ -450,10 +603,14 @@ const SettingsPage = () => {
                         </p>
                       </div>
                     </div>
-                    <select className="p-2 border border-gray-200 rounded-lg">
-                      <option>Light</option>
-                      <option>Dark</option>
-                      <option>Auto</option>
+                    <select
+                      value={userPreferences.theme}
+                      onChange={(e) => handlePreferenceChange("theme", e.target.value)}
+                      className="p-2 border border-gray-200 rounded-lg"
+                    >
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                      <option value="auto">Auto</option>
                     </select>
                   </div>
 
@@ -469,12 +626,16 @@ const SettingsPage = () => {
                         </p>
                       </div>
                     </div>
-                    <select className="p-2 border border-gray-200 rounded-lg">
-                      <option>5 km</option>
-                      <option>10 km</option>
-                      <option>25 km</option>
-                      <option>50 km</option>
-                      <option>Anywhere in Rwanda</option>
+                    <select
+                      value={userPreferences.notifications.jobAlerts.radius}
+                      onChange={(e) => handlePreferenceChange("notifications.jobAlerts.radius", e.target.value)}
+                      className="p-2 border border-gray-200 rounded-lg"
+                    >
+                      <option value="5">5 km</option>
+                      <option value="10">10 km</option>
+                      <option value="25">25 km</option>
+                      <option value="50">50 km</option>
+                      <option value="any">Anywhere in Rwanda</option>
                     </select>
                   </div>
                 </div>
@@ -490,29 +651,34 @@ const SettingsPage = () => {
                 <div className="space-y-6">
                   {[
                     {
+                      key: "jobAlerts",
                       title: "Job Alerts",
                       desc: "Get notified about new job opportunities",
-                      enabled: true,
+                      enabled: notificationSettings.jobAlerts,
                     },
                     {
-                      title: "Application Updates",
-                      desc: "Updates on your job applications",
-                      enabled: true,
+                      key: "email",
+                      title: "Email Notifications",
+                      desc: "Receive email updates and alerts",
+                      enabled: notificationSettings.email,
                     },
                     {
-                      title: "Messages",
-                      desc: "New messages from employers",
-                      enabled: true,
+                      key: "sms",
+                      title: "SMS Notifications",
+                      desc: "Receive text message updates",
+                      enabled: notificationSettings.sms,
                     },
                     {
-                      title: "Community Posts",
-                      desc: "New posts in your feed",
-                      enabled: false,
+                      key: "push",
+                      title: "Push Notifications",
+                      desc: "Receive app notifications",
+                      enabled: notificationSettings.push,
                     },
                     {
+                      key: "marketing",
                       title: "Marketing",
                       desc: "Promotional offers and updates",
-                      enabled: false,
+                      enabled: notificationSettings.marketing,
                     },
                   ].map((item, index) => (
                     <div
@@ -525,7 +691,9 @@ const SettingsPage = () => {
                         </h4>
                         <p className="text-sm text-gray-500">{item.desc}</p>
                       </div>
-                      <div
+                      <button
+                        onClick={() => handleNotificationToggle(item.key)}
+                        disabled={actionLoading.notifications}
                         className={`w-12 h-6 rounded-full p-1 transition-colors ${
                           item.enabled ? "bg-purple-600" : "bg-gray-300"
                         }`}
@@ -535,7 +703,7 @@ const SettingsPage = () => {
                             item.enabled ? "translate-x-6" : "translate-x-0"
                           }`}
                         ></div>
-                      </div>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -561,11 +729,162 @@ const SettingsPage = () => {
                         </p>
                       </div>
                     </div>
-                    <select className="p-2 border border-gray-200 rounded-lg">
-                      <option>Everyone</option>
-                      <option>Employers Only</option>
-                      <option>Private</option>
+                    <select
+                      value={privacySettings.profileVisibility}
+                      onChange={(e) => handlePrivacyChange("profileVisibility", e.target.value)}
+                      disabled={actionLoading.privacy}
+                      className="p-2 border border-gray-200 rounded-lg"
+                    >
+                      <option value="public">Everyone</option>
+                      <option value="limited">Employers Only</option>
+                      <option value="private">Private</option>
                     </select>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <BiMailSend className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">
+                          Show Email
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Display email on public profile
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handlePrivacyChange("showEmail", !privacySettings.showEmail)}
+                      disabled={actionLoading.privacy}
+                      className={`w-12 h-6 rounded-full p-1 transition-colors ${
+                        privacySettings.showEmail ? "bg-purple-600" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                          privacySettings.showEmail ? "translate-x-6" : "translate-x-0"
+                        }`}
+                      ></div>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <BiPhone className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">
+                          Show Phone
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Display phone number on public profile
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handlePrivacyChange("showPhone", !privacySettings.showPhone)}
+                      disabled={actionLoading.privacy}
+                      className={`w-12 h-6 rounded-full p-1 transition-colors ${
+                        privacySettings.showPhone ? "bg-purple-600" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                          privacySettings.showPhone ? "translate-x-6" : "translate-x-0"
+                        }`}
+                      ></div>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <BiMapPin className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">
+                          Show Location
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          Display location on public profile
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handlePrivacyChange("showLocation", !privacySettings.showLocation)}
+                      disabled={actionLoading.privacy}
+                      className={`w-12 h-6 rounded-full p-1 transition-colors ${
+                        privacySettings.showLocation ? "bg-purple-600" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                          privacySettings.showLocation ? "translate-x-6" : "translate-x-0"
+                        }`}
+                      ></div>
+                    </button>
+                  </div>
+
+                  {/* Password Change Section */}
+                  <div className="border-t pt-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Change Password
+                    </h4>
+                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          name="currentPassword"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={actionLoading.password}
+                        className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {actionLoading.password ? (
+                          <>
+                            <BiLoader className="animate-spin" />
+                            Changing Password...
+                          </>
+                        ) : (
+                          <>
+                            <BiLock />
+                            Change Password
+                          </>
+                        )}
+                      </button>
+                    </form>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -583,23 +902,6 @@ const SettingsPage = () => {
                     <button className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors">
                       Enable
                     </button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <BiPhone className="text-purple-600 text-xl" />
-                      <div>
-                        <h4 className="font-medium text-gray-800">
-                          Phone Number Visibility
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Show phone number to employers
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-12 h-6 bg-purple-600 rounded-full p-1">
-                      <div className="w-4 h-4 bg-white rounded-full translate-x-6"></div>
-                    </div>
                   </div>
                 </div>
               </div>

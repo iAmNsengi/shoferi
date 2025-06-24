@@ -28,8 +28,8 @@ const userSchema = new mongoose.Schema(
     },
     accountType: {
       type: String,
-      enum: ["user", "driver", "admin"],
-      default: "user",
+      enum: ["driver", "admin"],
+      default: "driver",
     },
     contact: { type: String },
     location: { type: String },
@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
     jobTitle: { type: String },
     about: { type: String },
     phoneNumber: { type: String },
+    dateOfBirth: { type: Date },
+    gender: { 
+      type: String, 
+      enum: ["male", "female", "other", "prefer_not_to_say"] 
+    },
     address: {
       street: { type: String },
       city: { type: String },
@@ -53,12 +58,71 @@ const userSchema = new mongoose.Schema(
     preferences: {
       language: { type: String, default: "en" },
       currency: { type: String, default: "RWF" },
+      theme: { type: String, default: "light", enum: ["light", "dark", "auto"] },
+      timezone: { type: String, default: "Africa/Kigali" },
       notifications: {
         email: { type: Boolean, default: true },
         sms: { type: Boolean, default: true },
         push: { type: Boolean, default: true },
+        jobAlerts: { type: Boolean, default: true },
+        marketing: { type: Boolean, default: false },
+      },
+      privacy: {
+        profileVisibility: { 
+          type: String, 
+          default: "public", 
+          enum: ["public", "private", "limited"] 
+        },
+        showEmail: { type: Boolean, default: false },
+        showPhone: { type: Boolean, default: false },
+        showLocation: { type: Boolean, default: true },
       },
     },
+    socialLinks: {
+      linkedin: { type: String },
+      twitter: { type: String },
+      facebook: { type: String },
+      website: { type: String },
+    },
+    skills: [{ type: String }],
+    experience: {
+      years: { type: Number, default: 0 },
+      description: { type: String },
+    },
+    education: [{
+      institution: { type: String },
+      degree: { type: String },
+      fieldOfStudy: { type: String },
+      startDate: { type: Date },
+      endDate: { type: Date },
+      isCurrentlyStudying: { type: Boolean, default: false },
+    }],
+    certifications: [{
+      name: { type: String },
+      issuer: { type: String },
+      dateIssued: { type: Date },
+      expiryDate: { type: Date },
+      credentialId: { type: String },
+    }],
+    twoFactorAuth: {
+      enabled: { type: Boolean, default: false },
+      secret: { type: String },
+      backupCodes: [{ type: String }],
+    },
+    loginHistory: [{
+      timestamp: { type: Date, default: Date.now },
+      ipAddress: { type: String },
+      userAgent: { type: String },
+      location: { type: String },
+    }],
+    accountStatus: {
+      type: String,
+      enum: ["active", "suspended", "pending_verification", "deactivated"],
+      default: "active",
+    },
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false },
+    lastActive: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

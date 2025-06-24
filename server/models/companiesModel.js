@@ -17,15 +17,60 @@ const companySchema = new Schema({
   password: {
     type: String,
     required: [true, "Password is required"],
-    minlength: [6, "Password must be at least"],
+    minlength: [6, "Password must be at least 6 characters"],
     select: true,
   },
   contact: { type: String },
   location: { type: String },
   about: { type: String },
   profileUrl: { type: String, default: "" },
+  website: { type: String },
+  industry: { type: String },
+  companySize: { 
+    type: String, 
+    enum: ["1-10", "11-50", "51-200", "201-500", "500+"],
+    default: "1-10"
+  },
+  foundedYear: { type: Number },
+  address: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    country: { type: String, default: "Rwanda" },
+    postalCode: { type: String },
+  },
+  socialLinks: {
+    linkedin: { type: String },
+    twitter: { type: String },
+    facebook: { type: String },
+    instagram: { type: String },
+  },
+  accountType: {
+    type: String,
+    default: "company",
+    immutable: true,
+  },
+  accountStatus: {
+    type: String,
+    enum: ["active", "suspended", "pending_verification", "deactivated"],
+    default: "active",
+  },
+  emailVerified: { type: Boolean, default: false },
+  phoneVerified: { type: Boolean, default: false },
+  lastActive: { type: Date, default: Date.now },
   jobPosts: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
-});
+  preferences: {
+    language: { type: String, default: "en" },
+    currency: { type: String, default: "RWF" },
+    timezone: { type: String, default: "Africa/Kigali" },
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: true },
+      applicationAlerts: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: false },
+    },
+  },
+}, { timestamps: true });
 
 // middelwares
 companySchema.pre("save", async function () {

@@ -170,34 +170,85 @@ export const updateJob = async (req, res, next) => {
 
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { search, sort, location, jtype, exp } = req.query;
+    const { 
+      search, 
+      sort, 
+      location, 
+      jtype, 
+      exp, 
+      category, 
+      salaryMin, 
+      salaryMax,
+      experience,
+      vehicleType 
+    } = req.query;
+    
     const types = jtype?.split(","); //full-time,part-time
-    const experience = exp?.split("-"); //2-6
+    const experienceRange = exp?.split("-"); //2-6
 
     let queryObject = {};
 
+    // Location filter
     if (location) {
       queryObject.location = { $regex: location, $options: "i" };
     }
 
-    if (jtype) {
+    // Job type filter
+    if (jtype && jtype !== "all") {
       queryObject.jobType = { $in: types };
     }
 
-    //    [2. 6]
+    // Category filter
+    if (category) {
+      queryObject.category = category;
+    }
 
+    // Salary filters
+    if (salaryMin || salaryMax) {
+      queryObject.salary = {};
+      if (salaryMin) {
+        queryObject.salary.$gte = Number(salaryMin);
+      }
+      if (salaryMax) {
+        queryObject.salary.$lte = Number(salaryMax);
+      }
+    }
+
+    // Experience filter (using exp parameter for range)
     if (exp) {
       queryObject.experience = {
-        $gte: Number(experience[0]) - 1,
-        $lte: Number(experience[1]) + 1,
+        $gte: Number(experienceRange[0]) - 1,
+        $lte: Number(experienceRange[1]) + 1,
       };
     }
 
+    // Experience filter (using experience parameter for exact match)
+    if (experience) {
+      if (experience === "0-1") {
+        queryObject.experience = { $gte: 0, $lte: 1 };
+      } else if (experience === "2-5") {
+        queryObject.experience = { $gte: 2, $lte: 5 };
+      } else if (experience === "5-10") {
+        queryObject.experience = { $gte: 5, $lte: 10 };
+      } else if (experience === "10+") {
+        queryObject.experience = { $gte: 10 };
+      }
+    }
+
+    // Vehicle type filter
+    if (vehicleType) {
+      queryObject["vehicleRequirements.type"] = vehicleType;
+    }
+
+    // Search filter
     if (search) {
       const searchQuery = {
         $or: [
           { jobTitle: { $regex: search, $options: "i" } },
           { jobType: { $regex: search, $options: "i" } },
+          { category: { $regex: search, $options: "i" } },
+          { location: { $regex: search, $options: "i" } },
+          { "company.name": { $regex: search, $options: "i" } },
         ],
       };
       queryObject = { ...queryObject, ...searchQuery };
@@ -209,17 +260,21 @@ export const getJobPosts = async (req, res, next) => {
     });
 
     // SORTING
-    if (sort === "Newest") {
+    if (sort === "newest" || sort === "Newest") {
       queryResult = queryResult.sort("-createdAt");
-    }
-    if (sort === "Oldest") {
+    } else if (sort === "oldest" || sort === "Oldest") {
       queryResult = queryResult.sort("createdAt");
-    }
-    if (sort === "A-Z") {
+    } else if (sort === "salary_high") {
+      queryResult = queryResult.sort("-salary");
+    } else if (sort === "salary_low") {
+      queryResult = queryResult.sort("salary");
+    } else if (sort === "a-z" || sort === "A-Z") {
       queryResult = queryResult.sort("jobTitle");
-    }
-    if (sort === "Z-A") {
+    } else if (sort === "z-a" || sort === "Z-A") {
       queryResult = queryResult.sort("-jobTitle");
+    } else {
+      // Default sorting
+      queryResult = queryResult.sort("-createdAt");
     }
 
     // pagination
@@ -228,10 +283,10 @@ export const getJobPosts = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     //records count
-    const totalJobs = await Jobs.countDocuments(queryResult);
+    const totalJobs = await Jobs.countDocuments(queryObject);
     const numOfPage = Math.ceil(totalJobs / limit);
 
-    queryResult = queryResult.limit(limit * page);
+    queryResult = queryResult.skip(skip).limit(limit);
 
     const jobs = await queryResult;
 
