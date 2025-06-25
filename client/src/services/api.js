@@ -54,6 +54,16 @@ export const userAPI = {
   uploadProfileImage: (imageData) => api.post("/upload", imageData),
 };
 
+// Company API
+export const companyAPI = {
+  getProfile: () => api.get("/companies/get-company-profile"),
+  updateProfile: (companyData) => api.put("/companies/update-company-profile", companyData),
+  getJobs: () => api.get("/companies/get-company-job-listings"),
+  getStats: () => api.get("/companies/stats"),
+  getAllCompanies: (params) => api.get("/companies/get-companies", { params }),
+  getCompanyById: (companyId) => api.get(`/companies/get-company/${companyId}`),
+};
+
 // Driver API
 export const driverAPI = {
   register: (driverData) => api.post("/drivers/register", driverData),

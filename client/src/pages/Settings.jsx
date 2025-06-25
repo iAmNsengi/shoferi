@@ -1,5 +1,4 @@
-import { Eye, Languages } from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   fetchUserProfile, 
@@ -10,63 +9,89 @@ import {
   changePassword,
   fetchUserStats
 } from "../store/slices/userSlice";
+import { getCompanyProfile, updateCompanyProfile } from "../store/slices/companySlice";
 import toast from "react-hot-toast";
 import {
   BiUser,
   BiCog,
   BiShield,
   BiBell,
-  BiCar,
   BiMapPin,
   BiPhone,
   BiEdit,
   BiCamera,
-  BiDollarCircle,
   BiTime,
   BiTrendingUp,
-  BiBookmark,
-  BiHeart,
   BiLock,
   BiPalette,
   BiHelpCircle,
   BiLogOut,
-  BiCheck,
-  BiStar,
-  BiMailSend,
-  BiBullseye,
-  BiLoader,
   BiSave,
+  BiLoader,
+  BiBuilding,
+  BiGlobe,
+  BiStar,
+  BiCheck,
+  BiX,
+  BiPlus,
+  BiTrash,
+  BiEnvelope,
 } from "react-icons/bi";
-import { BsArrowRight, BsThreeDots } from "react-icons/bs";
+import { 
+  HiCurrencyDollar, 
+  HiClock, 
+  HiEye, 
+  HiEyeOff,
+  HiBell,
+} from "react-icons/hi";
 
-const SettingsPage = () => {
+const Settings = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const { profile, loading, error, preferences, actionLoading, stats } = useSelector((state) => state.user);
+  const { profile: companyProfile, loading: companyLoading } = useSelector((state) => state.company || {});
+  
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Determine if user is a company
+  const isCompany = user?.accountType === "company" || (user?.name && !user?.firstName);
+  const currentProfile = isCompany ? companyProfile : profile;
+  const currentLoading = isCompany ? companyLoading : loading;
+
+  // Profile form data
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    // Common fields
     email: "",
     contact: "",
     location: "",
-    jobTitle: "",
     about: "",
+    profileUrl: "",
+    // User-specific fields
+    firstName: "",
+    lastName: "",
     phoneNumber: "",
     dateOfBirth: "",
     gender: "",
+    jobTitle: "",
+    // Company-specific fields
+    name: "",
+    industry: "",
+    companySize: "",
+    website: "",
+    foundedYear: "",
   });
 
-  // Notification settings state
+  // Settings states
   const [notificationSettings, setNotificationSettings] = useState({
     email: true,
     sms: true,
     push: true,
     jobAlerts: true,
+    applicationAlerts: true,
     marketing: false,
   });
 
-  // Privacy settings state
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: "public",
     showEmail: false,
@@ -74,65 +99,84 @@ const SettingsPage = () => {
     showLocation: true,
   });
 
-  // Preferences state
   const [userPreferences, setUserPreferences] = useState({
     language: "en",
     currency: "RWF",
     theme: "light",
     timezone: "Africa/Kigali",
-    notifications: notificationSettings,
-    privacy: privacySettings,
   });
 
-  // Password change state
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
+  // Load profile data on component mount
   useEffect(() => {
+    if (isCompany) {
+      dispatch(getCompanyProfile());
+    } else {
     dispatch(fetchUserProfile());
-    dispatch(fetchUserStats());
-  }, [dispatch]);
+      dispatch(fetchUserStats());
+    }
+  }, [dispatch, isCompany]);
 
+  // Update form data when profile loads
   useEffect(() => {
-    if (profile) {
+    if (currentProfile) {
+      if (isCompany) {
       setFormData({
-        firstName: profile.firstName || "",
-        lastName: profile.lastName || "",
-        email: profile.email || "",
-        contact: profile.contact || "",
-        location: profile.location || "",
-        jobTitle: profile.jobTitle || "",
-        about: profile.about || "",
-        phoneNumber: profile.phoneNumber || "",
-        dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split('T')[0] : "",
-        gender: profile.gender || "",
-      });
+          name: currentProfile.name || "",
+          email: currentProfile.email || "",
+          contact: currentProfile.contact || "",
+          location: currentProfile.location || "",
+          about: currentProfile.about || "",
+          profileUrl: currentProfile.profileUrl || "",
+          industry: currentProfile.industry || "",
+          companySize: currentProfile.companySize || "",
+          website: currentProfile.website || "",
+          foundedYear: currentProfile.foundedYear || "",
+        });
+      } else {
+        setFormData({
+          firstName: currentProfile.firstName || "",
+          lastName: currentProfile.lastName || "",
+          email: currentProfile.email || "",
+          contact: currentProfile.contact || "",
+          location: currentProfile.location || "",
+          jobTitle: currentProfile.jobTitle || "",
+          about: currentProfile.about || "",
+          profileUrl: currentProfile.profileUrl || "",
+          phoneNumber: currentProfile.phoneNumber || "",
+          dateOfBirth: currentProfile.dateOfBirth ? currentProfile.dateOfBirth.split('T')[0] : "",
+          gender: currentProfile.gender || "",
+        });
+      }
 
-      if (profile.preferences) {
+      // Load preferences
+      if (currentProfile.preferences) {
         setUserPreferences({
           ...userPreferences,
-          ...profile.preferences,
+          ...currentProfile.preferences,
         });
         
-        if (profile.preferences.notifications) {
+        if (currentProfile.preferences.notifications) {
           setNotificationSettings({
             ...notificationSettings,
-            ...profile.preferences.notifications,
+            ...currentProfile.preferences.notifications,
           });
         }
         
-        if (profile.preferences.privacy) {
+        if (currentProfile.preferences.privacy) {
           setPrivacySettings({
             ...privacySettings,
-            ...profile.preferences.privacy,
+            ...currentProfile.preferences.privacy,
           });
         }
       }
     }
-  }, [profile]);
+  }, [currentProfile, isCompany]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -152,7 +196,11 @@ const SettingsPage = () => {
 
   const handleSaveProfile = async () => {
     try {
+      if (isCompany) {
+        await dispatch(updateCompanyProfile(formData)).unwrap();
+      } else {
       await dispatch(updateUserProfile(formData)).unwrap();
+      }
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -167,7 +215,9 @@ const SettingsPage = () => {
     setUserPreferences(updatedPreferences);
     
     try {
-      await dispatch(updateUserPreferences(updatedPreferences)).unwrap();
+      if (!isCompany) {
+        await dispatch(updateUserPreferences(updatedPreferences)).unwrap();
+      }
     } catch (error) {
       console.error("Failed to update preferences:", error);
     }
@@ -181,7 +231,9 @@ const SettingsPage = () => {
     setNotificationSettings(updatedNotifications);
     
     try {
-      await dispatch(updateNotificationSettings(updatedNotifications)).unwrap();
+      if (!isCompany) {
+        await dispatch(updateNotificationSettings(updatedNotifications)).unwrap();
+      }
     } catch (error) {
       console.error("Failed to update notifications:", error);
     }
@@ -195,7 +247,9 @@ const SettingsPage = () => {
     setPrivacySettings(updatedPrivacy);
     
     try {
-      await dispatch(updatePrivacySettings(updatedPrivacy)).unwrap();
+      if (!isCompany) {
+        await dispatch(updatePrivacySettings(updatedPrivacy)).unwrap();
+      }
     } catch (error) {
       console.error("Failed to update privacy:", error);
     }
@@ -231,159 +285,99 @@ const SettingsPage = () => {
   };
 
   const tabs = [
-    { id: "profile", label: "Profile", icon: BiUser },
-    { id: "activity", label: "Activity", icon: BiTrendingUp },
+    { id: "profile", label: "Profile", icon: isCompany ? BiBuilding : BiUser },
     { id: "preferences", label: "Preferences", icon: BiCog },
     { id: "notifications", label: "Notifications", icon: BiBell },
-    { id: "privacy", label: "Privacy", icon: BiShield },
-    { id: "help", label: "Help", icon: BiHelpCircle },
+    { id: "privacy", label: "Privacy & Security", icon: BiShield },
+    ...(isCompany ? [] : [{ id: "activity", label: "Activity", icon: BiTrendingUp }]),
+    { id: "help", label: "Help & Support", icon: BiHelpCircle },
   ];
 
-  const recentJobs = [
-    {
-      id: 1,
-      company: "Transport Solutions Ltd",
-      position: "Delivery Driver",
-      status: "interview_scheduled",
-      appliedDate: "2 days ago",
-      salary: "150,000 RWF",
-    },
-    {
-      id: 2,
-      company: "Safari Car Rental",
-      position: "VIP Chauffeur",
-      status: "under_review",
-      appliedDate: "1 week ago",
-      salary: "200,000 RWF",
-    },
-    {
-      id: 3,
-      company: "City Bus Service",
-      position: "Bus Driver",
-      status: "rejected",
-      appliedDate: "2 weeks ago",
-      salary: "180,000 RWF",
-    },
-  ];
-
-  if (loading && !profile) {
+  if (currentLoading && !currentProfile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 pt-24 flex items-center justify-center">
         <div className="text-center">
           <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600">Loading settings...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with Cover Photo */}
-      <div className="relative h-64 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-500 overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div className="absolute top-4 right-4">
-          <button className="bg-white bg-opacity-20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-opacity-30 transition-all">
-            <BiCamera className="text-lg" />
-          </button>
-        </div>
+  const displayName = isCompany 
+    ? currentProfile?.name 
+    : `${currentProfile?.firstName || ""} ${currentProfile?.lastName || ""}`.trim();
 
-        {/* Profile Picture */}
-        <div className="absolute bottom-10 left-8">
-          <div className="relative">
-            <div className="w-32 h-32 bg-white rounded-full border-4 border-white shadow-xl flex items-center justify-center text-4xl font-bold text-purple-600">
-              {profile?.profileUrl ? (
-                <img
-                  src={profile.profileUrl}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 pt-24">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold">
+                {isCompany ? (
+                  <BiBuilding className="text-2xl" />
+                ) : (
+                  currentProfile?.profileUrl ? (
+                    <img
+                      src={currentProfile.profileUrl}
                   alt="Profile"
-                  className="w-full h-full rounded-full object-cover"
+                      className="w-full h-full rounded-2xl object-cover"
                 />
               ) : (
-                `${profile?.firstName?.charAt(0) || ""}${
-                  profile?.lastName?.charAt(0) || ""
-                }`
+                    `${currentProfile?.firstName?.charAt(0) || ""}${currentProfile?.lastName?.charAt(0) || ""}`
+                  )
               )}
             </div>
-            <button className="absolute bottom-2 right-2 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition-all shadow-lg">
-              <BiCamera className="text-sm" />
-            </button>
-          </div>
-        </div>
-
-        {/* Profile Info */}
-        <div className="absolute bottom-20 left-48">
-          <h1 className="text-2xl font-bold text-white mb-1">
-            {profile
-              ? `${profile.firstName} ${profile.lastName}`
-              : "Loading..."}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {displayName || "Settings"}
           </h1>
-          <p className="text-purple-200 flex items-center gap-2">
+                <p className="text-gray-600 flex items-center gap-2">
             <BiMapPin className="text-sm" />
-            {profile?.location || "Location not set"}
+                  {currentProfile?.location || "Location not set"}
           </p>
         </div>
       </div>
 
-      {/* Profile Stats Bar */}
-      <div className="bg-white shadow-sm border-b px-8 pt-10 pb-4 z-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="text-center">
-              <div className="text-xl font-bold text-gray-800">24</div>
-              <div className="text-sm text-gray-500">Jobs Applied</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-gray-800">3</div>
-              <div className="text-sm text-gray-500">Interviews</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-gray-800">4.8</div>
-              <div className="text-sm text-gray-500 flex items-center gap-1">
-                <BiStar className="text-yellow-500" />
-                Rating
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-gray-800">2</div>
-              <div className="text-sm text-gray-500">Years Experience</div>
-            </div>
-          </div>
-          <div className="flex gap-2">
+            <div className="flex items-center gap-3">
             {isEditing ? (
               <>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-full font-medium hover:bg-gray-600 transition-all flex items-center gap-2"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveProfile}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                    disabled={currentLoading}
+                    className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
                 >
-                  {loading ? <BiLoader className="animate-spin" /> : <BiSave />}
+                    {currentLoading ? <BiLoader className="animate-spin" /> : <BiSave />}
                   Save Changes
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-medium hover:shadow-lg transition-all flex items-center gap-2"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
               >
                 <BiEdit className="text-sm" />
                 Edit Profile
               </button>
             )}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Sidebar - Tabs */}
+          {/* Sidebar */}
           <div className="lg:w-80">
-            <div className="bg-white rounded-2xl shadow-sm p-4 sticky top-4">
+            <div className="bg-white rounded-2xl shadow-sm p-4 sticky top-8">
               <nav className="space-y-2">
                 {tabs.map((tab) => {
                   const IconComponent = tab.icon;
@@ -406,17 +400,166 @@ const SettingsPage = () => {
             </div>
           </div>
 
-          {/* Right Content */}
+          {/* Main Content */}
           <div className="flex-1">
             {activeTab === "profile" && (
               <div className="bg-white rounded-2xl shadow-sm p-8">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold text-gray-800">
-                    Profile Information
+                    {isCompany ? "Company Information" : "Profile Information"}
                   </h2>
                 </div>
 
                 <div className="space-y-6">
+                  {isCompany ? (
+                    // Company Profile Fields
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Company Name
+                          </label>
+                          <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Industry
+                          </label>
+                          <select
+                            name="industry"
+                            value={formData.industry}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          >
+                            <option value="">Select Industry</option>
+                            <option value="transportation">Transportation</option>
+                            <option value="logistics">Logistics</option>
+                            <option value="delivery">Delivery Services</option>
+                            <option value="rideshare">Ride Sharing</option>
+                            <option value="freight">Freight</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Company Size
+                          </label>
+                          <select
+                            name="companySize"
+                            value={formData.companySize}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          >
+                            <option value="1-10">1-10 employees</option>
+                            <option value="11-50">11-50 employees</option>
+                            <option value="51-200">51-200 employees</option>
+                            <option value="201-500">201-500 employees</option>
+                            <option value="500+">500+ employees</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Founded Year
+                          </label>
+                          <input
+                            type="number"
+                            name="foundedYear"
+                            value={formData.foundedYear}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            min="1900"
+                            max={new Date().getFullYear()}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Website
+                          </label>
+                          <input
+                            type="url"
+                            name="website"
+                            value={formData.website}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Contact Number
+                          </label>
+                          <input
+                            type="tel"
+                            name="contact"
+                            value={formData.contact}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Location
+                          </label>
+                          <input
+                            type="text"
+                            name="location"
+                            value={formData.location}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          About Company
+                        </label>
+                        <textarea
+                          name="about"
+                          value={formData.about}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                          rows={4}
+                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          placeholder="Tell us about your company, mission, and what makes you special..."
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // User Profile Fields
+                    <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -466,8 +609,8 @@ const SettingsPage = () => {
                       </label>
                       <input
                         type="tel"
-                        name="contact"
-                        value={formData.contact}
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
                         onChange={handleInputChange}
                         disabled={!isEditing}
                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
@@ -501,6 +644,39 @@ const SettingsPage = () => {
                         className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                       />
                     </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Date of Birth
+                          </label>
+                          <input
+                            type="date"
+                            name="dateOfBirth"
+                            value={formData.dateOfBirth}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Gender
+                          </label>
+                          <select
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleInputChange}
+                            disabled={!isEditing}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                            <option value="prefer_not_to_say">Prefer not to say</option>
+                          </select>
+                        </div>
                   </div>
 
                   <div>
@@ -508,8 +684,8 @@ const SettingsPage = () => {
                       About Me
                     </label>
                     <textarea
-                      name="about"
-                      value={formData.about}
+                          name="about"
+                          value={formData.about}
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       rows={4}
@@ -517,69 +693,23 @@ const SettingsPage = () => {
                       placeholder="Tell us about yourself, your experience, and what kind of opportunities you're looking for..."
                     />
                   </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "activity" && (
-              <div className="bg-white rounded-2xl shadow-sm p-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                  Recent Activity
-                </h2>
-                <div className="space-y-4">
-                  {recentJobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-gray-800">
-                            {job.position}
-                          </h3>
-                          <p className="text-sm text-gray-600">{job.company}</p>
-                          <p className="text-sm text-purple-600">
-                            {job.salary}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              job.status === "interview_scheduled"
-                                ? "bg-blue-100 text-blue-800"
-                                : job.status === "under_review"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {job.status.replace("_", " ")}
-                          </span>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {job.appliedDate}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
             {activeTab === "preferences" && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  App Preferences
-                </h3>
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-8">Preferences</h2>
 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <Languages className="text-purple-600 text-xl" />
+                      <BiGlobe className="text-purple-600 text-xl" />
                       <div>
                         <h4 className="font-medium text-gray-800">Language</h4>
-                        <p className="text-sm text-gray-500">
-                          Choose your preferred language
-                        </p>
+                        <p className="text-sm text-gray-500">Choose your preferred language</p>
                       </div>
                     </div>
                     <select
@@ -593,14 +723,12 @@ const SettingsPage = () => {
                     </select>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center gap-3">
                       <BiPalette className="text-purple-600 text-xl" />
                       <div>
                         <h4 className="font-medium text-gray-800">Theme</h4>
-                        <p className="text-sm text-gray-500">
-                          Customize your app appearance
-                        </p>
+                        <p className="text-sm text-gray-500">Choose your preferred theme</p>
                       </div>
                     </div>
                     <select
@@ -614,28 +742,42 @@ const SettingsPage = () => {
                     </select>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <BiMapPin className="text-purple-600 text-xl" />
+                      <HiCurrencyDollar className="text-purple-600 text-xl" />
                       <div>
-                        <h4 className="font-medium text-gray-800">
-                          Job Search Radius
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Maximum distance for job recommendations
-                        </p>
+                        <h4 className="font-medium text-gray-800">Currency</h4>
+                        <p className="text-sm text-gray-500">Default currency for salary display</p>
                       </div>
                     </div>
                     <select
-                      value={userPreferences.notifications.jobAlerts.radius}
-                      onChange={(e) => handlePreferenceChange("notifications.jobAlerts.radius", e.target.value)}
+                      value={userPreferences.currency}
+                      onChange={(e) => handlePreferenceChange("currency", e.target.value)}
                       className="p-2 border border-gray-200 rounded-lg"
                     >
-                      <option value="5">5 km</option>
-                      <option value="10">10 km</option>
-                      <option value="25">25 km</option>
-                      <option value="50">50 km</option>
-                      <option value="any">Anywhere in Rwanda</option>
+                      <option value="RWF">Rwandan Franc (RWF)</option>
+                      <option value="USD">US Dollar (USD)</option>
+                      <option value="EUR">Euro (EUR)</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <HiClock className="text-purple-600 text-xl" />
+                      <div>
+                        <h4 className="font-medium text-gray-800">Timezone</h4>
+                        <p className="text-sm text-gray-500">Your local timezone</p>
+                      </div>
+                    </div>
+                    <select
+                      value={userPreferences.timezone}
+                      onChange={(e) => handlePreferenceChange("timezone", e.target.value)}
+                      className="p-2 border border-gray-200 rounded-lg"
+                    >
+                      <option value="Africa/Kigali">Kigali (GMT+2)</option>
+                      <option value="UTC">UTC (GMT+0)</option>
+                      <option value="America/New_York">New York (GMT-5)</option>
+                      <option value="Europe/London">London (GMT+0)</option>
                     </select>
                   </div>
                 </div>
@@ -643,66 +785,46 @@ const SettingsPage = () => {
             )}
 
             {activeTab === "notifications" && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Notification Settings
-                </h3>
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-8">Notification Settings</h2>
 
-                <div className="space-y-6">
-                  {[
-                    {
-                      key: "jobAlerts",
-                      title: "Job Alerts",
-                      desc: "Get notified about new job opportunities",
-                      enabled: notificationSettings.jobAlerts,
-                    },
-                    {
-                      key: "email",
-                      title: "Email Notifications",
-                      desc: "Receive email updates and alerts",
-                      enabled: notificationSettings.email,
-                    },
-                    {
-                      key: "sms",
-                      title: "SMS Notifications",
-                      desc: "Receive text message updates",
-                      enabled: notificationSettings.sms,
-                    },
-                    {
-                      key: "push",
-                      title: "Push Notifications",
-                      desc: "Receive app notifications",
-                      enabled: notificationSettings.push,
-                    },
-                    {
-                      key: "marketing",
-                      title: "Marketing",
-                      desc: "Promotional offers and updates",
-                      enabled: notificationSettings.marketing,
-                    },
-                  ].map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
+                <div className="space-y-4">
+                  {Object.entries(notificationSettings).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                          {key === 'email' && <BiEnvelope className="text-purple-600" />}
+                          {key === 'sms' && <BiPhone className="text-purple-600" />}
+                          {key === 'push' && <BiBell className="text-purple-600" />}
+                          {key === 'jobAlerts' && <BiTrendingUp className="text-purple-600" />}
+                          {key === 'applicationAlerts' && <BiUser className="text-purple-600" />}
+                          {key === 'marketing' && <BiEnvelope className="text-purple-600" />}
+                        </div>
                       <div>
-                        <h4 className="font-medium text-gray-800">
-                          {item.title}
+                          <h4 className="font-medium text-gray-800 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
                         </h4>
-                        <p className="text-sm text-gray-500">{item.desc}</p>
+                          <p className="text-sm text-gray-500">
+                            {key === 'email' && 'Receive notifications via email'}
+                            {key === 'sms' && 'Receive notifications via SMS'}
+                            {key === 'push' && 'Receive push notifications'}
+                            {key === 'jobAlerts' && 'Get notified about new job opportunities'}
+                            {key === 'applicationAlerts' && 'Get notified about application updates'}
+                            {key === 'marketing' && 'Receive marketing and promotional emails'}
+                          </p>
+                      </div>
                       </div>
                       <button
-                        onClick={() => handleNotificationToggle(item.key)}
-                        disabled={actionLoading.notifications}
-                        className={`w-12 h-6 rounded-full p-1 transition-colors ${
-                          item.enabled ? "bg-purple-600" : "bg-gray-300"
+                        onClick={() => handleNotificationToggle(key)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          value ? 'bg-purple-600' : 'bg-gray-200'
                         }`}
                       >
-                        <div
-                          className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                            item.enabled ? "translate-x-6" : "translate-x-0"
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            value ? 'translate-x-6' : 'translate-x-1'
                           }`}
-                        ></div>
+                        />
                       </button>
                     </div>
                   ))}
@@ -711,122 +833,70 @@ const SettingsPage = () => {
             )}
 
             {activeTab === "privacy" && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Privacy & Security
-                </h3>
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-8">Privacy & Security</h2>
 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-8">
+                  {/* Privacy Settings */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Privacy Settings</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <BiBullseye className="text-purple-600 text-xl" />
+                          <HiEye className="text-purple-600 text-xl" />
                       <div>
-                        <h4 className="font-medium text-gray-800">
-                          Profile Visibility
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Who can see your profile
-                        </p>
+                            <h4 className="font-medium text-gray-800">Profile Visibility</h4>
+                            <p className="text-sm text-gray-500">Who can see your profile</p>
                       </div>
                     </div>
-                    <select
-                      value={privacySettings.profileVisibility}
-                      onChange={(e) => handlePrivacyChange("profileVisibility", e.target.value)}
-                      disabled={actionLoading.privacy}
-                      className="p-2 border border-gray-200 rounded-lg"
-                    >
-                      <option value="public">Everyone</option>
-                      <option value="limited">Employers Only</option>
-                      <option value="private">Private</option>
+                        <select
+                          value={privacySettings.profileVisibility}
+                          onChange={(e) => handlePrivacyChange("profileVisibility", e.target.value)}
+                          className="p-2 border border-gray-200 rounded-lg"
+                        >
+                          <option value="public">Public</option>
+                          <option value="limited">Limited</option>
+                          <option value="private">Private</option>
                     </select>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                      {Object.entries(privacySettings).filter(([key]) => key !== 'profileVisibility').map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <BiMailSend className="text-purple-600 text-xl" />
+                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                              {value ? <HiEye className="text-purple-600" /> : <HiEyeOff className="text-purple-600" />}
+                            </div>
                       <div>
-                        <h4 className="font-medium text-gray-800">
-                          Show Email
+                              <h4 className="font-medium text-gray-800 capitalize">
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
                         </h4>
                         <p className="text-sm text-gray-500">
-                          Display email on public profile
+                                {key === 'showEmail' && 'Display email address on profile'}
+                                {key === 'showPhone' && 'Display phone number on profile'}
+                                {key === 'showLocation' && 'Display location on profile'}
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handlePrivacyChange("showEmail", !privacySettings.showEmail)}
-                      disabled={actionLoading.privacy}
-                      className={`w-12 h-6 rounded-full p-1 transition-colors ${
-                        privacySettings.showEmail ? "bg-purple-600" : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                          privacySettings.showEmail ? "translate-x-6" : "translate-x-0"
-                        }`}
-                      ></div>
+                          <button
+                            onClick={() => handlePrivacyChange(key, !value)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                              value ? 'bg-purple-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                value ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
                     </button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <BiPhone className="text-purple-600 text-xl" />
-                      <div>
-                        <h4 className="font-medium text-gray-800">
-                          Show Phone
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Display phone number on public profile
-                        </p>
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                    <button
-                      onClick={() => handlePrivacyChange("showPhone", !privacySettings.showPhone)}
-                      disabled={actionLoading.privacy}
-                      className={`w-12 h-6 rounded-full p-1 transition-colors ${
-                        privacySettings.showPhone ? "bg-purple-600" : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                          privacySettings.showPhone ? "translate-x-6" : "translate-x-0"
-                        }`}
-                      ></div>
-                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <BiMapPin className="text-purple-600 text-xl" />
+                  {/* Password Change */}
                       <div>
-                        <h4 className="font-medium text-gray-800">
-                          Show Location
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Display location on public profile
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handlePrivacyChange("showLocation", !privacySettings.showLocation)}
-                      disabled={actionLoading.privacy}
-                      className={`w-12 h-6 rounded-full p-1 transition-colors ${
-                        privacySettings.showLocation ? "bg-purple-600" : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                          privacySettings.showLocation ? "translate-x-6" : "translate-x-0"
-                        }`}
-                      ></div>
-                    </button>
-                  </div>
-
-                  {/* Password Change Section */}
-                  <div className="border-t pt-6">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                      Change Password
-                    </h4>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Change Password</h3>
                     <form onSubmit={handlePasswordSubmit} className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -841,6 +911,7 @@ const SettingsPage = () => {
                           required
                         />
                       </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           New Password
@@ -852,8 +923,10 @@ const SettingsPage = () => {
                           onChange={handlePasswordChange}
                           className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
+                          minLength={6}
                         />
-                      </div>
+                    </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Confirm New Password
@@ -865,95 +938,109 @@ const SettingsPage = () => {
                           onChange={handlePasswordChange}
                           className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
+                          minLength={6}
                         />
-                      </div>
+                    </div>
+
                       <button
                         type="submit"
                         disabled={actionLoading.password}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
                       >
-                        {actionLoading.password ? (
-                          <>
-                            <BiLoader className="animate-spin" />
-                            Changing Password...
-                          </>
-                        ) : (
-                          <>
-                            <BiLock />
-                            Change Password
-                          </>
-                        )}
+                        {actionLoading.password ? <BiLoader className="animate-spin" /> : <BiLock />}
+                        Change Password
                       </button>
                     </form>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <BiLock className="text-purple-600 text-xl" />
-                      <div>
-                        <h4 className="font-medium text-gray-800">
-                          Two-Factor Authentication
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Add extra security to your account
-                        </p>
-                      </div>
-                    </div>
-                    <button className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors">
-                      Enable
-                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeTab === "help" && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Help & Support
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    {
-                      title: "FAQ",
-                      desc: "Frequently asked questions",
-                      icon: BiHelpCircle,
-                    },
-                    {
-                      title: "Contact Support",
-                      desc: "Get help from our team",
-                      icon: BiMailSend,
-                    },
-                    {
-                      title: "Report Issue",
-                      desc: "Report a bug or problem",
-                      icon: BiShield,
-                    },
-                    {
-                      title: "Terms of Service",
-                      desc: "Read our terms and conditions",
-                      icon: BiUser,
-                    },
-                  ].map((item, index) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
-                      >
+            {activeTab === "activity" && !isCompany && (
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-8">Activity Overview</h2>
+                
+                {stats ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl">
                         <div className="flex items-center gap-3">
-                          <IconComponent className="text-purple-600 text-xl" />
+                        <BiTrendingUp className="text-blue-600 text-2xl" />
                           <div>
-                            <h4 className="font-medium text-gray-800">
-                              {item.title}
-                            </h4>
-                            <p className="text-sm text-gray-500">{item.desc}</p>
+                          <p className="text-blue-600 text-sm font-medium">Jobs Applied</p>
+                          <p className="text-2xl font-bold text-blue-700">{stats.jobsApplied || 0}</p>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
+
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <BiCheck className="text-green-600 text-2xl" />
+                        <div>
+                          <p className="text-green-600 text-sm font-medium">Interviews</p>
+                          <p className="text-2xl font-bold text-green-700">{stats.interviews || 0}</p>
+                </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-6 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <BiStar className="text-yellow-600 text-2xl" />
+                        <div>
+                          <p className="text-yellow-600 text-sm font-medium">Rating</p>
+                          <p className="text-2xl font-bold text-yellow-700">{stats.rating || "N/A"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <BiLoader className="animate-spin text-4xl text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading activity data...</p>
+              </div>
+            )}
+          </div>
+            )}
+
+            {activeTab === "help" && (
+              <div className="bg-white rounded-2xl shadow-sm p-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-8">Help & Support</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                    <BiHelpCircle className="text-purple-600 text-2xl mb-4" />
+                    <h3 className="font-semibold text-gray-800 mb-2">FAQ</h3>
+                    <p className="text-gray-600 text-sm mb-4">Find answers to commonly asked questions</p>
+                    <button className="text-purple-600 hover:text-purple-700 font-medium">
+                      View FAQ →
+                    </button>
+        </div>
+
+                  <div className="p-6 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                    <BiEnvelope className="text-purple-600 text-2xl mb-4" />
+                    <h3 className="font-semibold text-gray-800 mb-2">Contact Support</h3>
+                    <p className="text-gray-600 text-sm mb-4">Get help from our support team</p>
+                    <button className="text-purple-600 hover:text-purple-700 font-medium">
+                      Contact Us →
+                    </button>
+                  </div>
+
+                  <div className="p-6 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                    <BiUser className="text-purple-600 text-2xl mb-4" />
+                    <h3 className="font-semibold text-gray-800 mb-2">User Guide</h3>
+                    <p className="text-gray-600 text-sm mb-4">Learn how to use all features</p>
+                    <button className="text-purple-600 hover:text-purple-700 font-medium">
+                      Read Guide →
+                    </button>
+                  </div>
+
+                  <div className="p-6 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                    <BiGlobe className="text-purple-600 text-2xl mb-4" />
+                    <h3 className="font-semibold text-gray-800 mb-2">Community</h3>
+                    <p className="text-gray-600 text-sm mb-4">Join our community forum</p>
+                    <button className="text-purple-600 hover:text-purple-700 font-medium">
+                      Join Community →
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -964,4 +1051,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default Settings;

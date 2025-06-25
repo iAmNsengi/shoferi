@@ -101,7 +101,7 @@ export const register = async (req, res, next) => {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.toLowerCase().trim(),
-        password,
+      password,
         accountType,
       };
 
@@ -194,51 +194,127 @@ export const register = async (req, res, next) => {
 export const signIn = async (req, res, next) => {
   const { email, password } = req.body;
 
+  console.log("Login attempt for email:", email);
+
   try {
-    //validation
+    // Validation
     if (!email || !password) {
-      next("Please Provide All User Credentials");
-      return;
+      return next("Please provide email and password");
     }
+
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Check both Users and Companies collections
     const [user, company] = await Promise.all([
-      Users.findOne({ email }).select("+password"),
-      (await import("../models/companiesModel.js")).default.findOne({ email }).select("+password")
+      Users.findOne({ email: normalizedEmail }).select("+password"),
+      Companies.findOne({ email: normalizedEmail }).select("+password")
     ]);
+
+    console.log("Found user:", !!user, "Found company:", !!company);
 
     let authenticatedUser = null;
     let isMatch = false;
+    let accountType = null;
 
     if (user) {
+      console.log("Checking user password...");
       isMatch = await user.comparePassword(password);
       if (isMatch) {
         authenticatedUser = user;
-      }
+        accountType = user.accountType;
+        console.log("User authentication successful, account type:", accountType);
+    }
     } else if (company) {
+      console.log("Checking company password...");
       isMatch = await company.comparePassword(password);
       if (isMatch) {
         authenticatedUser = company;
+        accountType = "company";
+        console.log("Company authentication successful");
       }
     }
 
     if (!authenticatedUser || !isMatch) {
-      next("Invalid email or password");
-      return;
+      console.log("Authentication failed: Invalid credentials");
+      return next("Invalid email or password");
     }
 
+    // Remove password from response
     authenticatedUser.password = undefined;
 
+    // Generate token
     const token = authenticatedUser.createJWT();
+
+    // Prepare response user object
+    const responseUser = {
+      _id: authenticatedUser._id,
+      email: authenticatedUser.email,
+      accountType: accountType,
+    };
+
+    // Add appropriate name fields based on account type
+    if (accountType === "company") {
+      responseUser.name = authenticatedUser.name;
+      responseUser.industry = authenticatedUser.industry;
+      responseUser.companySize = authenticatedUser.companySize;
+    } else {
+      responseUser.firstName = authenticatedUser.firstName;
+      responseUser.lastName = authenticatedUser.lastName;
+    }
+
+    console.log("Login successful for:", accountType, normalizedEmail);
 
     res.status(200).json({
       success: true,
-      message: "Login successfully",
-      user: authenticatedUser,
+      message: "Login successful",
+      user: responseUser,
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(400).json({ message: error.message });
+    console.error("Login error:", error);
+    return next(`Login failed: ${error.message}`);
+  }
+};
+
+export const testCompanyAuth = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    console.log("Testing company auth for email:", email);
+    
+    // Check both collections
+    const [user, company] = await Promise.all([
+      Users.findOne({ email }),
+      Companies.findOne({ email })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        userExists: !!user,
+        companyExists: !!company,
+        userData: user ? {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          accountType: user.accountType
+        } : null,
+        companyData: company ? {
+          _id: company._id,
+          name: company.name,
+          email: company.email,
+          accountType: "company",
+          industry: company.industry
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error("Test error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };

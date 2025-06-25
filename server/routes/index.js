@@ -9,6 +9,7 @@ import driverRoutes from "./driverRoutes.js";
 import bookingRoutes from "./bookingRoutes.js";
 import paymentRoutes from "./paymentRoutes.js";
 
+
 const router = express.Router();
 
 const path = "/api-v1/";
@@ -16,10 +17,12 @@ const path = "/api-v1/";
 router.use(`${path}auth`, authRoute); //api-v1/auth/
 router.use(`${path}users`, userRoute);
 router.use(`${path}companies`, companyRoute);
+
 router.use(`${path}jobs`, jobRoute);
 router.use(`${path}upload`, uploadRoutes);
 router.use(`${path}drivers`, driverRoutes);
 router.use(`${path}bookings`, bookingRoutes);
 router.use(`${path}payments`, paymentRoutes);
+
 
 export default router;

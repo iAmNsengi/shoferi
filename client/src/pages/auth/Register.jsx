@@ -72,35 +72,63 @@ const Register = () => {
       return;
     }
 
-    // Validate based on account type
+    // Enhanced validation based on account type
     if (userType === "company") {
-      if (!formData.companyName || !formData.email || !formData.password) {
-        alert("Please fill in all required fields");
+      if (!formData.companyName?.trim()) {
+        alert("Company name is required");
+        return;
+      }
+      if (!formData.email?.trim()) {
+        alert("Email is required");
+        return;
+      }
+      if (!formData.password?.trim()) {
+        alert("Password is required");
+        return;
+      }
+      if (formData.companyName.trim().length < 2) {
+        alert("Company name must be at least 2 characters long");
         return;
       }
     } else {
-      if (
-        !formData.firstName ||
-        !formData.lastName ||
-        !formData.email ||
-        !formData.password
-      ) {
-        alert("Please fill in all required fields");
+      if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim() || !formData.password?.trim()) {
+      alert("Please fill in all required fields");
+        return;
+      }
+      if (formData.firstName.trim().length < 2) {
+        alert("First name must be at least 2 characters long");
+        return;
+      }
+      if (formData.lastName.trim().length < 2) {
+        alert("Last name must be at least 2 characters long");
         return;
       }
     }
 
+    if (formData.password.length < 6) {
+      alert("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Prepare userData object
     const userData = {
-      firstName: userType === "driver" ? formData.firstName : undefined,
-      lastName: userType === "driver" ? formData.lastName : undefined,
-      companyName: userType === "company" ? formData.companyName : undefined,
-      industry: userType === "company" ? formData.industry : undefined,
-      companySize: userType === "company" ? formData.companySize : undefined,
-      website: userType === "company" ? formData.website : undefined,
-      email: formData.email,
+      email: formData.email.trim(),
       password: formData.password,
       accountType: userType,
     };
+
+    // Add fields based on account type
+    if (userType === "company") {
+      userData.companyName = formData.companyName.trim();
+      if (formData.industry) userData.industry = formData.industry;
+      if (formData.companySize) userData.companySize = formData.companySize;
+      if (formData.website) userData.website = formData.website.trim();
+    } else {
+      userData.firstName = formData.firstName.trim();
+      userData.lastName = formData.lastName.trim();
+    }
+
+    console.log("Submitting registration data:", userData);
 
     dispatch(registerUser(userData));
   };
@@ -212,31 +240,31 @@ const Register = () => {
                       }
                       className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
                       placeholder="Enter your first name"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-white text-sm font-medium mb-2">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
-                    <input
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        handleInputChange("lastName", e.target.value)
-                      }
-                      className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
-                      placeholder="Enter your last name"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
+                    required
+                    disabled={loading}
+                  />
                 </div>
               </div>
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
+                    className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    placeholder="Enter your last name"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            </div>
             )}
 
             {/* Email Field */}
