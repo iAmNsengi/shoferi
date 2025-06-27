@@ -5,9 +5,13 @@ const driverSchema = new mongoose.Schema(
     user: { type: Schema.Types.ObjectId, ref: "Users", required: true },
     licenseNumber: {
       type: String,
-      required: [true, "License number is required"],
+      default: "",
     },
-    licenseType: { type: String, required: [true, "License type is required"] },
+    licenseType: { 
+      type: String, 
+      default: "",
+      enum: ["", "A", "B", "C", "D", "E", "F", "Commercial", "Motorcycle"]
+    },
     experience: { type: Number, default: 0 },
     vehicleTypes: [{ type: String }],
     availability: {
@@ -39,11 +43,13 @@ const driverSchema = new mongoose.Schema(
     },
     pricePerHour: {
       type: Number,
-      required: [true, "Price per hour is required"],
+      default: 0,
+      min: 0,
     },
     pricePerDay: {
       type: Number,
-      required: [true, "Price per day is required"],
+      default: 0,
+      min: 0,
     },
     verified: { type: Boolean, default: false },
   },

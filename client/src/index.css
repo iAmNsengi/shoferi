@@ -3,9 +3,33 @@
 @tailwind utilities;
 
 body {
-  font-family: theme('fontFamily.sans');
+  font-family: theme("fontFamily.sans");
 }
 
-h1, h2, h3, h4, h5, h6,a {
-  font-family: 'Gloria Hallelujah', cursive;
+h1 {
+  font-family: "Gloria Hallelujah", cursive;
+}
+
+/* Line clamp utilities */
+@layer utilities {
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
 }

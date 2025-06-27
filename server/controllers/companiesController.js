@@ -98,70 +98,124 @@ export const signIn = async (req, res, next) => {
 };
 
 export const updateCompanyProfile = async (req, res, next) => {
-  const { name, contact, location, profileUrl, about } = req.body;
+  const { 
+    name, 
+    contact, 
+    location, 
+    profileUrl, 
+    about,
+    industry,
+    companySize,
+    website,
+    foundedYear,
+    email
+  } = req.body;
 
   try {
-    // validation
-    if (!name || !location || !about || !contact || !profileUrl) {
-      next("Please Provide All Required Fields");
-      return;
+    // Basic validation
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Company name is required"
+      });
     }
 
-    const id = req.body.user.userId;
+    const id = req.user.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id))
       return res.status(404).send(`No Company with id: ${id}`);
 
     const updateCompany = {
       name,
-      contact,
-      location,
-      profileUrl,
-      about,
+      contact: contact || "",
+      location: location || "",
+      profileUrl: profileUrl || "",
+      about: about || "",
+      industry: industry || "",
+      companySize: companySize || "1-10",
+      website: website || "",
+      foundedYear: foundedYear || "",
+      email: email || "",
       _id: id,
     };
 
+    // Remove undefined values
+    Object.keys(updateCompany).forEach(key => 
+      updateCompany[key] === undefined && delete updateCompany[key]
+    );
+
     const company = await Companies.findByIdAndUpdate(id, updateCompany, {
       new: true,
+      runValidators: true,
     });
 
-    const token = company.createJWT();
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found"
+      });
+    }
 
     company.password = undefined;
 
     res.status(200).json({
       success: true,
-      message: "Company Profile Updated SUccessfully",
+      message: "Company Profile Updated Successfully",
       company,
-      token,
     });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
 export const getCompanyProfile = async (req, res, next) => {
   try {
-    const id = req.body.user.userId;
+    console.log("🏢 GET /get-company-profile - Request received");
+    console.log("🔑 User ID from token:", req.user?.userId);
+    
+    const id = req.user.userId;
 
-    const company = await Companies.findById({ _id: id });
+    // First, try to find the company directly by ID
+    let company = await Companies.findById({ _id: id });
+    console.log("🔍 Direct company search result:", company ? "Found" : "Not found");
 
     if (!company) {
-      return res.status(200).send({
-        message: "Company Not Found",
-        success: false,
-      });
+      // If not found as a company, check if this is a user with company account type
+      const { default: Users } = await import("../models/userModel.js");
+      const user = await Users.findById({ _id: id });
+      console.log("👤 User search result:", user ? `Found user with accountType: ${user.accountType}` : "Not found");
+      
+      if (user && user.accountType === "company") {
+        // Look for a company with the same email as the user
+        company = await Companies.findOne({ email: user.email });
+        console.log("📧 Company search by email result:", company ? "Found" : "Not found");
+      }
+      
+      if (!company) {
+        console.log("❌ No company profile found for user:", id);
+        return res.status(404).json({
+          message: "Company Profile Not Found",
+          success: false,
+        });
+      }
     }
 
     company.password = undefined;
+    console.log("✅ Company profile found and returned");
     res.status(200).json({
       success: true,
       data: company,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    console.log("💥 Error in getCompanyProfile:", error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
@@ -230,7 +284,7 @@ export const getCompanies = async (req, res, next) => {
 //GET  COMPANY JOBS
 export const getCompanyJobListing = async (req, res, next) => {
   const { search, sort } = req.query;
-  const id = req.body.user.userId;
+  const id = req.user.userId;
 
   try {
     //conditons for searching filters
@@ -267,7 +321,10 @@ export const getCompanyJobListing = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(404).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
@@ -300,4 +357,81 @@ export const getCompanyById = async (req, res, next) => {
     console.log(error);
     res.status(404).json({ message: error.message });
   }
+};
+
+// GET COMPANY STATS
+export const getCompanyStats = async (req, res, next) => {
+  try {
+    const companyId = req.user.userId;
+
+    // Import Jobs model dynamically to avoid circular dependency
+    const { default: Jobs } = await import("../models/jobsModel.js");
+
+    // First, try to find the company directly by ID
+    let company = await Companies.findById(companyId).populate('jobPosts');
+    
+    if (!company) {
+      // If not found as a company, check if this is a user with company account type
+      const { default: Users } = await import("../models/userModel.js");
+      const user = await Users.findById({ _id: companyId });
+      
+      if (user && user.accountType === "company") {
+        // Look for a company with the same email as the user
+        company = await Companies.findOne({ email: user.email }).populate('jobPosts');
+      }
+      
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          message: "Company not found"
+        });
+      }
+    }
+
+    // Calculate stats
+    const totalJobs = company.jobPosts.length;
+    const activeJobs = company.jobPosts.filter(job => job.status === 'active').length;
+    
+    // Get total applications across all jobs - use company._id for the query
+    const allJobs = await Jobs.find({ company: company._id });
+    const totalApplications = allJobs.reduce((total, job) => total + (job.application?.length || 0), 0);
+    
+    // Get recent applications (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentApplications = allJobs.reduce((total, job) => {
+      const recentJobApplications = job.application?.filter(app => 
+        new Date(app.createdAt) > thirtyDaysAgo
+      ) || [];
+      return total + recentJobApplications.length;
+    }, 0);
+
+    const stats = {
+      totalJobs,
+      activeJobs,
+      totalApplications,
+      recentApplications,
+      companyAge: company.foundedYear ? new Date().getFullYear() - company.foundedYear : 0,
+      profileCompletion: calculateProfileCompletion(company),
+    };
+
+    res.status(200).json({
+      success: true,
+      stats,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
+  }
+};
+
+// Helper function to calculate profile completion percentage
+const calculateProfileCompletion = (company) => {
+  const fields = ['name', 'email', 'contact', 'location', 'about', 'industry', 'companySize', 'website'];
+  const filledFields = fields.filter(field => company[field] && company[field].toString().trim() !== '');
+  return Math.round((filledFields.length / fields.length) * 100);
 };

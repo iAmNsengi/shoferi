@@ -1,192 +1,161 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BiSearch,
   BiBookmark,
   BiDollar,
   BiTime,
   BiLocationPlus,
+  BiLoader,
+  BiPlus,
 } from "react-icons/bi";
 import { BsStarFill, BsClock, BsGeoAlt } from "react-icons/bs";
 import { HiOutlineAdjustments } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchJobs,
+  setFilters,
+  setSearchQuery,
+  fetchJobCategories,
+} from "../../store/slices/jobSlice";
 import DownloadApp from "../../components/sections/DownloadApp";
+import toast from "react-hot-toast";
 
 const FindJobs = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
-  const [jobType, setJobType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState([]);
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
+  const [localLocation, setLocalLocation] = useState("");
+  const [localJobType, setLocalJobType] = useState("all");
+  const [localCategory, setLocalCategory] = useState("");
+  const [localSalaryMin, setLocalSalaryMin] = useState("");
+  const [localExperience, setLocalExperience] = useState("");
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { jobs, loading, categories, pagination, filters, searchQuery } =
+    useSelector((state) => state.jobs);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    // Fetch jobs and categories on component mount
+    dispatch(fetchJobs());
+    dispatch(fetchJobCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Fetch jobs when filters change
+    const params = {
+      search: searchQuery,
+      ...filters,
+      page: 1,
+    };
+    dispatch(fetchJobs(params));
+  }, [dispatch, filters, searchQuery]);
+
+  const handleSearch = () => {
+    dispatch(setSearchQuery(localSearchTerm));
+    dispatch(
+      setFilters({
+        location: localLocation,
+        jtype: localJobType === "all" ? "" : localJobType,
+        category: localCategory,
+        salaryMin: localSalaryMin,
+        experience: localExperience,
+      })
+    );
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const toggleSaveJob = (jobId) => {
+    if (!isAuthenticated) {
+      toast.error("Please login to save jobs");
+      navigate("/login");
+      return;
+    }
+
     setSavedJobs((prev) =>
       prev.includes(jobId)
         ? prev.filter((id) => id !== jobId)
         : [...prev, jobId]
     );
+
+    const action = savedJobs.includes(jobId) ? "removed from" : "added to";
+    toast.success(`Job ${action} saved jobs`);
   };
 
-  const jobListings = [
-    {
-      id: 1,
-      title: "Professional Taxi Driver",
-      company: "Kigali Transport Co.",
-      location: "Kigali, Rwanda",
-      salary: "150,000 - 200,000 RWF",
-      type: "Full-time",
-      posted: "2 days ago",
-      description:
-        "We are looking for a professional taxi driver with clean driving record and excellent customer service skills.",
-      requirements: [
-        "Valid driving license",
-        "2+ years experience",
-        "Clean driving record",
-        "Customer service skills",
-      ],
-      benefits: ["Health insurance", "Fuel allowance", "Performance bonus"],
-      logo: "KT",
-      rating: 4.8,
-      reviews: 24,
-    },
-    {
-      id: 2,
-      title: "Delivery Driver",
-      company: "Rwanda Express Delivery",
-      location: "Kigali, Rwanda",
-      salary: "120,000 - 180,000 RWF",
-      type: "Full-time",
-      posted: "1 day ago",
-      description:
-        "Join our growing delivery team. Experience with motorcycle or car delivery preferred.",
-      requirements: [
-        "Valid license",
-        "Own vehicle preferred",
-        "GPS navigation skills",
-        "Time management",
-      ],
-      benefits: ["Flexible hours", "Fuel compensation", "Equipment provided"],
-      logo: "RE",
-      rating: 4.5,
-      reviews: 18,
-    },
-    {
-      id: 3,
-      title: "Corporate Chauffeur",
-      company: "Executive Transport Ltd",
-      location: "Kigali, Rwanda",
-      salary: "200,000 - 280,000 RWF",
-      type: "Full-time",
-      posted: "3 days ago",
-      description:
-        "Premium chauffeur service for executive clients. Must maintain highest standards of professionalism.",
-      requirements: [
-        "5+ years experience",
-        "Professional appearance",
-        "English fluency",
-        "Discretion",
-      ],
-      benefits: [
-        "Premium salary",
-        "Uniform provided",
-        "Tips allowed",
-        "Training provided",
-      ],
-      logo: "ET",
-      rating: 4.9,
-      reviews: 12,
-    },
-    {
-      id: 4,
-      title: "School Bus Driver",
-      company: "Safe Schools Transport",
-      location: "Gasabo, Rwanda",
-      salary: "140,000 - 170,000 RWF",
-      type: "Part-time",
-      posted: "1 week ago",
-      description:
-        "Responsible for safe transportation of students. Background check required.",
-      requirements: [
-        "Clean driving record",
-        "Background check",
-        "Patience with children",
-        "Punctuality",
-      ],
-      benefits: ["Flexible schedule", "School holidays off", "Safety training"],
-      logo: "SS",
-      rating: 4.7,
-      reviews: 31,
-    },
-    {
-      id: 5,
-      title: "Truck Driver (Long Distance)",
-      company: "Rwanda Logistics Hub",
-      location: "Nationwide",
-      salary: "180,000 - 250,000 RWF",
-      type: "Full-time",
-      posted: "4 days ago",
-      description:
-        "Long distance truck driver for regional routes. Travel allowance provided.",
-      requirements: [
-        "Heavy vehicle license",
-        "3+ years experience",
-        "Physical fitness",
-        "Navigation skills",
-      ],
-      benefits: ["Travel allowance", "Accommodation provided", "Overtime pay"],
-      logo: "RL",
-      rating: 4.6,
-      reviews: 15,
-    },
-    {
-      id: 6,
-      title: "Uber/Bolt Driver",
-      company: "Independent Contractor",
-      location: "Kigali, Rwanda",
-      salary: "100,000 - 300,000 RWF",
-      type: "Flexible",
-      posted: "5 days ago",
-      description:
-        "Drive on your own schedule with ride-sharing platforms. Car rental options available.",
-      requirements: [
-        "Valid license",
-        "Smartphone",
-        "Customer service",
-        "Own car or rental",
-      ],
-      benefits: ["Flexible hours", "Weekly payments", "Car rental support"],
-      logo: "IC",
-      rating: 4.3,
-      reviews: 89,
-    },
-  ];
+  const formatSalary = (salary, salaryType) => {
+    if (!salary) return "Salary not specified";
+    const formattedAmount = salary.toLocaleString();
+    const typeMap = {
+      hourly: "/hr",
+      daily: "/day",
+      weekly: "/week",
+      monthly: "/month",
+      per_trip: "/trip",
+      commission: "commission",
+    };
+    return `${formattedAmount} RWF${typeMap[salaryType] || ""}`;
+  };
 
-  const filteredJobs = jobListings.filter((job) => {
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation =
-      location === "" ||
-      job.location.toLowerCase().includes(location.toLowerCase());
-    const matchesType =
-      jobType === "all" || job.type.toLowerCase() === jobType.toLowerCase();
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return matchesSearch && matchesLocation && matchesType;
-  });
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
+  const loadMoreJobs = () => {
+    if (pagination.currentPage < pagination.totalPages) {
+      const params = {
+        search: searchQuery,
+        ...filters,
+        page: pagination.currentPage + 1,
+      };
+      dispatch(fetchJobs(params));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 -mt-[100px]">
       {/* Hero Search Section */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 py-16 pt-60">
+      <div className="bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-100 py-16 pt-60">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Find Your Perfect Driving Job
-            </h1>
-            <p className="text-xl text-purple-100 max-w-2xl mx-auto">
-              Discover opportunities from verified companies across Rwanda
-            </p>
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex-1">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                  Find Your Perfect Driving Job
+                </h1>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                  Discover opportunities from verified companies across Rwanda
+                </p>
+              </div>
+
+              {/* Create Job Button - Only for companies */}
+              {isAuthenticated && user?.accountType === "company" && (
+                <div className="hidden md:block">
+                  <Link
+                    to="/jobs/create"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all flex items-center gap-2 shadow-lg"
+                  >
+                    <BiPlus className="text-lg" />
+                    Post a Job
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Search Bar */}
@@ -197,9 +166,10 @@ const FindJobs = () => {
                 <input
                   type="text"
                   placeholder="Job title, company, or keywords"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
 
@@ -208,203 +178,385 @@ const FindJobs = () => {
                 <input
                   type="text"
                   placeholder="Location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  value={localLocation}
+                  onChange={(e) => setLocalLocation(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
 
-              <button className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all font-semibold">
-                <h2>Search Jobs</h2>
+              <button
+                onClick={handleSearch}
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <BiLoader className="animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <BiSearch />
+                    Search Jobs
+                  </>
+                )}
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-6">
+            {/* Mobile Create Job Button */}
+            {isAuthenticated && user?.accountType === "company" && (
+              <div className="md:hidden mt-4">
+                <Link
+                  to="/jobs/create"
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
+                >
+                  <BiPlus className="text-lg" />
+                  Post a Job
+                </Link>
+              </div>
+            )}
+
+            {/* Advanced Filters */}
+            <div className="mt-4">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors"
+                className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium"
               >
                 <HiOutlineAdjustments />
-                <h3>Filters</h3>
+                Advanced Filters
               </button>
-              <button
-                onClick={() =>
-                  setJobType(jobType === "all" ? "full-time" : "all")
-                }
-                className={`px-4 py-2 rounded-full transition-colors ${
-                  jobType === "full-time"
-                    ? "bg-purple-100 text-purple-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <h3>Full-time</h3>
-              </button>
-              <button
-                onClick={() =>
-                  setJobType(jobType === "all" ? "part-time" : "all")
-                }
-                className={`px-4 py-2 rounded-full transition-colors ${
-                  jobType === "part-time"
-                    ? "bg-purple-100 text-purple-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <h3>Part-time</h3>
-              </button>
-              <button
-                onClick={() =>
-                  setJobType(jobType === "all" ? "flexible" : "all")
-                }
-                className={`px-4 py-2 rounded-full transition-colors ${
-                  jobType === "flexible"
-                    ? "bg-purple-100 text-purple-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <h3>Flexible</h3>
-              </button>
+
+              {showFilters && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 p-4 bg-gray-50 rounded-xl">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Job Type
+                    </label>
+                    <select
+                      value={localJobType}
+                      onChange={(e) => setLocalJobType(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="all">All Types</option>
+                      <option value="full-time">Full-time</option>
+                      <option value="part-time">Part-time</option>
+                      <option value="contract">Contract</option>
+                      <option value="temporary">Temporary</option>
+                      <option value="one-time">One-time</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={localCategory}
+                      onChange={(e) => setLocalCategory(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.title || category._id.replace("_", " ")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Min Salary (RWF)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 100000"
+                      value={localSalaryMin}
+                      onChange={(e) => setLocalSalaryMin(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Experience (Years)
+                    </label>
+                    <select
+                      value={localExperience}
+                      onChange={(e) => setLocalExperience(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">Any Experience</option>
+                      <option value="0-1">Entry Level (0-1 years)</option>
+                      <option value="2-5">Experienced (2-5 years)</option>
+                      <option value="5-10">Senior (5-10 years)</option>
+                      <option value="10+">Expert (10+ years)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Job Listings */}
+      {/* Results Section */}
       <div className="container mx-auto px-4 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {filteredJobs.length} Jobs Found
-          </h2>
-          <select className="border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none">
-            <option>Sort by: Most Recent</option>
-            <option>Sort by: Salary (High to Low)</option>
-            <option>Sort by: Salary (Low to High)</option>
-            <option>Sort by: Company Rating</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredJobs.map((job) => (
-            <div
-              key={job.id}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100"
-            >
-              {/* Job Header */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold">
-                    {job.logo}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {job.title}
-                    </h3>
-                    <p className="text-gray-600 font-medium">{job.company}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => toggleSaveJob(job.id)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    savedJobs.includes(job.id)
-                      ? "bg-purple-100 text-purple-600"
-                      : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                  }`}
-                >
-                  <BiBookmark className="text-xl" />
-                </button>
-              </div>
-
-              {/* Job Details */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <BsGeoAlt className="text-gray-400" />
-                  <span className="text-gray-600 text-sm">{job.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BiDollar className="text-gray-400" />
-                  <span className="text-gray-600 text-sm">{job.salary}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BsClock className="text-gray-400" />
-                  <span className="text-gray-600 text-sm">{job.type}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BiTime className="text-gray-400" />
-                  <span className="text-gray-600 text-sm">{job.posted}</span>
-                </div>
-              </div>
-
-              {/* Company Rating */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <BsStarFill
-                      key={i}
-                      className={
-                        i < Math.floor(job.rating)
-                          ? "text-yellow-400"
-                          : "text-gray-200"
-                      }
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-600">
-                  {job.rating} ({job.reviews} reviews)
-                </span>
-              </div>
-
-              {/* Job Description */}
-              <p className="text-gray-700 text-sm mb-4 line-clamp-2">
-                {job.description}
-              </p>
-
-              {/* Requirements Preview */}
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-2">
-                  {job.requirements.slice(0, 3).map((req, index) => (
-                    <span
-                      key={index}
-                      className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs"
-                    >
-                      {req}
-                    </span>
-                  ))}
-                  {job.requirements.length > 3 && (
-                    <span className="text-purple-600 text-xs">
-                      +{job.requirements.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => navigate("/jobs/1")}
-                  to={"/jobs/1"}
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-xl hover:shadow-lg transition-all font-semibold"
-                >
-                  Apply Now
-                </button>
-                <button
-                  onClick={() => navigate("/jobs/1")}
-                  className="bg-gray-100 text-gray-700 py-2 px-4 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  View Details
-                </button>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar - Categories */}
+          <div className="lg:w-1/4">
+            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Job Categories
+              </h3>
+              <div className="space-y-2">
+                {categories.slice(0, 8).map((category) => (
+                  <button
+                    key={category._id}
+                    onClick={() => {
+                      setLocalCategory(category._id);
+                      dispatch(
+                        setFilters({ ...filters, category: category._id })
+                      );
+                    }}
+                    className={`block w-full text-left p-3 rounded-lg transition-colors ${
+                      localCategory === category._id
+                        ? "bg-purple-100 text-purple-700"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="capitalize">
+                        {category.title || category._id.replace("_", " ")}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {category.count}
+                      </span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* Load More */}
-        <div className="text-center mt-12">
-          <button className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-8 py-3 rounded-xl hover:shadow-lg transition-all font-semibold">
-            Load More Jobs
-          </button>
+          {/* Main Content */}
+          <div className="lg:w-3/4">
+            {/* Results Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {searchQuery
+                    ? `Search Results for "${searchQuery}"`
+                    : "All Jobs"}
+                </h2>
+                <p className="text-gray-600">
+                  {pagination.total || 0} jobs found
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <select
+                  onChange={(e) => {
+                    dispatch(setFilters({ ...filters, sort: e.target.value }));
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="salary_high">Highest Salary</option>
+                  <option value="salary_low">Lowest Salary</option>
+                  <option value="a-z">A-Z</option>
+                  <option value="z-a">Z-A</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Loading State */}
+            {loading && jobs.length === 0 && (
+              <div className="text-center py-12">
+                <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
+                <p className="text-gray-600">Loading jobs...</p>
+              </div>
+            )}
+
+            {/* No Results */}
+            {!loading && jobs.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl text-gray-300 mb-4">📋</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  No jobs found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your search criteria or filters
+                </p>
+                <button
+                  onClick={() => {
+                    setLocalSearchTerm("");
+                    setLocalLocation("");
+                    setLocalJobType("all");
+                    setLocalCategory("");
+                    setLocalSalaryMin("");
+                    setLocalExperience("");
+                    dispatch(setSearchQuery(""));
+                    dispatch(setFilters({}));
+                  }}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+
+            {/* Job Listings */}
+            <div className="space-y-6">
+              {jobs.map((job) => (
+                <div
+                  key={job._id}
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6"
+                >
+                  <div className="flex flex-col md:flex-row md:items-start gap-6">
+                    {/* Company Logo */}
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
+                        {job.company?.profileUrl ? (
+                          <img
+                            src={job.company.profileUrl}
+                            alt={job.company.name}
+                            className="w-full h-full rounded-2xl object-cover"
+                          />
+                        ) : (
+                          job.company?.name?.charAt(0) || job.jobTitle.charAt(0)
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Job Details */}
+                    <div className="flex-1">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-800 mb-2">
+                            {job.jobTitle}
+                          </h3>
+                          <div className="flex items-center gap-4 mb-2">
+                            <span className="text-purple-600 font-semibold">
+                              {job.company?.name || "Company"}
+                            </span>
+                            {job.company?.rating && (
+                              <div className="flex items-center gap-1">
+                                <BsStarFill className="text-yellow-400 text-sm" />
+                                <span className="text-sm text-gray-600">
+                                  {job.company.rating}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <BsGeoAlt className="text-gray-400" />
+                              {job.location}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BiDollar className="text-gray-400" />
+                              {formatSalary(job.salary, job.salaryType)}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BsClock className="text-gray-400" />
+                              <span className="capitalize">{job.jobType}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BiTime className="text-gray-400" />
+                              {formatDate(job.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => toggleSaveJob(job._id)}
+                          className={`mt-2 md:mt-0 p-2 rounded-lg transition-colors ${
+                            savedJobs.includes(job._id)
+                              ? "bg-purple-100 text-purple-600"
+                              : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
+                          }`}
+                        >
+                          <BiBookmark className="text-xl" />
+                        </button>
+                      </div>
+
+                      {/* Job Tags */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm capitalize">
+                          {job.category?.replace("_", " ")}
+                        </span>
+                        {job.featured && (
+                          <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                            ⭐ Featured
+                          </span>
+                        )}
+                        {job.urgent && (
+                          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
+                            🔥 Urgent
+                          </span>
+                        )}
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm capitalize ${
+                            job.priority === "high"
+                              ? "bg-orange-100 text-orange-800"
+                              : job.priority === "urgent"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {job.priority} Priority
+                        </span>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-gray-700 mb-4 line-clamp-2">
+                        {job.details?.[0]?.desc ||
+                          "Join our team and be part of Rwanda's growing transportation industry."}
+                      </p>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-between">
+                        <Link
+                          to={`/jobs/${job._id}`}
+                          className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all"
+                        >
+                          View Details
+                        </Link>
+
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>
+                            {job.applicationCount ||
+                              job.applications?.length ||
+                              0}{" "}
+                            applicants
+                          </span>
+                          <span>{job.analytics?.views || 0} views</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {pagination.currentPage < pagination.totalPages && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={loadMoreJobs}
+                  disabled={loading}
+                  className="px-8 py-3 bg-white border border-purple-600 text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all disabled:opacity-50"
+                >
+                  {loading ? "Loading..." : "Load More Jobs"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Quick Stats */}
       <DownloadApp />
     </div>
   );
