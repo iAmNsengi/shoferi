@@ -1,5 +1,6 @@
 import Users from "../models/userModel.js";
 import Companies from "../models/companiesModel.js";
+import mongoose from "mongoose";
 
 export const register = async (req, res, next) => {
   const { 
@@ -56,43 +57,45 @@ export const register = async (req, res, next) => {
     }
   }
 
+  // Start transaction for proper rollback if needed
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    // Check if email already exists in both Users and Companies collections
-    const [userExist, companyExist] = await Promise.all([
-      Users.findOne({ email }),
-      Companies.findOne({ email })
+    // Check if user already exists
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    const [existingUser, existingCompany] = await Promise.all([
+      Users.findOne({ email: normalizedEmail }),
+      Companies.findOne({ email: normalizedEmail })
     ]);
 
-    if (userExist || companyExist) {
+    if (existingUser || existingCompany) {
+      await session.abortTransaction();
       return next("Email address is already registered. Please login instead.");
     }
 
     let user;
 
-    // Create user based on account type
     if (accountType === "company") {
       // Create company account
       console.log("Creating company account...");
       
       const companyData = {
         name: companyName.trim(),
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         password,
-        industry: industry?.trim() || "",
+        industry: industry || "",
         companySize: companySize || "1-10",
-        website: website?.trim() || "",
-        contact: "",
-        location: "",
-        profileUrl: "",
-        about: "",
+        website: website ? website.trim() : "",
       };
 
       console.log("Company data:", companyData);
       
-      const company = await Companies.create(companyData);
-      user = company;
+      const company = await Companies.create([companyData], { session });
+      user = company[0];
       
-      console.log("Company created successfully:", company._id);
+      console.log("Company created successfully:", company[0]._id);
     } else {
       // Create driver or admin account
       console.log("Creating user account...");
@@ -100,14 +103,15 @@ export const register = async (req, res, next) => {
       const userData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.toLowerCase().trim(),
-      password,
+        email: normalizedEmail,
+        password,
         accountType,
       };
 
       console.log("User data:", userData);
       
-      user = await Users.create(userData);
+      const createdUsers = await Users.create([userData], { session });
+      user = createdUsers[0];
       
       console.log("User created successfully:", user._id);
 
@@ -116,36 +120,35 @@ export const register = async (req, res, next) => {
         console.log("Creating driver profile...");
         const Drivers = (await import("../models/driverModel.js")).default;
         
-        await Drivers.create({
+        const driverData = {
           user: user._id,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          email: email.toLowerCase().trim(),
-          phoneNumber: "",
+          // Only include fields that exist in the driver schema
           licenseNumber: "",
-          vehicleTypes: [],
+          licenseType: "",
           experience: 0,
+          vehicleTypes: [],
           availability: {
-            isAvailable: false,
-            workingHours: {
-              start: "06:00",
-              end: "22:00",
-            },
+            status: "offline",
+            schedule: [],
           },
+          rating: 0, // Fixed: should be a number, not an object
+          reviews: [],
           currentLocation: {
             type: "Point",
             coordinates: [0, 0],
           },
-          rating: {
-            average: 0,
-            count: 0,
-            reviews: [],
-          },
-          status: "inactive",
-        });
+          pricePerHour: 0,
+          pricePerDay: 0,
+          verified: false,
+        };
+
+        await Drivers.create([driverData], { session });
         console.log("Driver profile created successfully");
       }
     }
+
+    // Commit the transaction
+    await session.commitTransaction();
 
     // Generate token
     const token = await user.createJWT();
@@ -174,6 +177,9 @@ export const register = async (req, res, next) => {
       token,
     });
   } catch (error) {
+    // Rollback transaction on error
+    await session.abortTransaction();
+    
     console.error("Registration error:", error);
     
     // Handle specific mongoose validation errors
@@ -188,6 +194,9 @@ export const register = async (req, res, next) => {
     }
     
     return next(`Registration failed: ${error.message}`);
+  } finally {
+    // End session
+    session.endSession();
   }
 };
 
