@@ -1,6 +1,6 @@
 const CTASection = () => {
   return (
-    <div className="py-20 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 relative overflow-hidden">
+    <div className="py-20 bg-gradient-to-br from-gray-800 via-gray-900 to-indigo-900 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>

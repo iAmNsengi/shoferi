@@ -29,7 +29,10 @@ router.post("/register", limiter, register);
 router.post("/login", limiter, signIn);
 
 // GET DATA
-router.get("/get-company-profile", userAuth, getCompanyProfile);
+router.get("/get-company-profile", (req, res, next) => {
+  console.log("🚀 Route handler: /get-company-profile accessed");
+  next();
+}, userAuth, getCompanyProfile);
 router.get("/get-company-job-listings", userAuth, getCompanyJobListing);
 router.get("/stats", userAuth, getCompanyStats);
 router.get("/get-companies", getCompanies);

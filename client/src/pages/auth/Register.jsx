@@ -134,25 +134,25 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br pt-20 from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center p-4">
       {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-100/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative w-full max-w-3xl">
         {/* Registration Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
+        <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
           {/* Logo and Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                <BiCar className="text-3xl text-purple-600" />
+              <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <BiCar className="text-3xl text-white" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Join Shoferi</h1>
-            <p className="text-purple-100">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Join Shoferi</h1>
+            <p className="text-gray-600">
               Create your account and start your journey
             </p>
           </div>
@@ -165,8 +165,8 @@ const Register = () => {
                 onClick={() => setUserType("driver")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "driver"
-                    ? "bg-white/20 border-white text-white"
-                    : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
+                    ? "bg-purple-50 border-purple-300 text-purple-700 shadow-md"
+                    : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
                 disabled={loading}
               >
@@ -179,8 +179,8 @@ const Register = () => {
                 onClick={() => setUserType("company")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "company"
-                    ? "bg-white/20 border-white text-white"
-                    : "bg-white/10 border-white/30 text-white/70 hover:bg-white/15"
+                    ? "bg-purple-50 border-purple-300 text-purple-700 shadow-md"
+                    : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
                 disabled={loading}
               >
@@ -193,7 +193,7 @@ const Register = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-100 text-center">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-center">
               {error}
             </div>
           )}
@@ -203,18 +203,18 @@ const Register = () => {
             {/* Company Name (for companies) */}
             {userType === "company" && (
               <div>
-                <label className="block text-white text-sm font-medium mb-2">
+                <label className="block text-gray-800 text-sm font-medium mb-2">
                   Company Name
                 </label>
                 <div className="relative">
-                  <BiBuilding className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <BiBuilding className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
                   <input
                     type="text"
                     value={formData.companyName}
                     onChange={(e) =>
                       handleInputChange("companyName", e.target.value)
                     }
-                    className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                     placeholder="Enter your company name"
                     required
                     disabled={loading}
@@ -227,18 +227,18 @@ const Register = () => {
             {userType === "driver" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">
+                  <label className="block text-gray-800 text-sm font-medium mb-2">
                     First Name
                   </label>
                   <div className="relative">
-                    <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                    <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
                     <input
                       type="text"
                       value={formData.firstName}
                       onChange={(e) =>
                         handleInputChange("firstName", e.target.value)
                       }
-                      className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                       placeholder="Enter your first name"
                     required
                     disabled={loading}
@@ -246,18 +246,18 @@ const Register = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-white text-sm font-medium mb-2">
+                <label className="block text-gray-800 text-sm font-medium mb-2">
                   Last Name
                 </label>
                 <div className="relative">
-                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) =>
                       handleInputChange("lastName", e.target.value)
                     }
-                    className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                     placeholder="Enter your last name"
                     required
                     disabled={loading}
@@ -269,16 +269,16 @@ const Register = () => {
 
             {/* Email Field */}
             <div>
-              <label className="block text-white text-sm font-medium mb-2">
+              <label className="block text-gray-800 text-sm font-medium mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                   placeholder="Enter your email"
                   required
                   disabled={loading}
@@ -290,7 +290,7 @@ const Register = () => {
             {userType === "company" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">
+                  <label className="block text-gray-800 text-sm font-medium mb-2">
                     Industry
                   </label>
                   <select
@@ -298,7 +298,7 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("industry", e.target.value)
                     }
-                    className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                     disabled={loading}
                   >
                     <option value="" className="text-gray-900">Select Industry</option>
@@ -311,7 +311,7 @@ const Register = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">
+                  <label className="block text-gray-800 text-sm font-medium mb-2">
                     Company Size
                   </label>
                   <select
@@ -319,7 +319,7 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("companySize", e.target.value)
                     }
-                    className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                     disabled={loading}
                   >
                     <option value="1-10" className="text-gray-900">1-10 employees</option>
@@ -335,18 +335,18 @@ const Register = () => {
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-white text-sm font-medium mb-2">
+                <label className="block text-gray-800 text-sm font-medium mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <BiLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <BiLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) =>
                       handleInputChange("password", e.target.value)
                     }
-                    className="w-full pl-12 pr-12 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                     placeholder="Create password"
                     required
                     minLength={6}
@@ -355,7 +355,7 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
                     disabled={loading}
                   >
                     {showPassword ? (
@@ -368,18 +368,18 @@ const Register = () => {
               </div>
 
               <div>
-                <label className="block text-white text-sm font-medium mb-2">
+                <label className="block text-gray-800 text-sm font-medium mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <BiLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 text-xl" />
+                  <BiLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={(e) =>
                       handleInputChange("confirmPassword", e.target.value)
                     }
-                    className="w-full pl-12 pr-12 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
                     placeholder="Confirm password"
                     required
                     disabled={loading}
@@ -387,7 +387,7 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
                     disabled={loading}
                   >
                     {showConfirmPassword ? (
@@ -406,22 +406,22 @@ const Register = () => {
                 type="checkbox"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
-                className="w-4 h-4 text-purple-600 bg-white/20 border-white/30 rounded focus:ring-purple-500 mt-1"
+                className="w-4 h-4 text-purple-600 bg-gray-50 border-gray-200 rounded focus:ring-purple-500 mt-1"
                 required
                 disabled={loading}
               />
-              <div className="text-sm text-white">
+              <div className="text-sm text-gray-800">
                 I agree to the{" "}
                 <a
                   href="#"
-                  className="text-white hover:underline font-semibold"
+                  className="text-gray-800 hover:underline font-semibold"
                 >
                   Terms of Service
                 </a>{" "}
                 and{" "}
                 <a
                   href="#"
-                  className="text-white hover:underline font-semibold"
+                  className="text-gray-800 hover:underline font-semibold"
                 >
                   Privacy Policy
                 </a>
@@ -436,7 +436,7 @@ const Register = () => {
                 !agreeToTerms ||
                 formData.password !== formData.confirmPassword
               }
-              className="w-full bg-white text-purple-700 py-3 px-4 rounded-xl hover:bg-gray-100 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-purple-700 text-white py-3 px-4 rounded-xl hover:bg-purple-800 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -453,13 +453,13 @@ const Register = () => {
 
           {/* Sign In Link */}
           <div className="text-center mt-6">
-            <p className="text-purple-100">
+            <p className="text-gray-600">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-white font-semibold hover:text-purple-200 transition-colors underline"
+                className="text-gray-800 font-semibold hover:text-purple-200 transition-colors underline"
               >
-                Sign In <span className="text-orange-500 font-bold">here</span>
+                Sign In <span className="text-purple-500 font-bold">here</span>
               </Link>
             </p>
           </div>

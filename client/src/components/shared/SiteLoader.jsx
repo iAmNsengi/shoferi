@@ -1,6 +1,6 @@
 const SiteLoader = () => {
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-100 flex items-center justify-center z-50">
       <div className="text-center">
         {/* Moving Car Animation */}
         <div className="relative mb-8">

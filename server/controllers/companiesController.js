@@ -174,22 +174,29 @@ export const updateCompanyProfile = async (req, res, next) => {
 
 export const getCompanyProfile = async (req, res, next) => {
   try {
+    console.log("🏢 GET /get-company-profile - Request received");
+    console.log("🔑 User ID from token:", req.user?.userId);
+    
     const id = req.user.userId;
 
     // First, try to find the company directly by ID
     let company = await Companies.findById({ _id: id });
+    console.log("🔍 Direct company search result:", company ? "Found" : "Not found");
 
     if (!company) {
       // If not found as a company, check if this is a user with company account type
       const { default: Users } = await import("../models/userModel.js");
       const user = await Users.findById({ _id: id });
+      console.log("👤 User search result:", user ? `Found user with accountType: ${user.accountType}` : "Not found");
       
       if (user && user.accountType === "company") {
         // Look for a company with the same email as the user
         company = await Companies.findOne({ email: user.email });
+        console.log("📧 Company search by email result:", company ? "Found" : "Not found");
       }
       
       if (!company) {
+        console.log("❌ No company profile found for user:", id);
         return res.status(404).json({
           message: "Company Profile Not Found",
           success: false,
@@ -198,12 +205,13 @@ export const getCompanyProfile = async (req, res, next) => {
     }
 
     company.password = undefined;
+    console.log("✅ Company profile found and returned");
     res.status(200).json({
       success: true,
       data: company,
     });
   } catch (error) {
-    console.log(error);
+    console.log("💥 Error in getCompanyProfile:", error);
     res.status(500).json({ 
       success: false,
       message: error.message 

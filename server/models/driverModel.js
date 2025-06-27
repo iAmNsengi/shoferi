@@ -7,7 +7,7 @@ const driverSchema = new mongoose.Schema(
       type: String,
       required: [true, "License number is required"],
     },
-    licenseType: { type: String, required: [true, "License type is required"] },
+    licenseType: { type: String, default:"" },
     experience: { type: Number, default: 0 },
     vehicleTypes: [{ type: String }],
     availability: {
@@ -39,11 +39,14 @@ const driverSchema = new mongoose.Schema(
     },
     pricePerHour: {
       type: Number,
-      required: [true, "Price per hour is required"],
+      default: 0,
+      // required: [false, "Price per hour is required"],
     },
     pricePerDay: {
       type: Number,
-      required: [true, "Price per day is required"],
+      default: 0,
+
+      // required: [true, "Price per day is required"],
     },
     verified: { type: Boolean, default: false },
   },

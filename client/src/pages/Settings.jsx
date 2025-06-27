@@ -295,7 +295,7 @@ const Settings = () => {
 
   if (currentLoading && !currentProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 pt-24 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 pt-24 flex items-center justify-center">
         <div className="text-center">
           <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading settings...</p>
@@ -309,7 +309,7 @@ const Settings = () => {
     : `${currentProfile?.firstName || ""} ${currentProfile?.lastName || ""}`.trim();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-100 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 pt-24">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6">

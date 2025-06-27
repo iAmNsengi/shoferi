@@ -130,15 +130,15 @@ const FindJobs = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20 -mt-[100px]">
       {/* Hero Search Section */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 py-16 pt-60">
+      <div className="bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-100 py-16 pt-60">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <div className="flex justify-between items-center mb-6">
               <div className="flex-1">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
                   Find Your Perfect Driving Job
                 </h1>
-                <p className="text-xl text-purple-100 max-w-2xl mx-auto">
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                   Discover opportunities from verified companies across Rwanda
                 </p>
               </div>

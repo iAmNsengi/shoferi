@@ -38,8 +38,19 @@ const jobSchema = new mongoose.Schema(
       required: [true, "Location is required"],
     },
     coordinates: {
-      type: { type: String },
-      coordinates: [Number], // [longitude, latitude]
+      type: { 
+        type: String, 
+        enum: ['Point']
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        validate: {
+          validator: function(coords) {
+            return coords.length === 2;
+          },
+          message: 'Coordinates must contain exactly 2 elements [longitude, latitude]'
+        }
+      }
     },
     workRadius: { type: Number, default: 10 }, // km radius from base location
     salary: {

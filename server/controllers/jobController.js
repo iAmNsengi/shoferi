@@ -58,6 +58,15 @@ export const createJob = async (req, res, next) => {
       status: "active",
     };
 
+    // Only add coordinates if they are provided and valid
+    // Don't include empty coordinates field to avoid GeoJSON errors
+    if (req.body.coordinates && req.body.coordinates.length === 2) {
+      jobPost.coordinates = {
+        type: "Point",
+        coordinates: req.body.coordinates // [longitude, latitude]
+      };
+    }
+
     // Get company with given ID
     const company = await Companies.findById(req?.user?.userId);
     if (!company) {
