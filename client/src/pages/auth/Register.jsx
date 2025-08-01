@@ -146,11 +146,6 @@ const Register = () => {
         <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-green-100">
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <BiCar className="text-3xl text-white" />
-              </div>
-            </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               Join Shoferi
             </h1>
