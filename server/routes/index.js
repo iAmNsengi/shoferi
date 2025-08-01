@@ -8,7 +8,9 @@ import uploadRoutes from "./uploadRoutes.js";
 import driverRoutes from "./driverRoutes.js";
 import bookingRoutes from "./bookingRoutes.js";
 import paymentRoutes from "./paymentRoutes.js";
-
+import adminRoutes from "./adminRoutes.js";
+import messageRoutes from "./messageRoutes.js";
+import notificationRoutes from "./notificationRoutes.js";
 
 const router = express.Router();
 
@@ -23,6 +25,8 @@ router.use(`${path}upload`, uploadRoutes);
 router.use(`${path}drivers`, driverRoutes);
 router.use(`${path}bookings`, bookingRoutes);
 router.use(`${path}payments`, paymentRoutes);
-
+router.use(`${path}admin`, adminRoutes);
+router.use(`${path}messages`, messageRoutes);
+router.use(`${path}notifications`, notificationRoutes);
 
 export default router;
