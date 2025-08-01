@@ -67,10 +67,7 @@ const FeaturedJobsSection = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Featured
-            <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
-              {" "}
-              Job Opportunities
-            </span>
+            <span className="text-green-600"> Job Opportunities</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Discover the latest driving opportunities from top-rated companies

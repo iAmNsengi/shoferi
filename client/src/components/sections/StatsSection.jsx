@@ -7,7 +7,7 @@ const StatsSection = () => {
   ];
 
   return (
-    <div className="py-24 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-r-[150px] mr-20">
+    <div className="py-24 bg-primary-600 rounded-r-[150px] mr-20">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, index) => (

@@ -52,7 +52,7 @@ const HeroSection = () => {
               <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                 Find Driving Jobs
               </button>
-              <button className="flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm border-2 border-green-200 text-gray-700 px-8 py-4 rounded-xl font-semibold hover:bg-green-50 hover:border-green-300 transition-all duration-300 transform hover:scale-105 shadow-lg">
+              <button className="flex items-center justify-center gap-2 bg-secondary-600 text-white backdrop-blur-sm border-2 border-green-200 px-8 py-4 rounded-xl font-semibold hover:bg-secondary-700 hover:border-green-300 transition-all duration-300 transform hover:scale-105 shadow-lg">
                 <BiPlay className="text-xl text-green-600" />
                 What's Shoferi?
               </button>

@@ -33,7 +33,7 @@ const ServicesSection = () => {
       <div className="container mx-auto px-6">
         <div className="text-center mb-20">
           <div className="inline-block">
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-6 leading-tight">
+            <h2 className="text-5xl font-bold text-green-600 mb-6 leading-tight">
               Our Core Services
             </h2>
             <div className="h-1 w-24 bg-gradient-to-r from-primary-600 to-secondary-600 mx-auto mb-6 rounded-full"></div>
