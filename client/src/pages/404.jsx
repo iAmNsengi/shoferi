@@ -63,7 +63,7 @@ const NotFound = () => {
             </span>
           </h1>
 
-          <p className="text-xl text-purple-100 mb-8 leading-relaxed">
+          <p className="text-xl text-primary-100 mb-8 leading-relaxed">
             Looks like this page has driven off the map! Don't worry, even the
             best drivers sometimes take a detour. Let's get you back on the
             right route.
@@ -73,13 +73,13 @@ const NotFound = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link
               to={"/"}
-              className="bg-white text-purple-700 px-8 py-4 rounded-full font-semibold hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-2"
+              className="bg-white text-primary-700 px-8 py-4 rounded-full font-semibold hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <BiHome className="text-xl" />
               Go Home
             </Link>
             <button
-              className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-purple-700 transition-all"
+              className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-primary-700 transition-all"
               onClick={() => history.back()}
             >
               <BiArrowToLeft className="text-xl" />
@@ -94,7 +94,7 @@ const NotFound = () => {
                 <BiCar className="text-white text-xl" />
               </div>
               <h3 className="text-white font-semibold mb-2">Find Jobs</h3>
-              <p className="text-purple-100 text-sm">
+              <p className="text-primary-100 text-sm">
                 Browse available driving opportunities
               </p>
               <div className="flex items-center text-yellow-300 text-sm mt-3 group-hover:gap-2 transition-all">
@@ -108,7 +108,7 @@ const NotFound = () => {
                 <BiCompass className="text-white text-xl" />
               </div>
               <h3 className="text-white font-semibold mb-2">Community</h3>
-              <p className="text-purple-100 text-sm">
+              <p className="text-primary-100 text-sm">
                 Connect with fellow drivers
               </p>
               <div className="flex items-center text-yellow-300 text-sm mt-3 group-hover:gap-2 transition-all">
@@ -122,7 +122,7 @@ const NotFound = () => {
                 <BiMapPin className="text-white text-xl" />
               </div>
               <h3 className="text-white font-semibold mb-2">Support</h3>
-              <p className="text-purple-100 text-sm">Get help and guidance</p>
+              <p className="text-primary-100 text-sm">Get help and guidance</p>
               <div className="flex items-center text-yellow-300 text-sm mt-3 group-hover:gap-2 transition-all">
                 <span>Contact</span>
                 <BsArrowRight className="ml-1 group-hover:ml-0 transition-all" />
@@ -141,11 +141,11 @@ const NotFound = () => {
               <div className="text-2xl font-bold text-yellow-300 mb-1">
                 1,247
               </div>
-              <div className="text-purple-100 text-sm">Drivers Online</div>
+              <div className="text-primary-100 text-sm">Drivers Online</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-300 mb-1">89</div>
-              <div className="text-purple-100 text-sm">Jobs Posted Today</div>
+              <div className="text-primary-100 text-sm">Jobs Posted Today</div>
             </div>
           </div>
         </div>
@@ -157,9 +157,9 @@ const NotFound = () => {
               <input
                 type="text"
                 placeholder="Search for something specific..."
-                className="flex-1 bg-transparent text-white placeholder-purple-200 px-4 py-2 outline-none"
+                className="flex-1 bg-transparent text-white placeholder-primary-200 px-4 py-2 outline-none"
               />
-              <button className="bg-gradient-to-r from-yellow-400 to-orange-400 text-purple-800 px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all">
+              <button className="bg-gradient-to-r from-yellow-400 to-orange-400 text-primary-800 px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all">
                 Search
               </button>
             </div>

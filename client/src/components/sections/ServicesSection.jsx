@@ -7,36 +7,36 @@ const ServicesSection = () => {
       title: "Driver Jobs",
       description:
         "Find verified driving opportunities with top companies across Rwanda. From delivery services to corporate transportation.",
-      gradient: "from-blue-500 to-cyan-500",
-      accentColor: "blue-500",
+      gradient: "from-primary-600 to-primary-500",
+      accentColor: "primary-500",
     },
     {
       icon: Building2,
       title: "Company Hiring",
       description:
         "Connect with qualified, verified drivers for your business needs. Streamlined hiring process with background checks.",
-      gradient: "from-purple-500 to-pink-500",
-      accentColor: "purple-500",
+      gradient: "from-secondary-600 to-secondary-500",
+      accentColor: "secondary-500",
     },
     {
       icon: User,
       title: "Driver Training",
       description:
         "Professional development programs to enhance driving skills, safety awareness, and career advancement opportunities.",
-      gradient: "from-green-500 to-emerald-500",
-      accentColor: "green-500",
+      gradient: "from-accent-600 to-accent-500",
+      accentColor: "accent-500",
     },
   ];
 
   return (
-    <div className="py-24 bg-gradient-to-b from-slate-50 to-white">
+    <div className="py-24 bg-gradient-to-b from-primary-50 to-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-20">
           <div className="inline-block">
             <h2 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-6 leading-tight">
               Our Core Services
             </h2>
-            <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-6 rounded-full"></div>
+            <div className="h-1 w-24 bg-gradient-to-r from-primary-600 to-secondary-600 mx-auto mb-6 rounded-full"></div>
           </div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-light">
             Comprehensive solutions for drivers and companies in Rwanda's

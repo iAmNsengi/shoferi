@@ -294,7 +294,7 @@ const Feeds = () => {
                               {post.author.name}
                             </h4>
                             {post.author.verified && (
-                              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                              <div className="w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center">
                                 <span className="text-white text-xs">✓</span>
                               </div>
                             )}

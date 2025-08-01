@@ -8,8 +8,8 @@ import {
   BiBuilding,
 } from "react-icons/bi";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { registerUser, clearError } from "../../store/slices/authSlice";
+import { useAuthStore } from "../../store";
+import { useRegister } from "../../hooks/useQueries";
 
 const Register = () => {
   const [userType, setUserType] = useState("driver"); // "driver" or "company"
@@ -28,13 +28,10 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const { loading, error, isAuthenticated } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, login } = useAuthStore();
+  const registerMutation = useRegister();
 
   const from = location.state?.from?.pathname || "/feed";
 
@@ -43,14 +40,6 @@ const Register = () => {
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
-
-  useEffect(() => {
-    return () => {
-      if (error) {
-        dispatch(clearError());
-      }
-    };
-  }, [dispatch, error]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -91,8 +80,13 @@ const Register = () => {
         return;
       }
     } else {
-      if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.email?.trim() || !formData.password?.trim()) {
-      alert("Please fill in all required fields");
+      if (
+        !formData.firstName?.trim() ||
+        !formData.lastName?.trim() ||
+        !formData.email?.trim() ||
+        !formData.password?.trim()
+      ) {
+        alert("Please fill in all required fields");
         return;
       }
       if (formData.firstName.trim().length < 2) {
@@ -128,30 +122,38 @@ const Register = () => {
       userData.lastName = formData.lastName.trim();
     }
 
-    console.log("Submitting registration data:", userData);
-
-    dispatch(registerUser(userData));
+    try {
+      const response = await registerMutation.mutateAsync(userData);
+      if (response.data) {
+        login(response.data.user, response.data.token);
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      // Error is handled by the mutation
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 pt-20 flex items-center justify-center p-4">
       {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-100/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-300/30 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative w-full max-w-3xl">
         {/* Registration Card */}
-        <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
+        <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-green-100">
           {/* Logo and Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <BiCar className="text-3xl text-white" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Join Shoferi</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              Join Shoferi
+            </h1>
             <p className="text-gray-600">
               Create your account and start your journey
             </p>
@@ -165,24 +167,26 @@ const Register = () => {
                 onClick={() => setUserType("driver")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "driver"
-                    ? "bg-purple-50 border-purple-300 text-purple-700 shadow-md"
+                    ? "bg-green-50 border-green-300 text-green-700 shadow-md"
                     : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
-                disabled={loading}
+                disabled={registerMutation.isPending}
               >
                 <BiCar className="text-2xl mx-auto mb-2" />
                 <div className="font-semibold">I'm a Driver</div>
-                <div className="text-sm opacity-80">Looking for driving jobs</div>
+                <div className="text-sm opacity-80">
+                  Looking for driving jobs
+                </div>
               </button>
               <button
                 type="button"
                 onClick={() => setUserType("company")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "company"
-                    ? "bg-purple-50 border-purple-300 text-purple-700 shadow-md"
+                    ? "bg-green-50 border-green-300 text-green-700 shadow-md"
                     : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
-                disabled={loading}
+                disabled={registerMutation.isPending}
               >
                 <BiBuilding className="text-2xl mx-auto mb-2" />
                 <div className="font-semibold">I'm a Company</div>
@@ -192,9 +196,10 @@ const Register = () => {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {registerMutation.error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-center">
-              {error}
+              {registerMutation.error.response?.data?.message ||
+                "Registration failed"}
             </div>
           )}
 
@@ -214,10 +219,10 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("companyName", e.target.value)
                     }
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                     placeholder="Enter your company name"
                     required
-                    disabled={loading}
+                    disabled={registerMutation.isPending}
                   />
                 </div>
               </div>
@@ -238,33 +243,33 @@ const Register = () => {
                       onChange={(e) =>
                         handleInputChange("firstName", e.target.value)
                       }
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                       placeholder="Enter your first name"
-                    required
-                    disabled={loading}
-                  />
+                      required
+                      disabled={registerMutation.isPending}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-800 text-sm font-medium mb-2">
+                    Last Name
+                  </label>
+                  <div className="relative">
+                    <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
+                      placeholder="Enter your last name"
+                      required
+                      disabled={registerMutation.isPending}
+                    />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-gray-800 text-sm font-medium mb-2">
-                  Last Name
-                </label>
-                <div className="relative">
-                  <BiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl" />
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
-                    }
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
-                    placeholder="Enter your last name"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
             )}
 
             {/* Email Field */}
@@ -278,10 +283,10 @@ const Register = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                   placeholder="Enter your email"
                   required
-                  disabled={loading}
+                  disabled={registerMutation.isPending}
                 />
               </div>
             </div>
@@ -298,16 +303,30 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("industry", e.target.value)
                     }
-                    className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
-                    disabled={loading}
+                    className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
+                    disabled={registerMutation.isPending}
                   >
-                    <option value="" className="text-gray-900">Select Industry</option>
-                    <option value="transportation" className="text-gray-900">Transportation</option>
-                    <option value="logistics" className="text-gray-900">Logistics</option>
-                    <option value="delivery" className="text-gray-900">Delivery Services</option>
-                    <option value="rideshare" className="text-gray-900">Ride Sharing</option>
-                    <option value="freight" className="text-gray-900">Freight</option>
-                    <option value="other" className="text-gray-900">Other</option>
+                    <option value="" className="text-gray-900">
+                      Select Industry
+                    </option>
+                    <option value="transportation" className="text-gray-900">
+                      Transportation
+                    </option>
+                    <option value="logistics" className="text-gray-900">
+                      Logistics
+                    </option>
+                    <option value="delivery" className="text-gray-900">
+                      Delivery Services
+                    </option>
+                    <option value="rideshare" className="text-gray-900">
+                      Ride Sharing
+                    </option>
+                    <option value="freight" className="text-gray-900">
+                      Freight
+                    </option>
+                    <option value="other" className="text-gray-900">
+                      Other
+                    </option>
                   </select>
                 </div>
                 <div>
@@ -319,14 +338,24 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("companySize", e.target.value)
                     }
-                    className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
-                    disabled={loading}
+                    className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
+                    disabled={registerMutation.isPending}
                   >
-                    <option value="1-10" className="text-gray-900">1-10 employees</option>
-                    <option value="11-50" className="text-gray-900">11-50 employees</option>
-                    <option value="51-200" className="text-gray-900">51-200 employees</option>
-                    <option value="201-500" className="text-gray-900">201-500 employees</option>
-                    <option value="500+" className="text-gray-900">500+ employees</option>
+                    <option value="1-10" className="text-gray-900">
+                      1-10 employees
+                    </option>
+                    <option value="11-50" className="text-gray-900">
+                      11-50 employees
+                    </option>
+                    <option value="51-200" className="text-gray-900">
+                      51-200 employees
+                    </option>
+                    <option value="201-500" className="text-gray-900">
+                      201-500 employees
+                    </option>
+                    <option value="500+" className="text-gray-900">
+                      500+ employees
+                    </option>
                   </select>
                 </div>
               </div>
@@ -346,17 +375,17 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("password", e.target.value)
                     }
-                    className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                     placeholder="Create password"
                     required
                     minLength={6}
-                    disabled={loading}
+                    disabled={registerMutation.isPending}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
-                    disabled={loading}
+                    disabled={registerMutation.isPending}
                   >
                     {showPassword ? (
                       <BiHide className="text-xl" />
@@ -379,16 +408,16 @@ const Register = () => {
                     onChange={(e) =>
                       handleInputChange("confirmPassword", e.target.value)
                     }
-                    className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-purple-300 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                     placeholder="Confirm password"
                     required
-                    disabled={loading}
+                    disabled={registerMutation.isPending}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
-                    disabled={loading}
+                    disabled={registerMutation.isPending}
                   >
                     {showConfirmPassword ? (
                       <BiHide className="text-xl" />
@@ -406,9 +435,9 @@ const Register = () => {
                 type="checkbox"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
-                className="w-4 h-4 text-purple-600 bg-gray-50 border-gray-200 rounded focus:ring-purple-500 mt-1"
+                className="w-4 h-4 text-green-600 bg-gray-50 border-gray-200 rounded focus:ring-green-500 mt-1"
                 required
-                disabled={loading}
+                disabled={registerMutation.isPending}
               />
               <div className="text-sm text-gray-800">
                 I agree to the{" "}
@@ -432,21 +461,19 @@ const Register = () => {
             <button
               type="submit"
               disabled={
-                loading ||
+                registerMutation.isPending ||
                 !agreeToTerms ||
                 formData.password !== formData.confirmPassword
               }
-              className="w-full bg-purple-700 text-white py-3 px-4 rounded-xl hover:bg-purple-800 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
             >
-              {loading ? (
+              {registerMutation.isPending ? (
                 <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Creating Account...
                 </div>
               ) : (
-                `Create ${
-                  userType === "driver" ? "Driver" : "Company"
-                } Account`
+                `Create ${userType === "driver" ? "Driver" : "Company"} Account`
               )}
             </button>
           </form>
@@ -457,9 +484,9 @@ const Register = () => {
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-gray-800 font-semibold hover:text-purple-200 transition-colors underline"
+                className="text-green-600 font-semibold hover:text-green-700 transition-colors underline"
               >
-                Sign In <span className="text-purple-500 font-bold">here</span>
+                Sign In <span className="text-green-500 font-bold">here</span>
               </Link>
             </p>
           </div>

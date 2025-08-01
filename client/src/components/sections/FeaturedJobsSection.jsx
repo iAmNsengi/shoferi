@@ -2,26 +2,24 @@ import { useState, useEffect } from "react";
 import { BiDollar, BiTime, BiLoader } from "react-icons/bi";
 import { BsGeoAlt, BsClock, BsStarFill } from "react-icons/bs";
 import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchJobs } from "../../store/slices/jobSlice";
+import { useJobs } from "../../hooks/useQueries";
 import { ArrowBigRightIcon } from "lucide-react";
 
 const FeaturedJobsSection = () => {
-  const dispatch = useDispatch();
-  const { jobs, loading } = useSelector((state) => state.jobs);
   const [featuredJobs, setFeaturedJobs] = useState([]);
 
-  useEffect(() => {
-    // Fetch recent jobs for the landing page
-    dispatch(fetchJobs({ limit: 6, sort: "newest" }));
-  }, [dispatch]);
+  // Use React Query to fetch jobs
+  const { data: jobsData, isLoading } = useJobs({
+    limit: 6,
+    sort: "newest",
+  });
 
   useEffect(() => {
     // Filter and set featured jobs from the fetched jobs
-    if (jobs.length > 0) {
-      setFeaturedJobs(jobs.slice(0, 6));
+    if (jobsData?.data?.jobs) {
+      setFeaturedJobs(jobsData.data.jobs.slice(0, 6));
     }
-  }, [jobs]);
+  }, [jobsData]);
 
   const formatSalary = (salary, salaryType) => {
     if (!salary) return "Competitive salary";
@@ -49,12 +47,12 @@ const FeaturedJobsSection = () => {
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
 
-  if (loading && featuredJobs.length === 0) {
+  if (isLoading && featuredJobs.length === 0) {
     return (
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
+            <BiLoader className="animate-spin text-4xl text-green-600 mx-auto mb-4" />
             <p className="text-gray-600">Loading featured jobs...</p>
           </div>
         </div>
@@ -69,7 +67,7 @@ const FeaturedJobsSection = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Featured
-            <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
               {" "}
               Job Opportunities
             </span>
@@ -89,7 +87,7 @@ const FeaturedJobsSection = () => {
             >
               {/* Company Logo and Info */}
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                   {job.company?.profileUrl ? (
                     <img
                       src={job.company.profileUrl}
@@ -101,7 +99,7 @@ const FeaturedJobsSection = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-green-600 transition-colors">
                     {job.jobTitle}
                   </h3>
                   <p className="text-gray-600 text-sm truncate">
@@ -166,7 +164,7 @@ const FeaturedJobsSection = () => {
               {/* Action Button */}
               <Link
                 to={`/jobs/${job._id}`}
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center gap-2 group"
               >
                 View Details
                 <ArrowBigRightIcon className="group-hover:translate-x-1 transition-transform" />
@@ -179,7 +177,7 @@ const FeaturedJobsSection = () => {
         <div className="text-center">
           <Link
             to="/jobs"
-            className="inline-flex items-center gap-3 bg-white text-purple-600 px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all border-2 border-purple-600 hover:bg-purple-50"
+            className="inline-flex items-center gap-3 bg-white text-green-600 px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all border-2 border-green-600 hover:bg-green-50"
           >
             View All Job Opportunities
             <ArrowBigRightIcon className="text-xl" />
@@ -189,21 +187,21 @@ const FeaturedJobsSection = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-16 border-t border-gray-200">
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="text-3xl font-bold text-green-600 mb-2">
               {featuredJobs.length}+
             </div>
             <div className="text-gray-600">Active Jobs</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">50+</div>
+            <div className="text-3xl font-bold text-green-600 mb-2">50+</div>
             <div className="text-gray-600">Partner Companies</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">1000+</div>
+            <div className="text-3xl font-bold text-green-600 mb-2">1000+</div>
             <div className="text-gray-600">Drivers Hired</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">98%</div>
+            <div className="text-3xl font-bold text-green-600 mb-2">98%</div>
             <div className="text-gray-600">Success Rate</div>
           </div>
         </div>
