@@ -1,26 +1,106 @@
-import { configureStore } from "@reduxjs/toolkit";
-import authSlice from "./slices/authSlice";
-import userSlice from "./slices/userSlice";
-import driverSlice from "./slices/driverSlice";
-import bookingSlice from "./slices/bookingSlice";
-import jobSlice from "./slices/jobSlice";
-import companySlice from "./slices/companySlice";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-const store = configureStore({
-  reducer: {
-    auth: authSlice,
-    user: userSlice,
-    driver: driverSlice,
-    booking: bookingSlice,
-    jobs: jobSlice,
-    company: companySlice,
+// Auth Store
+export const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+
+      login: (userData, token) =>
+        set({
+          user: userData,
+          token,
+          isAuthenticated: true,
+          isLoading: false,
+        }),
+
+      logout: () =>
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        }),
+
+      setLoading: (loading) => set({ isLoading: loading }),
+
+      updateUser: (userData) => set({ user: userData }),
+    }),
+    {
+      name: "auth-storage",
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);
+
+// UI Store
+export const useUIStore = create((set) => ({
+  sidebarOpen: false,
+  notifications: [],
+
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+
+  addNotification: (notification) =>
+    set((state) => ({
+      notifications: [...state.notifications, notification],
+    })),
+
+  removeNotification: (id) =>
+    set((state) => ({
+      notifications: state.notifications.filter((n) => n.id !== id),
+    })),
+
+  clearNotifications: () => set({ notifications: [] }),
+}));
+
+// Job Store
+export const useJobStore = create((set) => ({
+  jobs: [],
+  currentJob: null,
+  filters: {
+    location: "",
+    category: "",
+    salary: "",
+    experience: "",
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ["persist/PERSIST"],
+
+  setJobs: (jobs) => set({ jobs }),
+  setCurrentJob: (job) => set({ currentJob: job }),
+  setFilters: (filters) => set({ filters }),
+  clearFilters: () =>
+    set({
+      filters: {
+        location: "",
+        category: "",
+        salary: "",
+        experience: "",
       },
     }),
-});
+}));
 
-export default store;
+// Booking Store
+export const useBookingStore = create((set) => ({
+  bookings: [],
+  currentBooking: null,
+
+  setBookings: (bookings) => set({ bookings }),
+  setCurrentBooking: (booking) => set({ currentBooking: booking }),
+  addBooking: (booking) =>
+    set((state) => ({
+      bookings: [...state.bookings, booking],
+    })),
+  updateBooking: (id, updates) =>
+    set((state) => ({
+      bookings: state.bookings.map((b) =>
+        b.id === id ? { ...b, ...updates } : b
+      ),
+    })),
+}));

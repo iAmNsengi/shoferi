@@ -12,31 +12,20 @@ import {
 import { BsStarFill, BsClock, BsGeoAlt, BsPeople } from "react-icons/bs";
 import { HiOutlineOfficeBuilding, HiOutlineBadgeCheck } from "react-icons/hi";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchJobById,
-  applyForJob,
-  trackJobView,
-} from "../../store/slices/jobSlice";
+import { useAuthStore } from "../../store";
+import { useJob, useApplyJob } from "../../hooks/useQueries";
 import toast from "react-hot-toast";
 
 const JobDetails = () => {
-  const [isApplying, setIsApplying] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { id: jobId } = useParams();
+  const { isAuthenticated, user } = useAuthStore();
 
-  const { currentJob: jobData, loading } = useSelector((state) => state.jobs);
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (jobId) {
-      dispatch(fetchJobById(jobId));
-      dispatch(trackJobView(jobId));
-    }
-  }, [dispatch, jobId]);
+  // Use React Query hooks
+  const { data: jobData, isLoading, error } = useJob(jobId);
+  const applyJobMutation = useApplyJob();
 
   const handleApply = async () => {
     if (!isAuthenticated) {
@@ -45,13 +34,10 @@ const JobDetails = () => {
       return;
     }
 
-    setIsApplying(true);
     try {
-      await dispatch(applyForJob(jobId)).unwrap();
+      await applyJobMutation.mutateAsync({ id: jobId, data: {} });
     } catch (error) {
       console.error("Application failed:", error);
-    } finally {
-      setIsApplying(false);
     }
   };
 
@@ -80,18 +66,18 @@ const JobDetails = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-14 flex items-center justify-center">
         <div className="text-center">
-          <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
+          <BiLoader className="animate-spin text-4xl text-green-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading job details...</p>
         </div>
       </div>
     );
   }
 
-  if (!jobData) {
+  if (error || !jobData) {
     return (
       <div className="min-h-screen bg-gray-50 pt-14 flex items-center justify-center">
         <div className="text-center">
@@ -103,7 +89,7 @@ const JobDetails = () => {
           </p>
           <button
             onClick={() => navigate("/jobs")}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             Back to Jobs
           </button>
@@ -149,7 +135,7 @@ const JobDetails = () => {
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate("/jobs")}
-              className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
+              className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
             >
               <BiArrowBack className="text-xl" />
               <span className="font-medium">Back to Jobs</span>
@@ -157,7 +143,7 @@ const JobDetails = () => {
             <div className="flex items-center gap-3">
               <button
                 onClick={shareJob}
-                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
               >
                 <BiShare className="text-xl" />
               </button>
@@ -165,8 +151,8 @@ const JobDetails = () => {
                 onClick={toggleSave}
                 className={`p-2 rounded-lg transition-colors ${
                   isSaved
-                    ? "bg-purple-100 text-purple-600"
-                    : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+                    ? "bg-green-100 text-green-600"
+                    : "text-gray-600 hover:text-green-600 hover:bg-green-50"
                 }`}
               >
                 <BiBookmark className="text-xl" />
@@ -183,7 +169,7 @@ const JobDetails = () => {
             {/* Job Header */}
             <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
               <div className="flex items-start gap-6 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
                   {jobData.company?.profileUrl ? (
                     <img
                       src={jobData.company.profileUrl}
@@ -199,7 +185,7 @@ const JobDetails = () => {
                     {jobData.jobTitle}
                   </h1>
                   <div className="flex items-center gap-4 mb-4">
-                    <h2 className="text-xl text-purple-600 font-semibold">
+                    <h2 className="text-xl text-green-600 font-semibold">
                       {jobData.company?.name || "Company"}
                     </h2>
                     {jobData.company?.rating && (
@@ -267,10 +253,10 @@ const JobDetails = () => {
                 ) : (
                   <button
                     onClick={handleApply}
-                    disabled={isApplying}
-                    className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all disabled:opacity-50"
+                    disabled={applyJobMutation.isPending}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50"
                   >
-                    {isApplying ? "Applying..." : "Apply Now"}
+                    {applyJobMutation.isPending ? "Applying..." : "Apply Now"}
                   </button>
                 )}
               </div>
@@ -355,7 +341,7 @@ const JobDetails = () => {
             {/* Apply Card */}
             <div className="hidden lg:block bg-white rounded-2xl shadow-lg p-6 mb-6 sticky top-24">
               <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-purple-600 mb-1">
+                <div className="text-3xl font-bold text-green-600 mb-1">
                   {formatSalary(jobData.salary, jobData.salaryType)}
                 </div>
                 <div className="text-gray-600 text-sm capitalize">
@@ -413,10 +399,10 @@ const JobDetails = () => {
               ) : (
                 <button
                   onClick={handleApply}
-                  disabled={isApplying}
-                  className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={applyJobMutation.isPending}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isApplying ? (
+                  {applyJobMutation.isPending ? (
                     <>
                       <BiLoader className="animate-spin" />
                       Applying...

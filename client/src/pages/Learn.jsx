@@ -18,7 +18,7 @@ const Learn = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4 ">
               Start Learning Driving for Free
             </h2>
-            <p className="text-purple-600 text-lg max-w-2xl mx-auto">
+            <p className="text-primary-600 text-lg max-w-2xl mx-auto">
               Shoferi empowers everyone in Rwanda with free access to essential
               driving skills and road safety knowledge.
             </p>

@@ -11,13 +11,8 @@ import {
 import { BsStarFill, BsClock, BsGeoAlt } from "react-icons/bs";
 import { HiOutlineAdjustments } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchJobs,
-  setFilters,
-  setSearchQuery,
-  fetchJobCategories,
-} from "../../store/slices/jobSlice";
+import { useAuthStore } from "../../store";
+import { useJobs } from "../../hooks/useQueries";
 import DownloadApp from "../../components/sections/DownloadApp";
 import toast from "react-hot-toast";
 
@@ -30,41 +25,35 @@ const FindJobs = () => {
   const [localCategory, setLocalCategory] = useState("");
   const [localSalaryMin, setLocalSalaryMin] = useState("");
   const [localExperience, setLocalExperience] = useState("");
+  const [filters, setFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const { isAuthenticated, user } = useAuthStore();
 
-  const { jobs, loading, categories, pagination, filters, searchQuery } =
-    useSelector((state) => state.jobs);
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  // Use React Query to fetch jobs
+  const {
+    data: jobsData,
+    isLoading,
+    error,
+  } = useJobs({
+    search: searchQuery,
+    ...filters,
+  });
 
-  useEffect(() => {
-    // Fetch jobs and categories on component mount
-    dispatch(fetchJobs());
-    dispatch(fetchJobCategories());
-  }, [dispatch]);
-
-  useEffect(() => {
-    // Fetch jobs when filters change
-    const params = {
-      search: searchQuery,
-      ...filters,
-      page: 1,
-    };
-    dispatch(fetchJobs(params));
-  }, [dispatch, filters, searchQuery]);
+  const jobs = jobsData?.data?.jobs || [];
+  const pagination = jobsData?.data?.pagination || {};
+  const categories = jobsData?.data?.categories || [];
 
   const handleSearch = () => {
-    dispatch(setSearchQuery(localSearchTerm));
-    dispatch(
-      setFilters({
-        location: localLocation,
-        jtype: localJobType === "all" ? "" : localJobType,
-        category: localCategory,
-        salaryMin: localSalaryMin,
-        experience: localExperience,
-      })
-    );
+    setSearchQuery(localSearchTerm);
+    setFilters({
+      location: localLocation,
+      jtype: localJobType === "all" ? "" : localJobType,
+      category: localCategory,
+      salaryMin: localSalaryMin,
+      experience: localExperience,
+    });
   };
 
   const handleKeyPress = (e) => {
@@ -118,19 +107,17 @@ const FindJobs = () => {
 
   const loadMoreJobs = () => {
     if (pagination.currentPage < pagination.totalPages) {
-      const params = {
-        search: searchQuery,
-        ...filters,
+      setFilters((prev) => ({
+        ...prev,
         page: pagination.currentPage + 1,
-      };
-      dispatch(fetchJobs(params));
+      }));
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 -mt-[100px]">
       {/* Hero Search Section */}
-      <div className="bg-gradient-to-br from-gray-100 via-blue-50 to-indigo-100 py-16 pt-60">
+      <div className="bg-gradient-to-br from-green-50 via-green-100 to-green-200 py-16 pt-60">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <div className="flex justify-between items-center mb-6">
@@ -148,7 +135,7 @@ const FindJobs = () => {
                 <div className="hidden md:block">
                   <Link
                     to="/jobs/create"
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all flex items-center gap-2 shadow-lg"
+                    className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center gap-2 shadow-lg"
                   >
                     <BiPlus className="text-lg" />
                     Post a Job
@@ -169,7 +156,7 @@ const FindJobs = () => {
                   value={localSearchTerm}
                   onChange={(e) => setLocalSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
 
@@ -181,15 +168,15 @@ const FindJobs = () => {
                   value={localLocation}
                   onChange={(e) => setLocalLocation(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
 
               <button
                 onClick={handleSearch}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center gap-2"
               >
-                {loading ? (
+                {isLoading ? (
                   <>
                     <BiLoader className="animate-spin" />
                     Searching...
@@ -208,7 +195,7 @@ const FindJobs = () => {
               <div className="md:hidden mt-4">
                 <Link
                   to="/jobs/create"
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center gap-2"
                 >
                   <BiPlus className="text-lg" />
                   Post a Job
@@ -220,7 +207,7 @@ const FindJobs = () => {
             <div className="mt-4">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium"
+                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
               >
                 <HiOutlineAdjustments />
                 Advanced Filters
@@ -235,7 +222,7 @@ const FindJobs = () => {
                     <select
                       value={localJobType}
                       onChange={(e) => setLocalJobType(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     >
                       <option value="all">All Types</option>
                       <option value="full-time">Full-time</option>
@@ -253,7 +240,7 @@ const FindJobs = () => {
                     <select
                       value={localCategory}
                       onChange={(e) => setLocalCategory(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     >
                       <option value="">All Categories</option>
                       {categories.map((category) => (
@@ -273,7 +260,7 @@ const FindJobs = () => {
                       placeholder="e.g., 100000"
                       value={localSalaryMin}
                       onChange={(e) => setLocalSalaryMin(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     />
                   </div>
 
@@ -284,7 +271,7 @@ const FindJobs = () => {
                     <select
                       value={localExperience}
                       onChange={(e) => setLocalExperience(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     >
                       <option value="">Any Experience</option>
                       <option value="0-1">Entry Level (0-1 years)</option>
@@ -315,13 +302,14 @@ const FindJobs = () => {
                     key={category._id}
                     onClick={() => {
                       setLocalCategory(category._id);
-                      dispatch(
-                        setFilters({ ...filters, category: category._id })
-                      );
+                      setFilters((prev) => ({
+                        ...prev,
+                        category: category._id,
+                      }));
                     }}
                     className={`block w-full text-left p-3 rounded-lg transition-colors ${
                       localCategory === category._id
-                        ? "bg-purple-100 text-purple-700"
+                        ? "bg-green-100 text-green-700"
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
@@ -357,9 +345,9 @@ const FindJobs = () => {
               <div className="flex items-center gap-4">
                 <select
                   onChange={(e) => {
-                    dispatch(setFilters({ ...filters, sort: e.target.value }));
+                    setFilters((prev) => ({ ...prev, sort: e.target.value }));
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -372,15 +360,28 @@ const FindJobs = () => {
             </div>
 
             {/* Loading State */}
-            {loading && jobs.length === 0 && (
+            {isLoading && jobs.length === 0 && (
               <div className="text-center py-12">
-                <BiLoader className="animate-spin text-4xl text-purple-600 mx-auto mb-4" />
+                <BiLoader className="animate-spin text-4xl text-green-600 mx-auto mb-4" />
                 <p className="text-gray-600">Loading jobs...</p>
               </div>
             )}
 
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-12">
+                <div className="text-6xl text-red-300 mb-4">⚠️</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Error loading jobs
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {error.response?.data?.message || "Something went wrong"}
+                </p>
+              </div>
+            )}
+
             {/* No Results */}
-            {!loading && jobs.length === 0 && (
+            {!isLoading && !error && jobs.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-6xl text-gray-300 mb-4">📋</div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
@@ -397,10 +398,10 @@ const FindJobs = () => {
                     setLocalCategory("");
                     setLocalSalaryMin("");
                     setLocalExperience("");
-                    dispatch(setSearchQuery(""));
-                    dispatch(setFilters({}));
+                    setSearchQuery("");
+                    setFilters({});
                   }}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   Clear Filters
                 </button>
@@ -417,7 +418,7 @@ const FindJobs = () => {
                   <div className="flex flex-col md:flex-row md:items-start gap-6">
                     {/* Company Logo */}
                     <div className="flex-shrink-0">
-                      <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
+                      <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
                         {job.company?.profileUrl ? (
                           <img
                             src={job.company.profileUrl}
@@ -438,7 +439,7 @@ const FindJobs = () => {
                             {job.jobTitle}
                           </h3>
                           <div className="flex items-center gap-4 mb-2">
-                            <span className="text-purple-600 font-semibold">
+                            <span className="text-green-600 font-semibold">
                               {job.company?.name || "Company"}
                             </span>
                             {job.company?.rating && (
@@ -474,8 +475,8 @@ const FindJobs = () => {
                           onClick={() => toggleSaveJob(job._id)}
                           className={`mt-2 md:mt-0 p-2 rounded-lg transition-colors ${
                             savedJobs.includes(job._id)
-                              ? "bg-purple-100 text-purple-600"
-                              : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
+                              ? "bg-green-100 text-green-600"
+                              : "text-gray-400 hover:text-green-600 hover:bg-green-50"
                           }`}
                         >
                           <BiBookmark className="text-xl" />
@@ -520,7 +521,7 @@ const FindJobs = () => {
                       <div className="flex items-center justify-between">
                         <Link
                           to={`/jobs/${job._id}`}
-                          className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all"
+                          className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all"
                         >
                           View Details
                         </Link>
@@ -546,10 +547,10 @@ const FindJobs = () => {
               <div className="text-center mt-8">
                 <button
                   onClick={loadMoreJobs}
-                  disabled={loading}
-                  className="px-8 py-3 bg-white border border-purple-600 text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition-all disabled:opacity-50"
+                  disabled={isLoading}
+                  className="px-8 py-3 bg-white border border-green-600 text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-all disabled:opacity-50"
                 >
-                  {loading ? "Loading..." : "Load More Jobs"}
+                  {isLoading ? "Loading..." : "Load More Jobs"}
                 </button>
               </div>
             )}
