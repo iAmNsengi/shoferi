@@ -122,7 +122,6 @@ export const register = async (req, res, next) => {
         
         const driverData = {
           user: user._id,
-          // Only include fields that exist in the driver schema
           licenseNumber: "",
           licenseType: "",
           experience: 0,
@@ -131,7 +130,7 @@ export const register = async (req, res, next) => {
             status: "offline",
             schedule: [],
           },
-          rating: 0, // Fixed: should be a number, not an object
+          rating: 0, 
           reviews: [],
           currentLocation: {
             type: "Point",

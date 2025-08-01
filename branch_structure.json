@@ -1,0 +1,33 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "chore/v2",
+    "dev",
+    "feat/v2",
+    "feature/apply-job",
+    "ft/companies",
+    "ft/user",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "chore/v2": "main",
+    "dev": "main",
+    "feat/v2": "main",
+    "feature/apply-job": "main",
+    "ft/companies": "main",
+    "ft/user": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "chore/v2",
+    "dev",
+    "feat/v2",
+    "feature/apply-job",
+    "ft/companies",
+    "ft/user",
+    "origin"
+  ]
+}

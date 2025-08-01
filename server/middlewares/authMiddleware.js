@@ -1,4 +1,6 @@
 import JWT from "jsonwebtoken";
+import Users from "../models/userModel.js";
+import Companies from "../models/companiesModel.js";
 
 const userAuth = async (req, res, next) => {
   const authHeader = req?.headers?.authorization;
@@ -36,4 +38,38 @@ const userAuth = async (req, res, next) => {
   }
 };
 
-export default userAuth;
+// Check if user is admin
+const isAdmin = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+
+    // Check if user exists and is admin
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.accountType !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin privileges required.",
+      });
+    }
+
+    req.adminUser = user;
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error checking admin privileges",
+    });
+  }
+};
+
+// Check if user is authenticated (alias for userAuth)
+const isAuthenticated = userAuth;
+
+export { userAuth as default, isAuthenticated, isAdmin };
