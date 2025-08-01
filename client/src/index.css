@@ -2,8 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+
+html,
 body {
-  font-family: theme("fontFamily.sans");
+  font-family: "Jost", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif;
+  font-size: 15px;
 }
 
 h1 {

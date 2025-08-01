@@ -43,10 +43,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <BiCar className="text-green-600 text-lg font-bold" />
-              </div>
-              <span className="text-xl font-black text-white">Shoferi</span>
+              <span className="text-xl font-black text-white">Shoferi.rw</span>
             </Link>
           </div>
 
