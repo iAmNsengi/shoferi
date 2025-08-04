@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuthStore } from "../store";
+import { useAuth } from "../contexts/AuthContext";
 import { useAdminDashboard, useAdminStats } from "../hooks/useQueries";
 import {
   BiBuilding,
@@ -18,7 +18,7 @@ import {
 import { HiOutlineCurrencyDollar } from "react-icons/hi";
 
 const AdminDashboard = () => {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [dateRange, setDateRange] = useState("7d");
 

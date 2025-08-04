@@ -12,7 +12,7 @@ import {
 import { BsStarFill, BsClock, BsGeoAlt, BsPeople } from "react-icons/bs";
 import { HiOutlineOfficeBuilding, HiOutlineBadgeCheck } from "react-icons/hi";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuthStore } from "../../store";
+import { useAuth } from "../../contexts/AuthContext";
 import { useJob, useApplyJob } from "../../hooks/useQueries";
 import toast from "react-hot-toast";
 
@@ -21,7 +21,7 @@ const JobDetails = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
   const { id: jobId } = useParams();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user } = useAuth();
 
   // Use React Query hooks
   const { data: jobData, isLoading, error } = useJob(jobId);

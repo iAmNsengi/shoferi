@@ -11,7 +11,7 @@ import {
 import { BsStarFill, BsClock, BsGeoAlt } from "react-icons/bs";
 import { HiOutlineAdjustments } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store";
+import { useAuth } from "../../contexts/AuthContext";
 import { useJobs } from "../../hooks/useQueries";
 import DownloadApp from "../../components/sections/DownloadApp";
 import toast from "react-hot-toast";
@@ -29,7 +29,7 @@ const FindJobs = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user } = useAuth();
 
   // Use React Query to fetch jobs
   const {

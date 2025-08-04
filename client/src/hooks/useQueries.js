@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
   authAPI,
+  userAPI,
   jobsAPI,
   companiesAPI,
   driversAPI,
@@ -11,6 +12,7 @@ import {
   paymentsAPI,
   adminAPI,
 } from "../services/api";
+import useAuthStore from "../store/authStore";
 
 // Auth Queries
 export const useLogin = () => {
@@ -19,11 +21,7 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: authAPI.login,
     onSuccess: (data) => {
-      toast.success("Login successful!");
       queryClient.invalidateQueries(["user"]);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Login failed");
     },
   });
 };
@@ -34,20 +32,20 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: authAPI.register,
     onSuccess: (data) => {
-      toast.success("Registration successful!");
       queryClient.invalidateQueries(["user"]);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Registration failed");
     },
   });
 };
 
 export const useProfile = () => {
+  const { token, isInitialized } = useAuthStore();
+
   return useQuery({
     queryKey: ["user", "profile"],
     queryFn: authAPI.getProfile,
-    enabled: !!localStorage.getItem("auth-storage"),
+    enabled: !!token && isInitialized, // Only run when we have a token and store is initialized
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -66,6 +64,156 @@ export const useUpdateProfile = () => {
   });
 };
 
+// User Profile Queries
+export const useUserProfile = () => {
+  return useQuery({
+    queryKey: ["user", "profile", "detailed"],
+    queryFn: userAPI.getProfile,
+    enabled: !!localStorage.getItem("auth-storage"),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useUpdateUserProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.updateProfile,
+    onSuccess: () => {
+      toast.success("Profile updated successfully!");
+      queryClient.invalidateQueries(["user"]);
+      queryClient.invalidateQueries(["user", "profile", "detailed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Profile update failed");
+    },
+  });
+};
+
+export const useUpdateUserPreferences = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.updatePreferences,
+    onSuccess: () => {
+      toast.success("Preferences updated successfully!");
+      queryClient.invalidateQueries(["user", "profile", "detailed"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update preferences"
+      );
+    },
+  });
+};
+
+export const useUpdateNotificationSettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.updateNotificationSettings,
+    onSuccess: () => {
+      toast.success("Notification settings updated successfully!");
+      queryClient.invalidateQueries(["user", "profile", "detailed"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update notification settings"
+      );
+    },
+  });
+};
+
+export const useUpdatePrivacySettings = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.updatePrivacySettings,
+    onSuccess: () => {
+      toast.success("Privacy settings updated successfully!");
+      queryClient.invalidateQueries(["user", "profile", "detailed"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update privacy settings"
+      );
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: userAPI.changePassword,
+    onSuccess: () => {
+      toast.success("Password changed successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to change password");
+    },
+  });
+};
+
+export const useDeactivateAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.deactivateAccount,
+    onSuccess: () => {
+      toast.success("Account deactivated successfully!");
+      localStorage.removeItem("auth-storage");
+      queryClient.clear();
+      window.location.href = "/login";
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to deactivate account"
+      );
+    },
+  });
+};
+
+export const useUserStats = () => {
+  return useQuery({
+    queryKey: ["user", "stats"],
+    queryFn: userAPI.getUserStats,
+    enabled: !!localStorage.getItem("auth-storage"),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+export const useUploadProfileImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.uploadProfileImage,
+    onSuccess: () => {
+      toast.success("Profile image uploaded successfully!");
+      queryClient.invalidateQueries(["user", "profile", "detailed"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to upload profile image"
+      );
+    },
+  });
+};
+
+export const useUploadCV = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: userAPI.uploadCV,
+    onSuccess: () => {
+      toast.success("CV uploaded successfully!");
+      queryClient.invalidateQueries(["user", "profile", "detailed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to upload CV");
+    },
+  });
+};
+
 // Jobs Queries
 export const useJobs = (params = {}) => {
   return useQuery({
@@ -80,6 +228,31 @@ export const useJob = (id) => {
     queryKey: ["jobs", id],
     queryFn: () => jobsAPI.getById(id),
     enabled: !!id,
+  });
+};
+
+export const useNearbyJobs = (params = {}) => {
+  return useQuery({
+    queryKey: ["jobs", "nearby", params],
+    queryFn: () => jobsAPI.getNearby(params),
+    staleTime: 2 * 60 * 1000, // 2 minutes for location-based data
+  });
+};
+
+export const useJobsByCategory = (category, params = {}) => {
+  return useQuery({
+    queryKey: ["jobs", "category", category, params],
+    queryFn: () => jobsAPI.getByCategory(category, params),
+    enabled: !!category,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useJobCategories = () => {
+  return useQuery({
+    queryKey: ["jobs", "categories"],
+    queryFn: () => jobsAPI.getCategories(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -133,16 +306,89 @@ export const useApplyJob = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }) => jobsAPI.apply(id, data),
+    mutationFn: ({ jobId, applicationData }) =>
+      jobsAPI.apply(jobId, applicationData),
     onSuccess: () => {
-      toast.success("Application submitted successfully!");
+      toast.success("Job application submitted successfully!");
+      queryClient.invalidateQueries(["jobs"]);
+      queryClient.invalidateQueries(["user-applications"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to apply for job");
+    },
+  });
+};
+
+export const useUserApplications = (params = {}) => {
+  return useQuery({
+    queryKey: ["user-applications", params],
+    queryFn: () => jobsAPI.getUserApplications(params),
+    enabled: !!localStorage.getItem("auth-storage"),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+export const useUpdateApplicationStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ applicationId, data }) =>
+      jobsAPI.updateApplicationStatus(applicationId, data),
+    onSuccess: () => {
+      toast.success("Application status updated successfully!");
+      queryClient.invalidateQueries(["user-applications"]);
       queryClient.invalidateQueries(["jobs"]);
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.message || "Failed to submit application"
+        error.response?.data?.message || "Failed to update application status"
       );
     },
+  });
+};
+
+export const useTrackJobView = () => {
+  return useMutation({
+    mutationFn: jobsAPI.trackView,
+    onError: (error) => {
+      console.error("Failed to track job view:", error);
+    },
+  });
+};
+
+export const useSmartJobMatch = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: jobsAPI.smartMatch,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["jobs"]);
+      toast.success("Smart job matching completed!");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to find matching jobs"
+      );
+    },
+  });
+};
+
+export const useTrackProfileView = () => {
+  return useMutation({
+    mutationFn: ({ driverId, source }) =>
+      driversAPI.trackProfileView(driverId, source),
+    onError: (error) => {
+      console.error("Failed to track profile view:", error);
+    },
+  });
+};
+
+export const useProfileViews = (driverId, period = "30d") => {
+  return useQuery({
+    queryKey: ["profile-views", driverId, period],
+    queryFn: () => driversAPI.getProfileViews(driverId, period),
+    enabled: !!driverId && !!localStorage.getItem("auth-storage"),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -188,6 +434,87 @@ export const useDriverProfile = () => {
   });
 };
 
+export const useDriverStats = () => {
+  return useQuery({
+    queryKey: ["drivers", "stats"],
+    queryFn: driversAPI.getStats,
+    enabled: !!localStorage.getItem("auth-storage"),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useToggleAvailability = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: driversAPI.toggleAvailability,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["drivers", "profile"]);
+      queryClient.invalidateQueries(["drivers", "stats"]);
+      toast.success("Availability updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update availability"
+      );
+    },
+  });
+};
+
+export const useUpdateDriverLocation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: driversAPI.updateLocation,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["drivers", "profile"]);
+    },
+    onError: (error) => {
+      console.error("Failed to update location:", error);
+    },
+  });
+};
+
+export const useNearbyDrivers = (params = {}) => {
+  return useQuery({
+    queryKey: ["drivers", "nearby", params],
+    queryFn: () => driversAPI.getNearby(params),
+    staleTime: 30 * 1000, // 30 seconds for real-time location
+  });
+};
+
+export const useSearchDrivers = (params = {}) => {
+  return useQuery({
+    queryKey: ["drivers", "search", params],
+    queryFn: () => driversAPI.search(params),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+export const useAvailableDrivers = (params = {}) => {
+  return useQuery({
+    queryKey: ["drivers", "available", params],
+    queryFn: () => driversAPI.getAvailable(params),
+    staleTime: 1 * 60 * 1000, // 1 minute for real-time availability
+  });
+};
+
+export const useSmartDriverMatch = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: driversAPI.smartMatch,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["drivers", "available"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to find matching drivers"
+      );
+    },
+  });
+};
+
 // Bookings Queries
 export const useBookings = (params = {}) => {
   return useQuery({
@@ -202,6 +529,58 @@ export const useMyBookings = () => {
     queryKey: ["bookings", "my-bookings"],
     queryFn: bookingsAPI.getMyBookings,
     enabled: !!localStorage.getItem("auth-storage"),
+  });
+};
+
+export const useDriverBookings = () => {
+  return useQuery({
+    queryKey: ["bookings", "driver"],
+    queryFn: bookingsAPI.getDriverBookings,
+    enabled: !!localStorage.getItem("auth-storage"),
+    staleTime: 2 * 60 * 1000, // 2 minutes for real-time updates
+  });
+};
+
+export const useUserBookings = () => {
+  return useQuery({
+    queryKey: ["bookings", "user"],
+    queryFn: bookingsAPI.getUserBookings,
+    enabled: !!localStorage.getItem("auth-storage"),
+    staleTime: 2 * 60 * 1000, // 2 minutes for real-time updates
+  });
+};
+
+export const useUpdateBookingStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ bookingId, status }) =>
+      bookingsAPI.updateStatus(bookingId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["bookings"]);
+      toast.success("Booking status updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update booking status"
+      );
+    },
+  });
+};
+
+export const useAddBookingReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ bookingId, review }) =>
+      bookingsAPI.addReview(bookingId, review),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["bookings"]);
+      toast.success("Review added successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to add review");
+    },
   });
 };
 
@@ -306,5 +685,57 @@ export const useAdminUsers = (params = {}) => {
     queryKey: ["admin", "users", params],
     queryFn: () => adminAPI.getUsers(params),
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Company Dashboard & Analytics
+export const useCompanyDashboard = () => {
+  const { token, isInitialized } = useAuthStore();
+  return useQuery({
+    queryKey: ["company-dashboard"],
+    queryFn: companiesAPI.getDashboard,
+    enabled: !!token && isInitialized,
+  });
+};
+
+export const useCompanyApplications = (params = {}) => {
+  const { token, isInitialized } = useAuthStore();
+  return useQuery({
+    queryKey: ["company-applications", params],
+    queryFn: () => companiesAPI.getApplications(params),
+    enabled: !!token && isInitialized,
+  });
+};
+
+export const useCompanyAnalytics = (params = {}) => {
+  const { token, isInitialized } = useAuthStore();
+  return useQuery({
+    queryKey: ["company-analytics", params],
+    queryFn: () => companiesAPI.getAnalytics(params),
+    enabled: !!token && isInitialized,
+  });
+};
+
+// Company Application Management
+export const useBulkUpdateApplications = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: companiesAPI.bulkUpdateApplications,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["company-applications"]);
+      queryClient.invalidateQueries(["company-dashboard"]);
+    },
+  });
+};
+
+export const useScheduleInterview = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ applicationId, data }) =>
+      companiesAPI.scheduleInterview(applicationId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["company-applications"]);
+      queryClient.invalidateQueries(["company-dashboard"]);
+    },
   });
 };

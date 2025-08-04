@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { BiUser, BiLock, BiShow, BiHide, BiCar } from "react-icons/bi";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "../../store";
-import { useLogin } from "../../hooks/useQueries";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, login } = useAuthStore();
-  const loginMutation = useLogin();
+  const { isAuthenticated, login, isLoading } = useAuth();
 
-  const from = location.state?.from?.pathname || "/feed";
+  const from = location.state?.from?.pathname || "/settings";
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,19 +24,19 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (!email || !password) {
+      setError("Please fill in all fields");
       return;
     }
 
     try {
-      const response = await loginMutation.mutateAsync({ email, password });
-      if (response.data) {
-        login(response.data.user, response.data.token);
-        navigate(from, { replace: true });
-      }
+      const response = await login({ email, password });
+      console.log(response);
+      navigate(from, { replace: true });
     } catch (error) {
-      // Error is handled by the mutation
+      setError(error.response?.data?.message || "Login failed");
     }
   };
 
@@ -61,9 +60,9 @@ const Login = () => {
           </div>
 
           {/* Error Message */}
-          {loginMutation.error && (
+          {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-center">
-              {loginMutation.error.response?.data?.message || "Login failed"}
+              {error}
             </div>
           )}
 
@@ -83,7 +82,7 @@ const Login = () => {
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                   placeholder="Enter your email"
                   required
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -102,13 +101,13 @@ const Login = () => {
                   className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                   placeholder="Enter your password"
                   required
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <BiHide className="text-xl" />
@@ -127,7 +126,7 @@ const Login = () => {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-green-600 bg-white border-gray-300 rounded focus:ring-green-500"
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading}
                 />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
@@ -142,10 +141,10 @@ const Login = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loginMutation.isPending || !email || !password}
+              disabled={isLoading || !email || !password}
               className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
             >
-              {loginMutation.isPending ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Signing in...

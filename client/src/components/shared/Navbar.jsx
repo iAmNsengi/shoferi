@@ -13,14 +13,14 @@ import { useState } from "react";
 import { BiCar } from "react-icons/bi";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store";
+import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../hooks/useQueries";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuth();
   const { data: profile } = useProfile();
 
   const handleLogout = () => {
@@ -79,26 +79,6 @@ const Navbar = () => {
                   <Book />
                   Learn
                 </Link>
-
-                {/* Show Dashboard links based on user type */}
-                {currentUser?.accountType === "driver" && (
-                  <Link
-                    to="/driver-dashboard"
-                    className="text-white hover:text-green-200 transition-colors flex gap-2"
-                  >
-                    <Car />
-                    Dashboard
-                  </Link>
-                )}
-                {currentUser?.accountType === "admin" && (
-                  <Link
-                    to="/admin-dashboard"
-                    className="text-white hover:text-green-200 transition-colors flex gap-2"
-                  >
-                    <Settings />
-                    Admin
-                  </Link>
-                )}
               </>
             )}
 
@@ -110,31 +90,40 @@ const Navbar = () => {
                 >
                   <div className="w-8 h-8 bg-white text-green-600 rounded-full flex items-center justify-center font-semibold text-sm">
                     {currentUser?.profileUrl ? (
-                      <img
-                        src={currentUser.profileUrl}
-                        alt="Profile"
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      getInitials(currentUser?.firstName, currentUser?.lastName)
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={currentUser.profileUrl}
+                          alt="Profile"
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                        <p className="text-sm font-medium">
+                          {currentUser.user.firstName}
+                        </p>
+                      </div>
+                    ) : ( 
+                      getInitials(
+                        currentUser?.user?.firstName,
+                        currentUser?.user?.lastName
+                      )
                     )}
                   </div>
-                  <span className="font-medium">{currentUser?.firstName}</span>
+                  <span className="font-medium">
+                    {currentUser?.user?.firstName}
+                  </span>
                 </button>
 
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-10 border border-green-100">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                    <Link  to={`${currentUser?.user?.accountType === "driver"? '/driver-dashboard':currentUser?.user?.accountType === "admin"? "/admin-dashboard":""}`} className="flex flex-col items-center px-4 py-2 text-gray-700 hover:bg-green-50 transition-colors" onClick={() => setShowUserMenu(false)}>
+                    <>
                       <p className="font-semibold text-gray-800">
-                        {currentUser?.firstName} {currentUser?.lastName}
+                        {currentUser?.user?.firstName} {currentUser?.user?.lastName}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        {currentUser?.email}
+                      <p className="text-sm text-gray-600 border-b">
+                          {currentUser?.user?.email}
                       </p>
-                      <p className="text-xs text-green-600 capitalize">
-                        {currentUser?.accountType || "User"}
-                      </p>
-                    </div>
+                      </>
+                    </Link>
                     <Link
                       to="/settings"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-green-50 transition-colors"

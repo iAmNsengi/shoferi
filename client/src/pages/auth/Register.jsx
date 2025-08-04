@@ -8,8 +8,7 @@ import {
   BiBuilding,
 } from "react-icons/bi";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "../../store";
-import { useRegister } from "../../hooks/useQueries";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Register = () => {
   const [userType, setUserType] = useState("driver"); // "driver" or "company"
@@ -27,11 +26,11 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, login } = useAuthStore();
-  const registerMutation = useRegister();
+  const { isAuthenticated, register, isLoading } = useAuth();
 
   const from = location.state?.from?.pathname || "/feed";
 
@@ -50,33 +49,34 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match!");
       return;
     }
 
     if (!agreeToTerms) {
-      alert("Please agree to terms and conditions");
+      setError("Please agree to terms and conditions");
       return;
     }
 
     // Enhanced validation based on account type
     if (userType === "company") {
       if (!formData.companyName?.trim()) {
-        alert("Company name is required");
+        setError("Company name is required");
         return;
       }
       if (!formData.email?.trim()) {
-        alert("Email is required");
+        setError("Email is required");
         return;
       }
       if (!formData.password?.trim()) {
-        alert("Password is required");
+        setError("Password is required");
         return;
       }
       if (formData.companyName.trim().length < 2) {
-        alert("Company name must be at least 2 characters long");
+        setError("Company name must be at least 2 characters long");
         return;
       }
     } else {
@@ -86,21 +86,21 @@ const Register = () => {
         !formData.email?.trim() ||
         !formData.password?.trim()
       ) {
-        alert("Please fill in all required fields");
+        setError("Please fill in all required fields");
         return;
       }
       if (formData.firstName.trim().length < 2) {
-        alert("First name must be at least 2 characters long");
+        setError("First name must be at least 2 characters long");
         return;
       }
       if (formData.lastName.trim().length < 2) {
-        alert("Last name must be at least 2 characters long");
+        setError("Last name must be at least 2 characters long");
         return;
       }
     }
 
     if (formData.password.length < 6) {
-      alert("Password must be at least 6 characters long");
+      setError("Password must be at least 6 characters long");
       return;
     }
 
@@ -123,13 +123,10 @@ const Register = () => {
     }
 
     try {
-      const response = await registerMutation.mutateAsync(userData);
-      if (response.data) {
-        login(response.data.user, response.data.token);
-        navigate(from, { replace: true });
-      }
+      await register(userData);
+      navigate(from, { replace: true });
     } catch (error) {
-      // Error is handled by the mutation
+      setError(error.response?.data?.message || "Registration failed");
     }
   };
 
@@ -165,7 +162,7 @@ const Register = () => {
                     ? "bg-green-50 border-green-300 text-green-700 shadow-md"
                     : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
-                disabled={registerMutation.isPending}
+                disabled={isLoading}
               >
                 <BiCar className="text-2xl mx-auto mb-2" />
                 <div className="font-semibold">I'm a Driver</div>
@@ -181,7 +178,7 @@ const Register = () => {
                     ? "bg-green-50 border-green-300 text-green-700 shadow-md"
                     : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
                 }`}
-                disabled={registerMutation.isPending}
+                disabled={isLoading}
               >
                 <BiBuilding className="text-2xl mx-auto mb-2" />
                 <div className="font-semibold">I'm a Company</div>
@@ -191,10 +188,9 @@ const Register = () => {
           </div>
 
           {/* Error Message */}
-          {registerMutation.error && (
+          {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-center">
-              {registerMutation.error.response?.data?.message ||
-                "Registration failed"}
+              {error}
             </div>
           )}
 
@@ -217,7 +213,7 @@ const Register = () => {
                     className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                     placeholder="Enter your company name"
                     required
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -241,7 +237,7 @@ const Register = () => {
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                       placeholder="Enter your first name"
                       required
-                      disabled={registerMutation.isPending}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -260,7 +256,7 @@ const Register = () => {
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                       placeholder="Enter your last name"
                       required
-                      disabled={registerMutation.isPending}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -281,7 +277,7 @@ const Register = () => {
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                   placeholder="Enter your email"
                   required
-                  disabled={registerMutation.isPending}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -299,7 +295,7 @@ const Register = () => {
                       handleInputChange("industry", e.target.value)
                     }
                     className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   >
                     <option value="" className="text-gray-900">
                       Select Industry
@@ -334,7 +330,7 @@ const Register = () => {
                       handleInputChange("companySize", e.target.value)
                     }
                     className="w-full px-4 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   >
                     <option value="1-10" className="text-gray-900">
                       1-10 employees
@@ -374,13 +370,13 @@ const Register = () => {
                     placeholder="Create password"
                     required
                     minLength={6}
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <BiHide className="text-xl" />
@@ -406,13 +402,13 @@ const Register = () => {
                     className="w-full pl-12 pr-12 py-3 bg-gray-50 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-800 placeholder-gray-600 focus:ring-2 focus:ring-green-300 focus:border-transparent outline-none transition-all"
                     placeholder="Confirm password"
                     required
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
-                    disabled={registerMutation.isPending}
+                    disabled={isLoading}
                   >
                     {showConfirmPassword ? (
                       <BiHide className="text-xl" />
@@ -432,7 +428,7 @@ const Register = () => {
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
                 className="w-4 h-4 text-green-600 bg-gray-50 border-gray-200 rounded focus:ring-green-500 mt-1"
                 required
-                disabled={registerMutation.isPending}
+                disabled={isLoading}
               />
               <div className="text-sm text-gray-800">
                 I agree to the{" "}
@@ -456,13 +452,13 @@ const Register = () => {
             <button
               type="submit"
               disabled={
-                registerMutation.isPending ||
+                isLoading ||
                 !agreeToTerms ||
                 formData.password !== formData.confirmPassword
               }
               className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
             >
-              {registerMutation.isPending ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Creating Account...
