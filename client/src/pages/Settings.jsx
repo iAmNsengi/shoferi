@@ -21,6 +21,9 @@ import {
   BiAward,
   BiBriefcase,
   BiGlobe,
+  BiCrown,
+  BiStar,
+  BiUpArrow,
 } from "react-icons/bi";
 import {
   useUserProfile,
@@ -33,18 +36,25 @@ import {
   useUserStats,
   useUploadProfileImage,
   useUploadCV,
+  useSubscriptionPlans,
+  useCurrentSubscription,
+  useCreateCheckoutSession,
 } from "../hooks/useQueries";
+import { toast } from "react-hot-toast";
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, canPerformAction, getTierLimits, usageStats } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
   // React Query hooks
-  const { data: userProfile, isLoading: profileLoading } = useUserProfile();
+  const { data, isLoading: profileLoading } = useUserProfile();
+  const userProfile = data?.data;
   const { data: userStats } = useUserStats();
+  const { data: plansData } = useSubscriptionPlans();
+  const { data: currentSubscription } = useCurrentSubscription();
 
   // Mutations
   const updateProfileMutation = useUpdateUserProfile();
@@ -55,6 +65,7 @@ const Settings = () => {
   const deactivateAccountMutation = useDeactivateAccount();
   const uploadProfileImageMutation = useUploadProfileImage();
   const uploadCVMutation = useUploadCV();
+  const createCheckoutMutation = useCreateCheckoutSession();
 
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -178,51 +189,129 @@ const Settings = () => {
     }
   }, [userProfile]);
 
+  // Handle profile image upload with better UX
+  const handleProfileImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+
+      toast.loading("Uploading profile image...");
+      const response = await uploadProfileImageMutation.mutateAsync(formData);
+
+      if (response.data.success) {
+        toast.success("Profile image updated successfully!");
+        // Refresh user profile data
+        // You might want to update the user context here
+      } else {
+        toast.error("Failed to upload profile image");
+      }
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      toast.error("Failed to upload profile image. Please try again.");
+    }
+  };
+
   const tabs = [
     { id: "profile", label: "Profile", icon: BiUser },
     { id: "preferences", label: "Preferences", icon: BiCog },
     { id: "notifications", label: "Notifications", icon: BiBell },
     { id: "privacy", label: "Privacy & Security", icon: BiShield },
+    { id: "account", label: "Account & Billing", icon: BiCrown },
     { id: "help", label: "Help & Support", icon: BiHelpCircle },
   ];
 
-  const handleProfileSubmit = (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    updateProfileMutation.mutate(profileForm);
-    setIsEditing(false);
+    try {
+      await updateProfileMutation.mutateAsync(profileForm);
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile. Please try again.");
+    }
   };
 
-  const handlePreferencesSubmit = (e) => {
+  const handlePreferencesSubmit = async (e) => {
     e.preventDefault();
-    updatePreferencesMutation.mutate(preferencesForm);
+    try {
+      await updatePreferencesMutation.mutateAsync(preferencesForm);
+      toast.success("Preferences updated successfully!");
+    } catch (error) {
+      console.error("Error updating preferences:", error);
+      toast.error("Failed to update preferences. Please try again.");
+    }
   };
 
-  const handleNotificationSubmit = (e) => {
+  const handleNotificationSubmit = async (e) => {
     e.preventDefault();
-    updateNotificationSettingsMutation.mutate(notificationForm);
+    try {
+      await updateNotificationSettingsMutation.mutateAsync(notificationForm);
+      toast.success("Notification settings updated successfully!");
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      toast.error("Failed to update notification settings. Please try again.");
+    }
   };
 
-  const handlePrivacySubmit = (e) => {
+  const handlePrivacySubmit = async (e) => {
     e.preventDefault();
-    updatePrivacySettingsMutation.mutate(privacyForm);
+    try {
+      await updatePrivacySettingsMutation.mutateAsync(privacyForm);
+      toast.success("Privacy settings updated successfully!");
+    } catch (error) {
+      console.error("Error updating privacy settings:", error);
+      toast.error("Failed to update privacy settings. Please try again.");
+    }
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert("New passwords don't match!");
+      toast.error("New passwords don't match!");
       return;
     }
-    changePasswordMutation.mutate({
-      currentPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword,
-    });
-    setShowPasswordModal(false);
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long!");
+      return;
+    }
+
+    try {
+      await changePasswordMutation.mutateAsync({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+
+      toast.success("Password changed successfully!");
+      setShowPasswordModal(false);
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error(
+        "Failed to change password. Please check your current password."
+      );
+    }
   };
 
   const handleDeactivateAccount = () => {
@@ -237,21 +326,74 @@ const Settings = () => {
     }
   };
 
-  const handleProfileImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append("profileImage", file);
-      uploadProfileImageMutation.mutate(formData);
+  const handleUpgradeAccount = async (planId) => {
+    if (!user) {
+      toast.error("Please log in to upgrade your account");
+      return;
+    }
+
+    try {
+      await createCheckoutMutation.mutateAsync(planId);
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      toast.error("Failed to initiate upgrade. Please try again.");
     }
   };
 
-  const handleCVUpload = (e) => {
+  const isFreeTier = user?.accountTier === "STARTER" || !user?.accountTier;
+  const plans = plansData?.data?.plans || [
+    {
+      id: "pro",
+      name: "PRO",
+      price: 3000,
+      features: [
+        "10 job posts per month",
+        "10 job applications per month",
+        "Create feed posts",
+        "Comment on posts",
+        "Verification badge",
+        "Priority support",
+      ],
+    },
+  ];
+
+  const handleCVUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please select a valid file (PDF, DOC, or DOCX)");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size should be less than 10MB");
+      return;
+    }
+
+    try {
       const formData = new FormData();
       formData.append("cv", file);
-      uploadCVMutation.mutate(formData);
+
+      toast.loading("Uploading CV...");
+      const response = await uploadCVMutation.mutateAsync(formData);
+
+      if (response.data.success) {
+        toast.success("CV uploaded successfully!");
+        // Refresh user profile data
+      } else {
+        toast.error("Failed to upload CV");
+      }
+    } catch (error) {
+      console.error("Error uploading CV:", error);
+      toast.error("Failed to upload CV. Please try again.");
     }
   };
 
@@ -269,26 +411,26 @@ const Settings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
+    <div className="min-h-screen bg-gray-50 pt-10">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center text-white text-xl font-bold">
+              <div className="relative group">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
                   {userProfile?.user?.profileUrl ? (
                     <img
                       src={userProfile.user.profileUrl}
                       alt="Profile"
-                      className="w-16 h-16 rounded-2xl object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     userProfile?.user?.firstName?.charAt(0) || "U"
                   )}
                 </div>
-                <label className="absolute -bottom-1 -right-1 bg-green-500 text-white p-1 rounded-full cursor-pointer hover:bg-green-600 transition-colors">
-                  <BiCamera className="text-xs" />
+                <label className="absolute inset-0 bg-black bg-opacity-50 rounded-2xl flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                  <BiCamera className="text-white text-xl" />
                   <input
                     type="file"
                     accept="image/*"
@@ -296,6 +438,11 @@ const Settings = () => {
                     className="hidden"
                   />
                 </label>
+                {uploadProfileImageMutation.isPending && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-2xl flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -304,6 +451,16 @@ const Settings = () => {
                 <p className="text-gray-600">
                   Manage your account and preferences
                 </p>
+                {userProfile?.user && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-500">
+                      {userProfile.user.firstName} {userProfile.user.lastName}
+                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      {userProfile.user.accountTier || "STARTER"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -365,14 +522,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="text"
-                          value={profileForm.firstName}
+                          value={userProfile?.user?.firstName}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               firstName: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                           required
                         />
@@ -383,14 +542,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="text"
-                          value={profileForm.lastName}
+                          value={userProfile?.user?.lastName}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               lastName: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                           required
                         />
@@ -401,14 +562,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="email"
-                          value={profileForm.email}
+                          value={userProfile?.user?.email}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               email: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                           required
                         />
@@ -419,14 +582,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="tel"
-                          value={profileForm.phoneNumber}
+                          value={userProfile?.user?.phoneNumber}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               phoneNumber: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                         />
                       </div>
@@ -440,14 +605,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="text"
-                          value={profileForm.jobTitle}
+                          value={userProfile?.user?.jobTitle}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               jobTitle: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                         />
                       </div>
@@ -457,14 +624,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="text"
-                          value={profileForm.location}
+                          value={userProfile?.user?.location}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               location: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                         />
                       </div>
@@ -476,14 +645,14 @@ const Settings = () => {
                         About
                       </label>
                       <textarea
-                        value={profileForm.about}
+                        value={userProfile?.user?.about}
                         onChange={(e) =>
                           setProfileForm({
                             ...profileForm,
                             about: e.target.value,
                           })
                         }
-                        disabled={!isEditing}
+                        disabled={!isEditing || updateProfileMutation.isPending}
                         rows={4}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                         placeholder="Tell us about yourself..."
@@ -498,14 +667,16 @@ const Settings = () => {
                         </label>
                         <input
                           type="date"
-                          value={profileForm.dateOfBirth}
+                          value={userProfile?.user?.dateOfBirth}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               dateOfBirth: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                         />
                       </div>
@@ -514,21 +685,43 @@ const Settings = () => {
                           Gender
                         </label>
                         <select
-                          value={profileForm.gender}
+                          value={userProfile?.user?.gender}
                           onChange={(e) =>
                             setProfileForm({
                               ...profileForm,
                               gender: e.target.value,
                             })
                           }
-                          disabled={!isEditing}
+                          disabled={
+                            !isEditing || updateProfileMutation.isPending
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-50"
                         >
                           <option value="">Select Gender</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                          <option value="prefer_not_to_say">
+                          <option
+                            value="male"
+                            selected={userProfile?.user?.gender === "male"}
+                          >
+                            Male
+                          </option>
+                          <option
+                            value="female"
+                            selected={userProfile?.user?.gender === "female"}
+                          >
+                            Female
+                          </option>
+                          <option
+                            value="other"
+                            selected={userProfile?.user?.gender === "other"}
+                          >
+                            Other
+                          </option>
+                          <option
+                            value="prefer_not_to_say"
+                            selected={
+                              userProfile?.user?.gender === "prefer_not_to_say"
+                            }
+                          >
                             Prefer not to say
                           </option>
                         </select>
@@ -547,13 +740,27 @@ const Settings = () => {
                           onChange={handleCVUpload}
                           className="hidden"
                           id="cv-upload"
+                          disabled={uploadCVMutation.isPending}
                         />
                         <label
                           htmlFor="cv-upload"
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+                          className={`flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer ${
+                            uploadCVMutation.isPending
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
                         >
-                          <BiDownload />
-                          Upload CV
+                          {uploadCVMutation.isPending ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <BiDownload />
+                              Upload CV
+                            </>
+                          )}
                         </label>
                         {userProfile?.user?.cvUrl && (
                           <a
@@ -574,16 +781,25 @@ const Settings = () => {
                         <button
                           type="submit"
                           disabled={updateProfileMutation.isPending}
-                          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
-                          {updateProfileMutation.isPending
-                            ? "Saving..."
-                            : "Save Changes"}
+                          {updateProfileMutation.isPending ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <BiCheck />
+                              Save Changes
+                            </>
+                          )}
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                          disabled={updateProfileMutation.isPending}
+                          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
                         >
                           Cancel
                         </button>
@@ -686,11 +902,19 @@ const Settings = () => {
                     <button
                       type="submit"
                       disabled={updatePreferencesMutation.isPending}
-                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                      {updatePreferencesMutation.isPending
-                        ? "Saving..."
-                        : "Save Preferences"}
+                      {updatePreferencesMutation.isPending ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <BiCheck />
+                          Save Preferences
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>
@@ -850,11 +1074,19 @@ const Settings = () => {
                     <button
                       type="submit"
                       disabled={updateNotificationSettingsMutation.isPending}
-                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                      {updateNotificationSettingsMutation.isPending
-                        ? "Saving..."
-                        : "Save Notification Settings"}
+                      {updateNotificationSettingsMutation.isPending ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <BiCheck />
+                          Save Notification Settings
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>
@@ -978,11 +1210,19 @@ const Settings = () => {
                     <button
                       type="submit"
                       disabled={updatePrivacySettingsMutation.isPending}
-                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                      {updatePrivacySettingsMutation.isPending
-                        ? "Saving..."
-                        : "Save Privacy Settings"}
+                      {updatePrivacySettingsMutation.isPending ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <BiCheck />
+                          Save Privacy Settings
+                        </>
+                      )}
                     </button>
                   </form>
 
@@ -999,6 +1239,183 @@ const Settings = () => {
                         <BiLock />
                         Change Password
                       </button>
+                      <button
+                        onClick={handleDeactivateAccount}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        <BiTrash />
+                        Deactivate Account
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Account & Billing Tab */}
+              {activeTab === "account" && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Account & Billing
+                  </h2>
+
+                  {/* Current Account Status */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Current Account Status
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <BiCrown className="text-yellow-500 text-xl" />
+                        <span className="font-medium text-gray-700">
+                          {user?.accountTier || "STARTER"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Usage Statistics */}
+                    {usageStats && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-800">
+                            {usageStats.jobsPosted || 0}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Jobs Posted
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-800">
+                            {usageStats.jobsApplied || 0}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Jobs Applied
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-800">
+                            {usageStats.postsCreated || 0}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Feed Posts
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                          <div className="text-2xl font-bold text-gray-800">
+                            {usageStats.commentsPosted || 0}
+                          </div>
+                          <div className="text-sm text-gray-600">Comments</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Current Subscription */}
+                    {currentSubscription?.data && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 className="font-semibold text-blue-800 mb-2">
+                          Current Subscription
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-blue-600">Status:</span>
+                            <span
+                              className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                                currentSubscription.data.status === "active"
+                                  ? "bg-green-100 text-green-600"
+                                  : "bg-red-100 text-red-600"
+                              }`}
+                            >
+                              {currentSubscription.data.status}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-blue-600">Plan:</span>
+                            <span className="ml-2 font-medium">
+                              {currentSubscription.data.planId}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-blue-600">Next billing:</span>
+                            <span className="ml-2 font-medium">
+                              {new Date(
+                                currentSubscription.data.currentPeriodEnd
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upgrade Options */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Upgrade Your Account
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Unlock more features and increase your limits with our PRO
+                      plan.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {plans.map((plan) => (
+                        <div
+                          key={plan.id}
+                          className="border border-gray-200 rounded-xl p-6 hover:border-purple-300 transition-colors"
+                        >
+                          <div className="text-center mb-4">
+                            <h4 className="text-xl font-bold text-gray-800 mb-2">
+                              {plan.name}
+                            </h4>
+                            <div className="text-3xl font-bold text-purple-600 mb-1">
+                              RWF {plan.price?.toLocaleString() || "Free"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              per month
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 mb-6">
+                            {plan.features?.map((feature, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-3"
+                              >
+                                <BiCheck className="text-green-500 text-lg flex-shrink-0" />
+                                <span className="text-sm text-gray-700">
+                                  {feature}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button
+                            onClick={() => handleUpgradeAccount(plan.id)}
+                            disabled={createCheckoutMutation.isPending}
+                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            {createCheckoutMutation.isPending ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <BiUpArrow className="text-sm" />
+                                Upgrade to {plan.name}
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Account Actions */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Account Actions
+                    </h3>
+                    <div className="space-y-4">
                       <button
                         onClick={handleDeactivateAccount}
                         className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -1142,16 +1559,25 @@ const Settings = () => {
                 <button
                   type="submit"
                   disabled={changePasswordMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {changePasswordMutation.isPending
-                    ? "Changing..."
-                    : "Change Password"}
+                  {changePasswordMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Changing...
+                    </>
+                  ) : (
+                    <>
+                      <BiCheck />
+                      Change Password
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
-                  className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  disabled={changePasswordMutation.isPending}
+                  className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
