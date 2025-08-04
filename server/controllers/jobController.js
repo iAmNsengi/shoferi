@@ -3,6 +3,7 @@ import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
 import Users from "../models/userModel.js";
 import { StatusCodes } from "http-status-codes";
+import { BadRequestError, NotFoundError } from "../utils/apiResponse.js";
 
 export const createJob = async (req, res, next) => {
   try {
@@ -33,9 +34,24 @@ export const createJob = async (req, res, next) => {
       !details[0]?.desc ||
       !details[0]?.requirements
     ) {
-      return res.status(400).json({
+      throw new BadRequestError("Please provide all required fields");
+    }
+
+    // Check if user can post jobs based on their tier
+    if (!req.user.canPerformAction("post_job")) {
+      const tierLimits = {
+        STARTER: "1 job per month",
+        PRO: "10 jobs per month",
+        ENTERPRISE: "Unlimited",
+      };
+
+      return res.status(StatusCodes.FORBIDDEN).json({
         success: false,
-        message: "Please provide all required fields",
+        message: `Job posting limit reached for ${
+          req.user.accountTier
+        } tier. Current limit: ${tierLimits[req.user.accountTier]}`,
+        currentTier: req.user.accountTier,
+        limit: tierLimits[req.user.accountTier],
       });
     }
 
@@ -63,17 +79,14 @@ export const createJob = async (req, res, next) => {
     if (req.body.coordinates && req.body.coordinates.length === 2) {
       jobPost.coordinates = {
         type: "Point",
-        coordinates: req.body.coordinates // [longitude, latitude]
+        coordinates: req.body.coordinates, // [longitude, latitude]
       };
     }
 
     // Get company with given ID
     const company = await Companies.findById(req?.user?.userId);
     if (!company) {
-      return res.status(400).json({
-        success: false,
-        message: "You are not logged in as a company!",
-      });
+      throw new BadRequestError("You are not logged in as a company!");
     }
 
     const job = new Jobs(jobPost);
@@ -85,14 +98,17 @@ export const createJob = async (req, res, next) => {
       new: true,
     });
 
-    res.status(200).json({
+    // Increment usage stats
+    await req.user.incrementUsage("post_job");
+
+    res.status(StatusCodes.CREATED).json({
       success: true,
       message: "Job Posted Successfully",
       job,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message,
     });
@@ -117,7 +133,7 @@ export const updateJob = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid job ID format"
+        message: "Invalid job ID format",
       });
     }
 
@@ -131,7 +147,7 @@ export const updateJob = async (req, res, next) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Please Provide All Required Fields"
+        message: "Please Provide All Required Fields",
       });
     }
 
@@ -140,7 +156,7 @@ export const updateJob = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid user ID: ${userId}`
+        message: `Invalid user ID: ${userId}`,
       });
     }
 
@@ -154,12 +170,14 @@ export const updateJob = async (req, res, next) => {
       details: [{ desc, requirements }], // Fixed: should be 'details' array, not 'detail'
     };
 
-    const updatedJob = await Jobs.findByIdAndUpdate(jobId, jobPost, { new: true });
+    const updatedJob = await Jobs.findByIdAndUpdate(jobId, jobPost, {
+      new: true,
+    });
 
     if (!updatedJob) {
       return res.status(404).json({
         success: false,
-        message: "Job not found"
+        message: "Job not found",
       });
     }
 
@@ -170,28 +188,28 @@ export const updateJob = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message,
     });
   }
 };
 
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { 
-      search, 
-      sort, 
-      location, 
-      jtype, 
-      exp, 
-      category, 
-      salaryMin, 
+    const {
+      search,
+      sort,
+      location,
+      jtype,
+      exp,
+      category,
+      salaryMin,
       salaryMax,
       experience,
-      vehicleType 
+      vehicleType,
     } = req.query;
-    
+
     const types = jtype?.split(","); //full-time,part-time
     const experienceRange = exp?.split("-"); //2-6
 
@@ -398,43 +416,43 @@ export const deleteJobPost = async (req, res, next) => {
 export const applyJob = async (req, res, next) => {
   try {
     const { jobId } = req.params; // Job ID from the URL params
-    const userId = req.user.userId; // User ID from the request body
+    const userId = req.user._id; // User ID from the authenticated user
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid job ID format",
-      });
+      throw new BadRequestError("Invalid job ID format");
     }
 
-    // Check if the user exists
-    const userExist = await Users.findById(userId);
-    if (!userExist) {
-      return res.status(400).json({
-        message: "You need to be logged in to apply!",
+    // Check if the user can apply for jobs based on their tier
+    if (!req.user.canPerformAction("apply_job")) {
+      const tierLimits = {
+        STARTER: "1 application per month",
+        PRO: "10 applications per month",
+        ENTERPRISE: "Unlimited",
+      };
+
+      return res.status(StatusCodes.FORBIDDEN).json({
         success: false,
+        message: `Job application limit reached for ${
+          req.user.accountTier
+        } tier. Current limit: ${tierLimits[req.user.accountTier]}`,
+        currentTier: req.user.accountTier,
+        limit: tierLimits[req.user.accountTier],
       });
     }
 
     // Check if the job post exists
     const job = await Jobs.findById(jobId);
     if (!job) {
-      return res.status(400).json({
-        message: "Job post with the given ID not found",
-        success: false,
-      });
+      throw new NotFoundError("Job post with the given ID not found");
     }
 
     // Check if the user has already applied for the job
     const hasApplied = job.applications.some(
-      (application) => application.user.toString() === userId
+      (application) => application.user.toString() === userId.toString()
     );
     if (hasApplied) {
-      return res.status(400).json({
-        message: "You have already applied for this job!",
-        success: false,
-      });
+      throw new BadRequestError("You have already applied for this job!");
     }
 
     // Add the user to the applications array with proper structure
@@ -447,15 +465,18 @@ export const applyJob = async (req, res, next) => {
     // Save the updated job document
     await job.save();
 
-    return res.status(200).json({
-      message: "You have successfully applied for the job!",
+    // Increment usage stats
+    await req.user.incrementUsage("apply_job");
+
+    return res.status(StatusCodes.OK).json({
       success: true,
+      message: "You have successfully applied for the job!",
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: "An error occurred while applying for the job",
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
+      message: error.message,
     });
   }
 };
