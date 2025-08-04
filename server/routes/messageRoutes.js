@@ -1,5 +1,5 @@
 import express from "express";
-import userAuth from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 import {
   sendMessage,
   getConversation,
@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 
-router.use(userAuth);
+router.use(isAuthenticated);
 
 // Send a message
 router.post("/send", sendMessage);
