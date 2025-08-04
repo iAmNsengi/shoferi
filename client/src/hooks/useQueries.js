@@ -11,6 +11,10 @@ import {
   notificationsAPI,
   paymentsAPI,
   adminAPI,
+  feedAPI,
+  learningAPI,
+  subscriptionsAPI,
+  accountAPI,
 } from "../services/api";
 import useAuthStore from "../store/authStore";
 
@@ -736,6 +740,397 @@ export const useScheduleInterview = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(["company-applications"]);
       queryClient.invalidateQueries(["company-dashboard"]);
+    },
+  });
+};
+
+// Feed Queries
+export const useFeedPosts = (params = {}) => {
+  return useQuery({
+    queryKey: ["feed", params],
+    queryFn: () => feedAPI.getAll(params),
+    staleTime: 2 * 60 * 1000, // 2 minutes for social feed
+  });
+};
+
+export const useFeedPost = (id) => {
+  return useQuery({
+    queryKey: ["feed", id],
+    queryFn: () => feedAPI.getById(id),
+    enabled: !!id,
+  });
+};
+
+export const useTrendingPosts = (params = {}) => {
+  return useQuery({
+    queryKey: ["feed", "trending", params],
+    queryFn: () => feedAPI.getTrending(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useUserPosts = (userId, params = {}) => {
+  return useQuery({
+    queryKey: ["feed", "user", userId, params],
+    queryFn: () => feedAPI.getUserPosts(userId, params),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useCreatePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: feedAPI.create,
+    onSuccess: () => {
+      toast.success("Post created successfully!");
+      queryClient.invalidateQueries(["feed"]);
+      queryClient.invalidateQueries(["feed", "trending"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to create post");
+    },
+  });
+};
+
+export const useUpdatePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => feedAPI.update(id, data),
+    onSuccess: (_, { id }) => {
+      toast.success("Post updated successfully!");
+      queryClient.invalidateQueries(["feed"]);
+      queryClient.invalidateQueries(["feed", id]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to update post");
+    },
+  });
+};
+
+export const useDeletePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: feedAPI.delete,
+    onSuccess: () => {
+      toast.success("Post deleted successfully!");
+      queryClient.invalidateQueries(["feed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to delete post");
+    },
+  });
+};
+
+export const useTogglePostLike = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: feedAPI.toggleLike,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["feed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to like post");
+    },
+  });
+};
+
+export const useAddComment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, commentData }) =>
+      feedAPI.addComment(postId, commentData),
+    onSuccess: () => {
+      toast.success("Comment added successfully!");
+      queryClient.invalidateQueries(["feed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to add comment");
+    },
+  });
+};
+
+export const useAddReply = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, commentId, replyData }) =>
+      feedAPI.addReply(postId, commentId, replyData),
+    onSuccess: () => {
+      toast.success("Reply added successfully!");
+      queryClient.invalidateQueries(["feed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to add reply");
+    },
+  });
+};
+
+export const useDeleteComment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, commentId }) =>
+      feedAPI.deleteComment(postId, commentId),
+    onSuccess: () => {
+      toast.success("Comment deleted successfully!");
+      queryClient.invalidateQueries(["feed"]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to delete comment");
+    },
+  });
+};
+
+// Learning Queries
+export const useLearningMaterials = (params = {}) => {
+  return useQuery({
+    queryKey: ["learning", params],
+    queryFn: () => learningAPI.getAll(params),
+    staleTime: 10 * 60 * 1000, // 10 minutes for learning content
+  });
+};
+
+export const useLearningMaterial = (id) => {
+  return useQuery({
+    queryKey: ["learning", id],
+    queryFn: () => learningAPI.getById(id),
+    enabled: !!id,
+  });
+};
+
+export const useFeaturedLearning = (params = {}) => {
+  return useQuery({
+    queryKey: ["learning", "featured", params],
+    queryFn: () => learningAPI.getFeatured(params),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+export const useLearningByCategory = (category, params = {}) => {
+  return useQuery({
+    queryKey: ["learning", "category", category, params],
+    queryFn: () => learningAPI.getByCategory(category, params),
+    enabled: !!category,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+export const useLearningStats = () => {
+  return useQuery({
+    queryKey: ["learning", "stats"],
+    queryFn: () => learningAPI.getStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useCreateLearning = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: learningAPI.create,
+    onSuccess: () => {
+      toast.success("Learning material created successfully!");
+      queryClient.invalidateQueries(["learning"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to create learning material"
+      );
+    },
+  });
+};
+
+export const useUpdateLearning = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => learningAPI.update(id, data),
+    onSuccess: (_, { id }) => {
+      toast.success("Learning material updated successfully!");
+      queryClient.invalidateQueries(["learning"]);
+      queryClient.invalidateQueries(["learning", id]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update learning material"
+      );
+    },
+  });
+};
+
+export const useDeleteLearning = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: learningAPI.delete,
+    onSuccess: () => {
+      toast.success("Learning material deleted successfully!");
+      queryClient.invalidateQueries(["learning"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to delete learning material"
+      );
+    },
+  });
+};
+
+export const useToggleLearningPublish = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: learningAPI.togglePublish,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["learning"]);
+      toast.success("Learning material publish status updated!");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update publish status"
+      );
+    },
+  });
+};
+
+export const useToggleLearningFeatured = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: learningAPI.toggleFeatured,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["learning"]);
+      queryClient.invalidateQueries(["learning", "featured"]);
+      toast.success("Learning material featured status updated!");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update featured status"
+      );
+    },
+  });
+};
+
+// Subscription Queries
+export const useSubscriptionPlans = () => {
+  return useQuery({
+    queryKey: ["subscriptions", "plans"],
+    queryFn: () => subscriptionsAPI.getPlans(),
+    staleTime: 30 * 60 * 1000, // 30 minutes for plans
+  });
+};
+
+export const useCurrentSubscription = () => {
+  const { token, isInitialized } = useAuthStore();
+
+  return useQuery({
+    queryKey: ["subscriptions", "current"],
+    queryFn: () => subscriptionsAPI.getCurrentSubscription(),
+    enabled: !!token && isInitialized,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useCreateCheckoutSession = () => {
+  return useMutation({
+    mutationFn: subscriptionsAPI.createCheckoutSession,
+    onSuccess: (data) => {
+      // Redirect to Stripe checkout
+      if (data.data?.url) {
+        window.location.href = data.data.url;
+      }
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to create checkout session"
+      );
+    },
+  });
+};
+
+export const useCancelSubscription = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: subscriptionsAPI.cancelSubscription,
+    onSuccess: () => {
+      toast.success("Subscription cancelled successfully!");
+      queryClient.invalidateQueries(["subscriptions", "current"]);
+      queryClient.invalidateQueries(["user"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to cancel subscription"
+      );
+    },
+  });
+};
+
+export const useReactivateSubscription = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: subscriptionsAPI.reactivateSubscription,
+    onSuccess: () => {
+      toast.success("Subscription reactivated successfully!");
+      queryClient.invalidateQueries(["subscriptions", "current"]);
+      queryClient.invalidateQueries(["user"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to reactivate subscription"
+      );
+    },
+  });
+};
+
+// Account Management Queries
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: accountAPI.deleteAccount,
+    onSuccess: () => {
+      toast.success("Account deleted successfully!");
+      localStorage.removeItem("auth-storage");
+      queryClient.clear();
+      window.location.href = "/";
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to delete account");
+    },
+  });
+};
+
+export const useUsageStats = () => {
+  const { token, isInitialized } = useAuthStore();
+
+  return useQuery({
+    queryKey: ["account", "stats"],
+    queryFn: () => accountAPI.getUsageStats(),
+    enabled: !!token && isInitialized,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+export const useUpgradeAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: accountAPI.upgradeAccount,
+    onSuccess: (data) => {
+      // Redirect to Stripe checkout
+      if (data.data?.url) {
+        window.location.href = data.data.url;
+      }
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to upgrade account");
     },
   });
 };
