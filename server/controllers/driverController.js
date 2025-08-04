@@ -1,7 +1,6 @@
 import Drivers from "../models/driverModel.js";
 import Users from "../models/userModel.js";
 import { StatusCodes } from "http-status-codes";
-import Bookings from "../models/bookingModel.js";
 import ProfileView from "../models/profileViewModel.js";
 
 export const registerDriver = async (req, res) => {
@@ -15,7 +14,7 @@ export const registerDriver = async (req, res) => {
     } = req.body;
 
     // Check if driver already exists
-    const existingDriver = await Drivers.findOne({ user: req.user.userId });
+    const existingDriver = await Drivers.findOne({ user: req.user._id });
     if (existingDriver) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -52,7 +51,7 @@ export const registerDriver = async (req, res) => {
 
 export const getDriverProfile = async (req, res) => {
   try {
-    const driver = await Drivers.findOne({ user: req.user.userId }).populate(
+    const driver = await Drivers.findOne({ user: req.user._id }).populate(
       "user",
       "firstName lastName email profileUrl"
     );
@@ -81,7 +80,7 @@ export const updateDriverProfile = async (req, res) => {
   try {
     const updates = req.body;
     const driver = await Drivers.findOneAndUpdate(
-      { user: req.user.userId },
+      { user: req.user._id },
       updates,
       { new: true }
     );
@@ -109,7 +108,7 @@ export const updateDriverProfile = async (req, res) => {
 
 export const toggleAvailability = async (req, res) => {
   try {
-    const driver = await Drivers.findOne({ user: req.user.userId });
+    const driver = await Drivers.findOne({ user: req.user._id });
 
     if (!driver) {
       return res.status(StatusCodes.NOT_FOUND).json({
@@ -239,7 +238,7 @@ export const updateDriverLocation = async (req, res) => {
     }
 
     const driver = await Drivers.findOneAndUpdate(
-      { user: req.user.userId },
+      { user: req.user._id },
       {
         currentLocation: {
           type: "Point",
@@ -319,7 +318,7 @@ export const getNearbyDrivers = async (req, res) => {
 
 export const getDriverStats = async (req, res) => {
   try {
-    const driver = await Drivers.findOne({ user: req.user.userId });
+    const driver = await Drivers.findOne({ user: req.user._id });
     if (!driver) {
       return res.status(StatusCodes.NOT_FOUND).json({
         success: false,
@@ -713,6 +712,137 @@ export const getProfileViews = async (req, res) => {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error fetching profile views",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllDrivers = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      location,
+      experience,
+      priceRange,
+    } = req.query;
+    const skip = (page - 1) * limit;
+
+    const query = { isAvailable: true };
+
+    if (search) {
+      query.$or = [
+        { "user.firstName": { $regex: search, $options: "i" } },
+        { "user.lastName": { $regex: search, $options: "i" } },
+        { licenseType: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    if (experience) {
+      query.experience = { $gte: parseInt(experience) };
+    }
+
+    if (priceRange) {
+      const [min, max] = priceRange.split("-");
+      query.pricePerHour = { $gte: parseInt(min), $lte: parseInt(max) };
+    }
+
+    const drivers = await Drivers.find(query)
+      .populate("user", "firstName lastName email profileUrl")
+      .sort({ rating: -1, experience: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Drivers.countDocuments(query);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: drivers,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalDrivers: total,
+        hasNext: skip + drivers.length < total,
+        hasPrev: page > 1,
+      },
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Error fetching drivers",
+      error: error.message,
+    });
+  }
+};
+
+export const getDriverById = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+
+    const driver = await Drivers.findById(driverId)
+      .populate("user", "firstName lastName email profileUrl")
+      .populate("reviews.user", "firstName lastName profileUrl");
+
+    if (!driver) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Driver not found",
+      });
+    }
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: driver,
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Error fetching driver",
+      error: error.message,
+    });
+  }
+};
+
+export const getDriverReviews = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const driver = await Drivers.findById(driverId);
+    if (!driver) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Driver not found",
+      });
+    }
+
+    const reviews = driver.reviews
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(skip, skip + parseInt(limit));
+
+    const total = driver.reviews.length;
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: reviews,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalReviews: total,
+        hasNext: skip + reviews.length < total,
+        hasPrev: page > 1,
+      },
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Error fetching driver reviews",
       error: error.message,
     });
   }
