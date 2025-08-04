@@ -1,5 +1,5 @@
 import express from "express";
-import userAuth from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 import {
   initiatePayment,
   getPaymentHistory,
@@ -11,10 +11,10 @@ import {
 const router = express.Router();
 
 // Payment processing routes
-router.post("/initiate", userAuth, initiatePayment);
-router.get("/history", userAuth, getPaymentHistory);
-router.get("/earnings", userAuth, getDriverEarnings);
-router.post("/:paymentId/refund", userAuth, refundPayment);
+router.post("/initiate", isAuthenticated, initiatePayment);
+router.get("/history", isAuthenticated, getPaymentHistory);
+router.get("/earnings", isAuthenticated, getDriverEarnings);
+router.post("/:paymentId/refund", isAuthenticated, refundPayment);
 
 // Webhook endpoint (no auth required for external payment providers)
 router.post("/webhook", paymentWebhook);
