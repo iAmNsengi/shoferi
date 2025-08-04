@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Users from "../models/userModel.js";
+import { StatusCodes } from "http-status-codes";
+import { BadRequestError, NotFoundError } from "../utils/apiResponse.js";
 
 export const updateUser = async (req, res, next) => {
   const {
@@ -31,7 +33,7 @@ export const updateUser = async (req, res, next) => {
       });
     }
 
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(404).json({
@@ -63,8 +65,8 @@ export const updateUser = async (req, res, next) => {
     };
 
     // Remove undefined values
-    Object.keys(updateUser).forEach(key => 
-      updateUser[key] === undefined && delete updateUser[key]
+    Object.keys(updateUser).forEach(
+      (key) => updateUser[key] === undefined && delete updateUser[key]
     );
 
     const user = await Users.findByIdAndUpdate(userId, updateUser, {
@@ -97,7 +99,7 @@ export const updateUser = async (req, res, next) => {
 
 export const updateUserPreferences = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const { preferences } = req.body;
 
     if (!preferences) {
@@ -109,11 +111,11 @@ export const updateUserPreferences = async (req, res, next) => {
 
     const user = await Users.findByIdAndUpdate(
       userId,
-      { 
-        $set: { 
+      {
+        $set: {
           preferences: { ...preferences },
-          lastActive: new Date()
-        }
+          lastActive: new Date(),
+        },
       },
       { new: true, runValidators: true }
     );
@@ -143,7 +145,7 @@ export const updateUserPreferences = async (req, res, next) => {
 
 export const updateNotificationSettings = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const { notifications } = req.body;
 
     if (!notifications) {
@@ -155,11 +157,11 @@ export const updateNotificationSettings = async (req, res, next) => {
 
     const user = await Users.findByIdAndUpdate(
       userId,
-      { 
-        $set: { 
+      {
+        $set: {
           "preferences.notifications": notifications,
-          lastActive: new Date()
-        }
+          lastActive: new Date(),
+        },
       },
       { new: true }
     );
@@ -189,7 +191,7 @@ export const updateNotificationSettings = async (req, res, next) => {
 
 export const updatePrivacySettings = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const { privacy } = req.body;
 
     if (!privacy) {
@@ -201,13 +203,13 @@ export const updatePrivacySettings = async (req, res, next) => {
 
     const user = await Users.findByIdAndUpdate(
       userId,
-      { 
-        $set: { 
+      {
+        $set: {
           "preferences.privacy": privacy,
-          lastActive: new Date()
-        }
+          lastActive: new Date(),
+        },
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!user) {
@@ -235,7 +237,7 @@ export const updatePrivacySettings = async (req, res, next) => {
 
 export const changePassword = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
@@ -290,15 +292,15 @@ export const changePassword = async (req, res, next) => {
 
 export const deactivateAccount = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const { reason } = req.body;
 
     const user = await Users.findByIdAndUpdate(
       userId,
-      { 
+      {
         accountStatus: "deactivated",
         lastActive: new Date(),
-        deactivationReason: reason || "User requested"
+        deactivationReason: reason || "User requested",
       },
       { new: true }
     );
@@ -323,16 +325,77 @@ export const deactivateAccount = async (req, res, next) => {
   }
 };
 
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { password, reason } = req.body;
+
+    if (!password) {
+      throw new BadRequestError("Password is required to delete account");
+    }
+
+    const user = await Users.findById(userId);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    // Verify password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      throw new BadRequestError("Incorrect password");
+    }
+
+    // Cancel active subscription if exists
+    if (user.subscription?.stripeSubscriptionId) {
+      try {
+        const stripe = (await import("stripe")).default;
+        const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+
+        await stripeInstance.subscriptions.update(
+          user.subscription.stripeSubscriptionId,
+          {
+            cancel_at_period_end: true,
+          }
+        );
+      } catch (error) {
+        console.error("Error canceling Stripe subscription:", error);
+      }
+    }
+
+    // Delete user account
+    await Users.findByIdAndDelete(userId);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getUserStats = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-    // You can enhance this with actual stats from jobs, applications etc.
+    // Return the usage statistics from the user model
     const stats = {
-      jobsApplied: 0,
-      interviews: 0,
-      profileViews: 0,
-      profileCompleteness: 0,
+      jobsPosted: user.usageStats?.jobsPosted || 0,
+      jobsApplied: user.usageStats?.jobsApplied || 0,
+      postsCreated: user.usageStats?.postsCreated || 0,
+      commentsPosted: user.usageStats?.commentsPosted || 0,
+      lastResetDate: user.usageStats?.lastResetDate || new Date(),
     };
 
     res.status(200).json({
@@ -387,7 +450,7 @@ export const getUser = async (req, res, next) => {
 
 export const getUserProfile = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const user = await Users.findByIdAndUpdate(
       userId,
