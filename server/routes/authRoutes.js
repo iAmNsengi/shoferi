@@ -7,7 +7,7 @@ import {
   getProfile,
   updateProfile,
 } from "../controllers/authController.js";
-import userAuth from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 
 //ip rate limit
 const limiter = rateLimit({
@@ -26,7 +26,7 @@ router.post("/sign-in", signIn);
 router.post("/test-company", testCompanyAuth);
 
 // Profile routes
-router.get("/profile", userAuth, getProfile);
-router.put("/profile", userAuth, updateProfile);
+router.get("/profile", isAuthenticated, getProfile);
+router.put("/profile", isAuthenticated, updateProfile);
 
 export default router;
