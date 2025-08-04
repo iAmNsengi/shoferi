@@ -11,6 +11,9 @@ import paymentRoutes from "./paymentRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import messageRoutes from "./messageRoutes.js";
 import notificationRoutes from "./notificationRoutes.js";
+import feedRoutes from "./feedRoutes.js";
+import learningRoutes from "./learningRoutes.js";
+import subscriptionRoutes from "./subscriptionRoutes.js";
 
 const router = express.Router();
 
@@ -19,7 +22,6 @@ const path = "/api/v1/";
 router.use(`${path}auth`, authRoute);
 router.use(`${path}users`, userRoute);
 router.use(`${path}companies`, companyRoute);
-
 router.use(`${path}jobs`, jobRoute);
 router.use(`${path}upload`, uploadRoutes);
 router.use(`${path}drivers`, driverRoutes);
@@ -28,5 +30,8 @@ router.use(`${path}payments`, paymentRoutes);
 router.use(`${path}admin`, adminRoutes);
 router.use(`${path}messages`, messageRoutes);
 router.use(`${path}notifications`, notificationRoutes);
+router.use(`${path}feed`, feedRoutes);
+router.use(`${path}learning`, learningRoutes);
+router.use(`${path}subscriptions`, subscriptionRoutes);
 
 export default router;
