@@ -1,37 +1,71 @@
 import express from "express";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 import multer from "multer";
-import userAuth from "../middlewares/authMiddleware.js";
-import cloudinary from "../config/cloudinary.js";
+import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-const router = express.Router();
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Configure multer for memory storage (for Cloudinary)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+// Configure multer for local storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/");
   },
-  fileFilter: (req, file, cb) => {
-    // Accept images and PDFs
-    if (
-      file.mimetype.startsWith("image/") ||
-      file.mimetype === "application/pdf"
-    ) {
-      cb(null, true);
-    } else {
-      cb(
-        new Error("Invalid file type. Only images and PDFs are allowed."),
-        false
-      );
-    }
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+    );
   },
 });
 
-// Profile image upload route
+// Configure Cloudinary storage
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "shoferi",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "pdf", "doc", "docx"],
+    transformation: [{ width: 1000, height: 1000, crop: "limit" }],
+  },
+});
+
+// Configure multer
+const upload = multer({
+  storage: cloudinaryStorage,
+  fileFilter: function (req, file, cb) {
+    // Check file type
+    if (
+      file.mimetype === "image/jpeg" ||
+      file.mimetype === "image/png" ||
+      file.mimetype === "image/gif" ||
+      file.mimetype === "application/pdf" ||
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.mimetype === "application/msword"
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type"), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
+
+const router = express.Router();
+
+// Upload profile picture
 router.post(
-  "/profile-image",
-  userAuth,
-  upload.single("profileImage"),
+  "/profile-picture",
+  isAuthenticated,
+  upload.single("profilePicture"),
   async (req, res) => {
     try {
       if (!req.file) {
@@ -41,72 +75,27 @@ router.post(
         });
       }
 
-      // Convert buffer to base64 for Cloudinary
-      const b64 = Buffer.from(req.file.buffer).toString("base64");
-      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(dataURI, {
-        folder: "shoferi/profile-images",
-        transformation: [
-          { width: 400, height: 400, crop: "fill", gravity: "face" },
-          { quality: "auto" },
-        ],
-      });
-
       res.status(200).json({
         success: true,
-        message: "Profile image uploaded successfully",
-        profileUrl: result.secure_url,
-        publicId: result.public_id,
+        message: "Profile picture uploaded successfully",
+        data: {
+          url: req.file.path,
+          filename: req.file.filename,
+        },
       });
     } catch (error) {
-      console.error("Profile image upload error:", error);
+      console.error("Upload error:", error);
       res.status(500).json({
         success: false,
-        message: "Failed to upload profile image",
+        message: "Error uploading file",
+        error: error.message,
       });
     }
   }
 );
 
-// CV upload route
-router.post("/cv", userAuth, upload.single("cv"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No CV file uploaded",
-      });
-    }
-
-    // Convert buffer to base64 for Cloudinary
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(dataURI, {
-      folder: "shoferi/cv",
-      resource_type: "auto",
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "CV uploaded successfully",
-      cvUrl: result.secure_url,
-      publicId: result.public_id,
-    });
-  } catch (error) {
-    console.error("CV upload error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to upload CV",
-    });
-  }
-});
-
-// Generic file upload route
-router.post("/", upload.single("file"), async (req, res) => {
+// Upload CV
+router.post("/cv", isAuthenticated, upload.single("cv"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -115,27 +104,78 @@ router.post("/", upload.single("file"), async (req, res) => {
       });
     }
 
-    // Convert buffer to base64 for Cloudinary
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(dataURI, {
-      folder: "shoferi/general",
-      resource_type: "auto",
+    res.status(200).json({
+      success: true,
+      message: "CV uploaded successfully",
+      data: {
+        url: req.file.path,
+        filename: req.file.filename,
+      },
     });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error uploading file",
+      error: error.message,
+    });
+  }
+});
+
+// Upload multiple images
+router.post(
+  "/images",
+  isAuthenticated,
+  upload.array("images", 5),
+  async (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No files uploaded",
+        });
+      }
+
+      const uploadedFiles = req.files.map((file) => ({
+        url: file.path,
+        filename: file.filename,
+      }));
+
+      res.status(200).json({
+        success: true,
+        message: "Images uploaded successfully",
+        data: uploadedFiles,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error uploading files",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// Delete uploaded file
+router.delete("/:filename", isAuthenticated, async (req, res) => {
+  try {
+    const { filename } = req.params;
+
+    // Delete from Cloudinary
+    const publicId = filename.split(".")[0];
+    await cloudinary.uploader.destroy(publicId);
 
     res.status(200).json({
       success: true,
-      message: "File uploaded successfully",
-      fileUrl: result.secure_url,
-      publicId: result.public_id,
+      message: "File deleted successfully",
     });
   } catch (error) {
-    console.error("File upload error:", error);
+    console.error("Delete error:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to upload file",
+      message: "Error deleting file",
+      error: error.message,
     });
   }
 });
