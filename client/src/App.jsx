@@ -1,6 +1,7 @@
 import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/shared/Navbar";
+import GlobalTierBanner from "./components/GlobalTierBanner";
 import LandingPage from "./pages/LandingPage";
 import Footer from "./components/shared/Footer";
 import FindJobs from "./pages/jobs/FindJobs";
@@ -51,36 +52,41 @@ function PublicRoute() {
 }
 
 function App() {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <main className="bg-gradient-to-br from-green-50 to-green-100 min-h-screen pt-10">
+    <main className="bg-gradient-to-br from-green-50 to-green-100 min-h-screen">
+      <GlobalTierBanner />
       <Navbar />
-      <Routes>
-        {/* Public routes */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
+      <div className={`${isAuthenticated ? "pt-32" : "pt-20"}`}>
+        <Routes>
+          {/* Public routes */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
 
-        {/* Landing page - accessible to all */}
-        <Route path="/" element={<LandingPage />} />
+          {/* Landing page - accessible to all */}
+          <Route path="/" element={<LandingPage />} />
 
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardRouter />} />
-          <Route path="/jobs" element={<FindJobs />} />
-          <Route path="/jobs/create" element={<CreateJob />} />
-          <Route path="/jobs/:id" element={<JobDetails />} />
-          <Route path="/feed" element={<Feeds />} />
-          <Route path="/learn" element={<Learn />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/driver-dashboard" element={<DriverDashboard />} />
-          <Route path="/company-dashboard" element={<CompanyDashboard />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        </Route>
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardRouter />} />
+            <Route path="/jobs" element={<FindJobs />} />
+            <Route path="/jobs/create" element={<CreateJob />} />
+            <Route path="/jobs/:id" element={<JobDetails />} />
+            <Route path="/feed" element={<Feeds />} />
+            <Route path="/learn" element={<Learn />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/driver-dashboard" element={<DriverDashboard />} />
+            <Route path="/company-dashboard" element={<CompanyDashboard />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          </Route>
 
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
       <Footer />
       <Toaster
         position="top-right"
