@@ -58,17 +58,19 @@ export const authAPI = {
   login: (credentials) => api.post("/auth/login", credentials),
   register: (userData) => api.post("/auth/register", userData),
   logout: () => api.post("/auth/logout"),
-  getProfile: () => api.get("/auth/profile"),
-  updateProfile: (data) => api.put("/auth/profile", data),
+  getProfile: () => api.get("/users/get-user"),
+  updateProfile: (data) => api.put("/users/update-user", data),
 };
 
 // User API
 export const userAPI = {
   getProfile: () => api.get("/users/get-user"),
   updateProfile: (data) => api.put("/users/update-user", data),
-  updatePreferences: (data) => api.put("/users/preferences", data),
-  updateNotificationSettings: (data) => api.put("/users/notifications", data),
-  updatePrivacySettings: (data) => api.put("/users/privacy", data),
+  updatePreferences: (data) =>
+    api.put("/users/preferences", { preferences: data }),
+  updateNotificationSettings: (data) =>
+    api.put("/users/notifications", { notifications: data }),
+  updatePrivacySettings: (data) => api.put("/users/privacy", { privacy: data }),
   changePassword: (data) => api.put("/users/change-password", data),
   deactivateAccount: (data) => api.put("/users/deactivate", data),
   getUserStats: () => api.get("/users/stats"),
@@ -203,6 +205,63 @@ export const adminAPI = {
   updateUser: (id, userData) => api.put(`/admin/users/${id}`, userData),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
   getStats: () => api.get("/admin/stats"),
+};
+
+// Feed API
+export const feedAPI = {
+  getAll: (params) => api.get("/feed", { params }),
+  getById: (id) => api.get(`/feed/${id}`),
+  create: (postData) => api.post("/feed", postData),
+  update: (id, postData) => api.put(`/feed/${id}`, postData),
+  delete: (id) => api.delete(`/feed/${id}`),
+  toggleLike: (id) => api.post(`/feed/${id}/like`),
+  addComment: (id, commentData) =>
+    api.post(`/feed/${id}/comments`, commentData),
+  addReply: (postId, commentId, replyData) =>
+    api.post(`/feed/${postId}/comments/${commentId}/replies`, replyData),
+  deleteComment: (postId, commentId) =>
+    api.delete(`/feed/${postId}/comments/${commentId}`),
+  getUserPosts: (userId, params) => api.get(`/feed/user/${userId}`, { params }),
+  getTrending: (params) => api.get("/feed/trending", { params }),
+};
+
+// Learning API
+export const learningAPI = {
+  getAll: (params) => api.get("/learning", { params }),
+  getById: (id) => api.get(`/learning/${id}`),
+  create: (learningData) => api.post("/learning", learningData),
+  update: (id, learningData) => api.put(`/learning/${id}`, learningData),
+  delete: (id) => api.delete(`/learning/${id}`),
+  togglePublish: (id) => api.put(`/learning/${id}/publish`),
+  toggleFeatured: (id) => api.put(`/learning/${id}/feature`),
+  getFeatured: (params) => api.get("/learning/featured", { params }),
+  getByCategory: (category, params) =>
+    api.get(`/learning/category/${category}`, { params }),
+  getStats: () => api.get("/learning/stats/overview"),
+};
+
+// Subscriptions API
+export const subscriptionsAPI = {
+  getPlans: () => api.get("/subscriptions/plans"),
+  createCheckoutSession: (planId) =>
+    api.post("/subscriptions/checkout", { planId }),
+  getCurrentSubscription: () => api.get("/subscriptions/current"),
+  cancelSubscription: () => api.post("/subscriptions/cancel"),
+  reactivateSubscription: () => api.post("/subscriptions/reactivate"),
+  handleWebhook: (payload, signature) =>
+    api.post("/subscriptions/webhook", payload, {
+      headers: { "stripe-signature": signature },
+    }),
+};
+
+// Account Management API
+export const accountAPI = {
+  deleteAccount: (password) =>
+    api.delete("/users/delete-account", {
+      data: { password },
+    }),
+  getUsageStats: () => api.get("/users/stats"),
+  upgradeAccount: (planId) => api.post("/users/upgrade", { planId }),
 };
 
 export default api;
