@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
+import userAuth from "../middlewares/authMiddleware.js";
 import {
   sendMessage,
   getConversation,
@@ -11,8 +11,7 @@ import {
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(authMiddleware);
+router.use(userAuth);
 
 // Send a message
 router.post("/send", sendMessage);
@@ -32,4 +31,4 @@ router.delete("/:messageId", deleteMessage);
 // Get unread message count
 router.get("/unread/count", getUnreadCount);
 
-export default router; 
+export default router;

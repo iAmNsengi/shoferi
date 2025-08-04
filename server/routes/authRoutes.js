@@ -1,6 +1,13 @@
 import express from "express";
 import { rateLimit } from "express-rate-limit";
-import { register, signIn, testCompanyAuth } from "../controllers/authController.js";
+import {
+  register,
+  signIn,
+  testCompanyAuth,
+  getProfile,
+  updateProfile,
+} from "../controllers/authController.js";
+import userAuth from "../middlewares/authMiddleware.js";
 
 //ip rate limit
 const limiter = rateLimit({
@@ -17,5 +24,9 @@ router.post("/register", limiter, register);
 router.post("/login", signIn);
 router.post("/sign-in", signIn);
 router.post("/test-company", testCompanyAuth);
+
+// Profile routes
+router.get("/profile", userAuth, getProfile);
+router.put("/profile", userAuth, updateProfile);
 
 export default router;

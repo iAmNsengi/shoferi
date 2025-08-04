@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
+import userAuth from "../middlewares/authMiddleware.js";
 import {
   getUserNotifications,
   markNotificationAsRead,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // All routes require authentication
-router.use(authMiddleware);
+router.use(userAuth);
 
 // Get user notifications
 router.get("/", getUserNotifications);
@@ -32,4 +32,4 @@ router.get("/settings", getNotificationSettings);
 // Update notification settings
 router.put("/settings", updateNotificationSettings);
 
-export default router; 
+export default router;

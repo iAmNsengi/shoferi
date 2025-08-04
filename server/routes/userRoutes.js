@@ -17,6 +17,9 @@ const router = express.Router();
 // GET current user profile (authenticated)
 router.get("/get-user", userAuth, getUserProfile);
 
+// GET USER STATS
+router.get("/stats", userAuth, getUserStats);
+
 // GET user by ID
 router.get("/:id", getUser);
 
@@ -37,8 +40,5 @@ router.put("/change-password", userAuth, changePassword);
 
 // DEACTIVATE ACCOUNT
 router.put("/deactivate", userAuth, deactivateAccount);
-
-// GET USER STATS
-router.get("/stats", userAuth, getUserStats);
 
 export default router;

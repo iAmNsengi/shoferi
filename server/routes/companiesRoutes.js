@@ -6,6 +6,11 @@ import {
   getCompanyJobListing,
   getCompanyProfile,
   getCompanyStats,
+  getCompanyDashboard,
+  getCompanyApplications,
+  getCompanyJobAnalytics,
+  bulkUpdateApplicationStatus,
+  scheduleInterview,
   register,
   signIn,
   updateCompanyProfile,
@@ -29,14 +34,32 @@ router.post("/register", limiter, register);
 router.post("/login", limiter, signIn);
 
 // GET DATA
-router.get("/get-company-profile", (req, res, next) => {
-  console.log("🚀 Route handler: /get-company-profile accessed");
-  next();
-}, userAuth, getCompanyProfile);
+router.get(
+  "/get-company-profile",
+  (req, res, next) => {
+    console.log("🚀 Route handler: /get-company-profile accessed");
+    next();
+  },
+  userAuth,
+  getCompanyProfile
+);
 router.get("/get-company-job-listings", userAuth, getCompanyJobListing);
 router.get("/stats", userAuth, getCompanyStats);
 router.get("/get-companies", getCompanies);
 router.get("/get-company/:id", getCompanyById);
+
+// COMPANY DASHBOARD & ANALYTICS
+router.get("/dashboard", userAuth, getCompanyDashboard);
+router.get("/applications", userAuth, getCompanyApplications);
+router.get("/analytics", userAuth, getCompanyJobAnalytics);
+
+// APPLICATION MANAGEMENT
+router.put("/applications/bulk-update", userAuth, bulkUpdateApplicationStatus);
+router.post(
+  "/applications/:applicationId/schedule-interview",
+  userAuth,
+  scheduleInterview
+);
 
 // UPDATE DATA
 router.put("/update-company-profile", userAuth, updateCompanyProfile);

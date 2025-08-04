@@ -11,6 +11,8 @@ import {
   getDriverStats,
   getNearbyDrivers,
   smartDriverMatching,
+  trackProfileView,
+  getProfileViews,
 } from "../controllers/driverController.js";
 
 const router = express.Router();
@@ -31,5 +33,9 @@ router.get("/nearby", getNearbyDrivers);
 router.get("/search", searchDrivers);
 router.get("/available", getAvailableDrivers);
 router.post("/smart-match", smartDriverMatching);
+
+// Profile view tracking routes
+router.post("/:driverId/track-view", trackProfileView);
+router.get("/:driverId/profile-views", userAuth, getProfileViews);
 
 export default router;
