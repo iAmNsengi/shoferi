@@ -1,5 +1,5 @@
 import express from "express";
-import userAuth from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 import {
   getUser,
   updateUser,
@@ -9,36 +9,40 @@ import {
   updatePrivacySettings,
   changePassword,
   deactivateAccount,
+  deleteAccount,
   getUserStats,
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
 // GET current user profile (authenticated)
-router.get("/get-user", userAuth, getUserProfile);
+router.get("/get-user", isAuthenticated, getUserProfile);
 
 // GET USER STATS
-router.get("/stats", userAuth, getUserStats);
+router.get("/stats", isAuthenticated, getUserStats);
 
 // GET user by ID
 router.get("/:id", getUser);
 
 // UPDATE USER || PUT
-router.put("/update-user", userAuth, updateUser);
+router.put("/update-user", isAuthenticated, updateUser);
 
 // UPDATE USER PREFERENCES
-router.put("/preferences", userAuth, updateUserPreferences);
+router.put("/preferences", isAuthenticated, updateUserPreferences);
 
 // UPDATE NOTIFICATION SETTINGS
-router.put("/notifications", userAuth, updateNotificationSettings);
+router.put("/notifications", isAuthenticated, updateNotificationSettings);
 
 // UPDATE PRIVACY SETTINGS
-router.put("/privacy", userAuth, updatePrivacySettings);
+router.put("/privacy", isAuthenticated, updatePrivacySettings);
 
 // CHANGE PASSWORD
-router.put("/change-password", userAuth, changePassword);
+router.put("/change-password", isAuthenticated, changePassword);
 
 // DEACTIVATE ACCOUNT
-router.put("/deactivate", userAuth, deactivateAccount);
+router.put("/deactivate", isAuthenticated, deactivateAccount);
+
+// DELETE ACCOUNT
+router.delete("/delete-account", isAuthenticated, deleteAccount);
 
 export default router;
