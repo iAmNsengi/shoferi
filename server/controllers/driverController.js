@@ -1,6 +1,8 @@
 import Drivers from "../models/driverModel.js";
 import Users from "../models/userModel.js";
 import { StatusCodes } from "http-status-codes";
+import Bookings from "../models/bookingModel.js";
+import ProfileView from "../models/profileViewModel.js";
 
 export const registerDriver = async (req, res) => {
   try {
@@ -327,6 +329,7 @@ export const getDriverStats = async (req, res) => {
 
     // Get booking statistics from the Bookings collection
     const Bookings = (await import("../models/bookingModel.js")).default;
+    const Jobs = (await import("../models/jobsModel.js")).default;
 
     const now = new Date();
     const startOfDay = new Date(
@@ -377,6 +380,92 @@ export const getDriverStats = async (req, res) => {
       monthlyEarnings: 0,
     };
 
+    // Get job application statistics
+    const jobApplications = await Jobs.aggregate([
+      {
+        $match: {
+          "applications.user": req.user.userId,
+        },
+      },
+      {
+        $unwind: "$applications",
+      },
+      {
+        $match: {
+          "applications.user": req.user.userId,
+        },
+      },
+      {
+        $group: {
+          _id: "$applications.status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Calculate application stats
+    const applicationStats = {
+      totalApplications: 0,
+      pendingApplications: 0,
+      reviewedApplications: 0,
+      shortlistedApplications: 0,
+      acceptedApplications: 0,
+      rejectedApplications: 0,
+      interviewsScheduled: 0,
+    };
+
+    jobApplications.forEach((stat) => {
+      applicationStats.totalApplications += stat.count;
+      switch (stat._id) {
+        case "pending":
+          applicationStats.pendingApplications = stat.count;
+          break;
+        case "reviewed":
+          applicationStats.reviewedApplications = stat.count;
+          break;
+        case "shortlisted":
+          applicationStats.shortlistedApplications = stat.count;
+          break;
+        case "accepted":
+          applicationStats.acceptedApplications = stat.count;
+          break;
+        case "rejected":
+          applicationStats.rejectedApplications = stat.count;
+          break;
+      }
+    });
+
+    // Get interviews scheduled (applications with interview data)
+    const interviewsScheduled = await Jobs.aggregate([
+      {
+        $match: {
+          "applications.user": req.user.userId,
+          "applications.interview.scheduled": { $exists: true, $ne: null },
+        },
+      },
+      {
+        $unwind: "$applications",
+      },
+      {
+        $match: {
+          "applications.user": req.user.userId,
+          "applications.interview.scheduled": { $exists: true, $ne: null },
+        },
+      },
+      {
+        $count: "total",
+      },
+    ]);
+
+    applicationStats.interviewsScheduled = interviewsScheduled[0]?.total || 0;
+
+    // Get profile views for the last 30 days
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const profileViews = await ProfileView.countDocuments({
+      driver: driver._id,
+      viewedAt: { $gte: thirtyDaysAgo },
+    });
+
     // Calculate average rating
     const avgRating =
       driver.reviews.length > 0
@@ -391,6 +480,10 @@ export const getDriverStats = async (req, res) => {
         avgRating: parseFloat(avgRating.toFixed(1)),
         totalReviews: driver.reviews.length,
         verificationStatus: driver.verified,
+        // Job application stats
+        ...applicationStats,
+        // Profile views
+        profileViews: profileViews,
       },
     });
   } catch (error) {
@@ -488,6 +581,138 @@ export const smartDriverMatching = async (req, res) => {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error in smart driver matching",
+      error: error.message,
+    });
+  }
+};
+
+export const trackProfileView = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const { source = "direct_link" } = req.body;
+    const userId = req.user?.userId || null;
+
+    // Verify driver exists
+    const driver = await Drivers.findById(driverId);
+    if (!driver) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Driver not found",
+      });
+    }
+
+    // Create profile view record
+    const profileView = new ProfileView({
+      driver: driverId,
+      viewer: userId,
+      source,
+      userAgent: req.get("User-Agent"),
+      ipAddress: req.ip,
+    });
+
+    await profileView.save();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Profile view tracked successfully",
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Error tracking profile view",
+      error: error.message,
+    });
+  }
+};
+
+export const getProfileViews = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const { period = "30d" } = req.query;
+
+    // Verify driver exists
+    const driver = await Drivers.findById(driverId);
+    if (!driver) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Driver not found",
+      });
+    }
+
+    // Calculate date range based on period
+    const now = new Date();
+    let startDate;
+    switch (period) {
+      case "7d":
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "30d":
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case "90d":
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    // Get profile views with aggregation
+    const views = await ProfileView.aggregate([
+      {
+        $match: {
+          driver: driver._id,
+          viewedAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$viewedAt" },
+          },
+          count: { $sum: 1 },
+          sources: { $addToSet: "$source" },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    // Get total views count
+    const totalViews = await ProfileView.countDocuments({
+      driver: driver._id,
+      viewedAt: { $gte: startDate },
+    });
+
+    // Get views by source
+    const viewsBySource = await ProfileView.aggregate([
+      {
+        $match: {
+          driver: driver._id,
+          viewedAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$source",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: {
+        totalViews,
+        viewsByDate: views,
+        viewsBySource,
+        period,
+      },
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Error fetching profile views",
       error: error.message,
     });
   }

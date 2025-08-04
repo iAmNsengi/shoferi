@@ -3,19 +3,25 @@ import Companies from "../models/companiesModel.js";
 import mongoose from "mongoose";
 
 export const register = async (req, res, next) => {
-  const { 
-    firstName, 
-    lastName, 
-    email, 
-    password, 
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
     accountType = "driver",
     companyName, // For company registration
     industry,
     companySize,
-    website
+    website,
   } = req.body;
 
-  console.log("Registration attempt:", { accountType, email, companyName, firstName, lastName });
+  console.log("Registration attempt:", {
+    accountType,
+    email,
+    companyName,
+    firstName,
+    lastName,
+  });
 
   // Basic validation
   if (!email) {
@@ -64,10 +70,10 @@ export const register = async (req, res, next) => {
   try {
     // Check if user already exists
     const normalizedEmail = email.toLowerCase().trim();
-    
+
     const [existingUser, existingCompany] = await Promise.all([
       Users.findOne({ email: normalizedEmail }),
-      Companies.findOne({ email: normalizedEmail })
+      Companies.findOne({ email: normalizedEmail }),
     ]);
 
     if (existingUser || existingCompany) {
@@ -80,7 +86,7 @@ export const register = async (req, res, next) => {
     if (accountType === "company") {
       // Create company account
       console.log("Creating company account...");
-      
+
       const companyData = {
         name: companyName.trim(),
         email: normalizedEmail,
@@ -91,15 +97,15 @@ export const register = async (req, res, next) => {
       };
 
       console.log("Company data:", companyData);
-      
+
       const company = await Companies.create([companyData], { session });
       user = company[0];
-      
+
       console.log("Company created successfully:", company[0]._id);
     } else {
       // Create driver or admin account
       console.log("Creating user account...");
-      
+
       const userData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -109,17 +115,17 @@ export const register = async (req, res, next) => {
       };
 
       console.log("User data:", userData);
-      
+
       const createdUsers = await Users.create([userData], { session });
       user = createdUsers[0];
-      
+
       console.log("User created successfully:", user._id);
 
       // If driver, also create driver profile
       if (accountType === "driver") {
         console.log("Creating driver profile...");
         const Drivers = (await import("../models/driverModel.js")).default;
-        
+
         const driverData = {
           user: user._id,
           licenseNumber: "",
@@ -130,7 +136,7 @@ export const register = async (req, res, next) => {
             status: "offline",
             schedule: [],
           },
-          rating: 0, 
+          rating: 0,
           reviews: [],
           currentLocation: {
             type: "Point",
@@ -171,27 +177,31 @@ export const register = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: `${accountType.charAt(0).toUpperCase() + accountType.slice(1)} account created successfully`,
+      message: `${
+        accountType.charAt(0).toUpperCase() + accountType.slice(1)
+      } account created successfully`,
       user: responseUser,
       token,
     });
   } catch (error) {
     // Rollback transaction on error
     await session.abortTransaction();
-    
+
     console.error("Registration error:", error);
-    
+
     // Handle specific mongoose validation errors
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => err.message);
-      return next(`Validation error: ${validationErrors.join(', ')}`);
+    if (error.name === "ValidationError") {
+      const validationErrors = Object.values(error.errors).map(
+        (err) => err.message
+      );
+      return next(`Validation error: ${validationErrors.join(", ")}`);
     }
-    
+
     // Handle duplicate key error
     if (error.code === 11000) {
       return next("Email address is already registered. Please login instead.");
     }
-    
+
     return next(`Registration failed: ${error.message}`);
   } finally {
     // End session
@@ -216,42 +226,33 @@ export const signIn = async (req, res, next) => {
     // Check both Users and Companies collections
     const [user, company] = await Promise.all([
       Users.findOne({ email: normalizedEmail }).select("+password"),
-      Companies.findOne({ email: normalizedEmail }).select("+password")
+      Companies.findOne({ email: normalizedEmail }).select("+password"),
     ]);
-
-    console.log("Found user:", !!user, "Found company:", !!company);
 
     let authenticatedUser = null;
     let isMatch = false;
     let accountType = null;
 
     if (user) {
-      console.log("Checking user password...");
       isMatch = await user.comparePassword(password);
       if (isMatch) {
         authenticatedUser = user;
         accountType = user.accountType;
-        console.log("User authentication successful, account type:", accountType);
-    }
+      }
     } else if (company) {
-      console.log("Checking company password...");
       isMatch = await company.comparePassword(password);
       if (isMatch) {
         authenticatedUser = company;
         accountType = "company";
-        console.log("Company authentication successful");
       }
     }
 
     if (!authenticatedUser || !isMatch) {
-      console.log("Authentication failed: Invalid credentials");
       return next("Invalid email or password");
     }
 
-    // Remove password from response
     authenticatedUser.password = undefined;
 
-    // Generate token
     const token = authenticatedUser.createJWT();
 
     // Prepare response user object
@@ -288,41 +289,124 @@ export const signIn = async (req, res, next) => {
 export const testCompanyAuth = async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     console.log("Testing company auth for email:", email);
-    
+
     // Check both collections
     const [user, company] = await Promise.all([
       Users.findOne({ email }),
-      Companies.findOne({ email })
+      Companies.findOne({ email }),
     ]);
-    
+
     res.json({
       success: true,
       data: {
         userExists: !!user,
         companyExists: !!company,
-        userData: user ? {
-          _id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          accountType: user.accountType
-        } : null,
-        companyData: company ? {
-          _id: company._id,
-          name: company.name,
-          email: company.email,
-          accountType: "company",
-          industry: company.industry
-        } : null
-      }
+        userData: user
+          ? {
+              _id: user._id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              accountType: user.accountType,
+            }
+          : null,
+        companyData: company
+          ? {
+              _id: company._id,
+              name: company.name,
+              email: company.email,
+              accountType: "company",
+              industry: company.industry,
+            }
+          : null,
+      },
     });
   } catch (error) {
     console.error("Test error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get user profile (auth endpoint)
+export const getProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(404).json({
+        success: false,
+        message: `Invalid user ID: ${userId}`,
+      });
+    }
+
+    const user = await Users.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Update user profile (auth endpoint)
+export const updateProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const updateData = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(404).json({
+        success: false,
+        message: `Invalid user ID: ${userId}`,
+      });
+    }
+
+    // Remove sensitive fields that shouldn't be updated here
+    delete updateData.password;
+    delete updateData.accountType;
+    delete updateData._id;
+
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };
