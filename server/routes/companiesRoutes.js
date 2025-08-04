@@ -15,7 +15,7 @@ import {
   signIn,
   updateCompanyProfile,
 } from "../controllers/companiesController.js";
-import userAuth from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -40,28 +40,32 @@ router.get(
     console.log("🚀 Route handler: /get-company-profile accessed");
     next();
   },
-  userAuth,
+  isAuthenticated,
   getCompanyProfile
 );
-router.get("/get-company-job-listings", userAuth, getCompanyJobListing);
-router.get("/stats", userAuth, getCompanyStats);
+router.get("/get-company-job-listings", isAuthenticated, getCompanyJobListing);
+router.get("/stats", isAuthenticated, getCompanyStats);
 router.get("/get-companies", getCompanies);
 router.get("/get-company/:id", getCompanyById);
 
 // COMPANY DASHBOARD & ANALYTICS
-router.get("/dashboard", userAuth, getCompanyDashboard);
-router.get("/applications", userAuth, getCompanyApplications);
-router.get("/analytics", userAuth, getCompanyJobAnalytics);
+router.get("/dashboard", isAuthenticated, getCompanyDashboard);
+router.get("/applications", isAuthenticated, getCompanyApplications);
+router.get("/analytics", isAuthenticated, getCompanyJobAnalytics);
 
 // APPLICATION MANAGEMENT
-router.put("/applications/bulk-update", userAuth, bulkUpdateApplicationStatus);
+router.put(
+  "/applications/bulk-update",
+  isAuthenticated,
+  bulkUpdateApplicationStatus
+);
 router.post(
   "/applications/:applicationId/schedule-interview",
-  userAuth,
+  isAuthenticated,
   scheduleInterview
 );
 
 // UPDATE DATA
-router.put("/update-company-profile", userAuth, updateCompanyProfile);
+router.put("/update-company-profile", isAuthenticated, updateCompanyProfile);
 
 export default router;
