@@ -1,5 +1,5 @@
 import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { useAuthStore } from "./store";
+import { useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/shared/Navbar";
 import LandingPage from "./pages/LandingPage";
 import Footer from "./components/shared/Footer";
@@ -21,7 +21,7 @@ import { Toaster } from "react-hot-toast";
 
 function ProtectedRoute() {
   const location = useLocation();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -35,7 +35,7 @@ function ProtectedRoute() {
 }
 
 function PublicRoute() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
 
   // If user is authenticated and trying to access auth pages, redirect to intended page or home
@@ -51,8 +51,6 @@ function PublicRoute() {
 }
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
-
   return (
     <main className="bg-gradient-to-br from-green-50 to-green-100 min-h-screen pt-10">
       <Navbar />
