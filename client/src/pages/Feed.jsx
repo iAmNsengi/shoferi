@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BiHeart,
   BiComment,
@@ -15,12 +15,48 @@ import {
   BiUser,
   BiPhone,
   BiShield,
+  BiEdit,
+  BiTrash,
+  BiSend,
+  BiX,
 } from "react-icons/bi";
 import { BsArrowRight, BsThreeDots } from "react-icons/bs";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  useFeedPosts,
+  useCreatePost,
+  useTogglePostLike,
+  useAddComment,
+  useDeletePost,
+  useUpdatePost,
+} from "../hooks/useQueries";
+import { toast } from "react-hot-toast";
 
 const Feeds = () => {
+  const { user, canPerformAction, getTierLimits } = useAuth();
   const [activeFilter, setActiveFilter] = useState("all");
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showCommentForm, setShowCommentForm] = useState(null);
+  const [commentText, setCommentText] = useState("");
+  const [postForm, setPostForm] = useState({
+    content: "",
+    category: "general",
+    tags: [],
+  });
+
+  // Queries
+  const {
+    data: feedData,
+    isLoading,
+    error,
+  } = useFeedPosts({
+    category: activeFilter === "all" ? undefined : activeFilter,
+  });
+  const createPostMutation = useCreatePost();
+  const toggleLikeMutation = useTogglePostLike();
+  const addCommentMutation = useAddComment();
+  const deletePostMutation = useDeletePost();
+  const updatePostMutation = useUpdatePost();
 
   const filters = [
     { id: "all", label: "All Posts", icon: BiTrendingUp },
@@ -30,110 +66,79 @@ const Feeds = () => {
     { id: "community", label: "Community", icon: BiUser },
   ];
 
-  const feedPosts = [
-    {
-      id: 1,
-      type: "job",
-      author: {
-        name: "Transport Solutions Ltd",
-        avatar: "🏢",
-        verified: true,
-        location: "Kigali",
-      },
-      timestamp: "2 hours ago",
-      content:
-        "We are looking for experienced drivers for our delivery fleet. Requirements: Clean driving record, 3+ years experience, knowledge of Kigali routes.",
-      jobDetails: {
-        salary: "150,000 - 200,000 RWF",
-        type: "Full-time",
-        vehicles: "Trucks & Vans",
-      },
-      likes: 24,
-      comments: 8,
-      shares: 3,
-      trending: true,
-    },
-    {
-      id: 2,
-      type: "road",
-      author: {
-        name: "Jean Claude Uwimana",
-        avatar: "👨‍💼",
-        verified: false,
-        location: "Nyamirambo",
-      },
-      timestamp: "4 hours ago",
-      content:
-        "Road construction on KG 15 Ave near Nyamirambo. Expect delays between 8-10 AM. Alternative route: Use KG 7 Ave for faster transit.",
-      image: "🚧",
-      likes: 18,
-      comments: 12,
-      shares: 15,
-      urgent: true,
-    },
-    {
-      id: 3,
-      type: "tip",
-      author: {
-        name: "Marie Mukandayisenga",
-        avatar: "👩‍🏫",
-        verified: true,
-        location: "Gasabo",
-      },
-      timestamp: "6 hours ago",
-      content:
-        'Safety tip: Always maintain 3-second following distance in city traffic. Count "one-thousand-one, one-thousand-two, one-thousand-three" after the car ahead passes a landmark.',
-      likes: 45,
-      comments: 6,
-      shares: 22,
-      helpful: true,
-    },
-    {
-      id: 4,
-      type: "community",
-      author: {
-        name: "Drivers Union Rwanda",
-        avatar: "🤝",
-        verified: true,
-        location: "Rwanda",
-      },
-      timestamp: "8 hours ago",
-      content:
-        "Monthly meeting this Saturday at 2 PM, Kigali Convention Center. Topics: New traffic regulations, insurance updates, and professional development opportunities.",
-      likes: 67,
-      comments: 23,
-      shares: 34,
-    },
-    {
-      id: 5,
-      type: "job",
-      author: {
-        name: "Safari Car Rental",
-        avatar: "🚗",
-        verified: true,
-        location: "Airport",
-      },
-      timestamp: "1 day ago",
-      content:
-        "Seeking professional chauffeurs for VIP airport transfers. Must speak English/French, excellent customer service skills required.",
-      jobDetails: {
-        salary: "200,000+ RWF",
-        type: "Part-time",
-        vehicles: "Luxury Cars",
-      },
-      likes: 31,
-      comments: 14,
-      shares: 7,
-    },
-  ];
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+
+    if (!canPerformAction("create_post")) {
+      const limits = getTierLimits("create_post");
+      toast.error(
+        `Creating posts is not available for your current tier. Upgrade to PRO or ENTERPRISE to create posts.`
+      );
+      return;
+    }
+
+    if (!postForm.content.trim()) {
+      toast.error("Please enter some content for your post");
+      return;
+    }
+
+    try {
+      await createPostMutation.mutateAsync({
+        content: postForm.content,
+        category: postForm.category,
+        tags: postForm.tags,
+      });
+
+      setPostForm({ content: "", category: "general", tags: [] });
+      setShowCreatePost(false);
+    } catch (error) {
+      console.error("Error creating post:", error);
+    }
+  };
+
+  const handleToggleLike = async (postId) => {
+    try {
+      await toggleLikeMutation.mutateAsync(postId);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+
+  const handleAddComment = async (postId) => {
+    if (!commentText.trim()) {
+      toast.error("Please enter a comment");
+      return;
+    }
+
+    try {
+      await addCommentMutation.mutateAsync({
+        postId,
+        commentData: { content: commentText },
+      });
+      setCommentText("");
+      setShowCommentForm(null);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        await deletePostMutation.mutateAsync(postId);
+      } catch (error) {
+        console.error("Error deleting post:", error);
+      }
+    }
+  };
 
   const getPostTypeColor = (type) => {
     switch (type) {
-      case "job":
+      case "jobs":
         return "from-green-500 to-emerald-600";
-      case "road":
+      case "roads":
         return "from-orange-500 to-red-500";
-      case "tip":
+      case "tips":
         return "from-blue-500 to-indigo-600";
       case "community":
         return "from-purple-500 to-pink-600";
@@ -144,11 +149,11 @@ const Feeds = () => {
 
   const getPostTypeLabel = (type) => {
     switch (type) {
-      case "job":
+      case "jobs":
         return "Job Opportunity";
-      case "road":
+      case "roads":
         return "Road Update";
-      case "tip":
+      case "tips":
         return "Driving Tip";
       case "community":
         return "Community";
@@ -156,6 +161,31 @@ const Feeds = () => {
         return "Post";
     }
   };
+
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-14 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Error Loading Feed
+          </h2>
+          <p className="text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-14">
@@ -176,13 +206,15 @@ const Feeds = () => {
                 />
               </div>
             </div>
-            <button
-              onClick={() => setShowCreatePost(!showCreatePost)}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-            >
-              <BiPlus className="text-lg" />
-              Create Post
-            </button>
+            {user && (
+              <button
+                onClick={() => setShowCreatePost(!showCreatePost)}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+              >
+                <BiPlus className="text-lg" />
+                Create Post
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -198,240 +230,307 @@ const Feeds = () => {
               </h3>
               <div className="space-y-2">
                 {filters.map((filter) => {
-                  const IconComponent = filter.icon;
+                  const Icon = filter.icon;
                   return (
                     <button
                       key={filter.id}
                       onClick={() => setActiveFilter(filter.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                         activeFilter === filter.id
                           ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
                           : "text-gray-600 hover:bg-gray-50"
                       }`}
                     >
-                      <IconComponent className="text-lg" />
+                      <Icon className="text-lg" />
                       <span className="font-medium">{filter.label}</span>
                     </button>
                   );
                 })}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="mt-8 p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
-                <h4 className="font-semibold text-gray-800 mb-3">
-                  Today's Activity
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">New Jobs</span>
-                    <span className="font-semibold text-green-600">12</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Road Updates</span>
-                    <span className="font-semibold text-orange-600">5</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Active Drivers</span>
-                    <span className="font-semibold text-blue-600">248</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
           {/* Main Feed */}
           <div className="lg:col-span-3">
+            {/* Create Post Form */}
             {showCreatePost && (
               <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-                <h3 className="font-semibold text-gray-800 mb-4">
-                  Create New Post
-                </h3>
-                <textarea
-                  className="w-full p-4 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  rows="4"
-                  placeholder="Share a job opportunity, road update, driving tip, or community news..."
-                ></textarea>
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex gap-2">
-                    <select className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                      <option>Job Opportunity</option>
-                      <option>Road Update</option>
-                      <option>Driving Tip</option>
-                      <option>Community</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowCreatePost(false)}
-                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-md transition-all">
-                      Post
-                    </button>
-                  </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800">
+                    Create New Post
+                  </h3>
+                  <button
+                    onClick={() => setShowCreatePost(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <BiX className="text-xl" />
+                  </button>
                 </div>
+                <form onSubmit={handleCreatePost}>
+                  <textarea
+                    value={postForm.content}
+                    onChange={(e) =>
+                      setPostForm({ ...postForm, content: e.target.value })
+                    }
+                    placeholder="What's on your mind? Share job opportunities, road updates, driving tips, or community news..."
+                    className="w-full p-4 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    rows={4}
+                  />
+                  <div className="flex items-center justify-between mt-4">
+                    <select
+                      value={postForm.category}
+                      onChange={(e) =>
+                        setPostForm({ ...postForm, category: e.target.value })
+                      }
+                      className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="general">General</option>
+                      <option value="jobs">Job Opportunities</option>
+                      <option value="roads">Road Updates</option>
+                      <option value="tips">Driving Tips</option>
+                      <option value="community">Community</option>
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={createPostMutation.isPending}
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+                    >
+                      {createPostMutation.isPending ? "Posting..." : "Post"}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
-            <div className="space-y-6">
-              {feedPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all"
-                >
-                  {/* Post Header */}
-                  <div className="p-6 pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center text-xl">
-                          {post.author.avatar}
+            {/* Posts */}
+            {isLoading ? (
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl shadow-sm p-6 animate-pulse"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {feedData?.data?.posts?.map((post) => (
+                  <div
+                    key={post._id}
+                    className="bg-white rounded-2xl shadow-sm p-6"
+                  >
+                    {/* Post Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">
+                          {post.author?.name?.charAt(0) || "U"}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-gray-800">
-                              {post.author.name}
+                              {post.author?.name || "Anonymous"}
                             </h4>
-                            {post.author.verified && (
-                              <div className="w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center">
-                                <span className="text-white text-xs">✓</span>
-                              </div>
+                            {post.author?.isVerified && (
+                              <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                ✓ Verified
+                              </span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <BiMapPin className="text-xs" />
-                            <span>{post.author.location}</span>
-                            <span>•</span>
                             <BiTime className="text-xs" />
-                            <span>{post.timestamp}</span>
+                            {formatTimeAgo(post.createdAt)}
+                            {post.category && (
+                              <>
+                                <span>•</span>
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getPostTypeColor(
+                                    post.category
+                                  )} text-white`}
+                                >
+                                  {getPostTypeLabel(post.category)}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getPostTypeColor(
-                            post.type
-                          )}`}
-                        >
-                          {getPostTypeLabel(post.type)}
+
+                      {/* Post Actions Menu */}
+                      {user &&
+                        (user._id === post.author?._id ||
+                          user.accountType === "admin") && (
+                          <div className="relative">
+                            <button className="text-gray-500 hover:text-gray-700 p-2">
+                              <BsThreeDots />
+                            </button>
+                            <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                              <button
+                                onClick={() => handleDeletePost(post._id)}
+                                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full"
+                              >
+                                <BiTrash className="text-sm" />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Post Content */}
+                    <div className="mb-4">
+                      <p className="text-gray-800 leading-relaxed">
+                        {post.content}
+                      </p>
+                      {post.media && post.media.length > 0 && (
+                        <div className="mt-4">
+                          <img
+                            src={post.media[0]}
+                            alt="Post media"
+                            className="rounded-lg max-w-full h-auto"
+                          />
                         </div>
-                        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                          <BsThreeDots className="text-gray-500" />
-                        </button>
+                      )}
+                    </div>
+
+                    {/* Post Stats */}
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-4">
+                        <span>{post.likes?.length || 0} likes</span>
+                        <span>{post.comments?.length || 0} comments</span>
                       </div>
                     </div>
 
-                    {/* Special Badges */}
-                    <div className="flex gap-2 mt-2">
-                      {post.trending && (
-                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          <BiTrendingUp className="text-xs" />
-                          Trending
-                        </span>
-                      )}
-                      {post.urgent && (
-                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          ⚡ Urgent
-                        </span>
-                      )}
-                      {post.helpful && (
-                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          💡 Helpful
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    {/* Post Actions */}
+                    <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => handleToggleLike(post._id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                          post.likes?.includes(user?._id)
+                            ? "text-red-500 bg-red-50"
+                            : "text-gray-500 hover:text-red-500 hover:bg-red-50"
+                        }`}
+                      >
+                        <BiHeart
+                          className={`text-lg ${
+                            post.likes?.includes(user?._id)
+                              ? "fill-current"
+                              : ""
+                          }`}
+                        />
+                        Like
+                      </button>
 
-                  {/* Post Content */}
-                  <div className="px-6 pb-4">
-                    <p className="text-gray-700 leading-relaxed mb-4">
-                      {post.content}
-                    </p>
+                      <button
+                        onClick={() =>
+                          setShowCommentForm(
+                            showCommentForm === post._id ? null : post._id
+                          )
+                        }
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition-all"
+                      >
+                        <BiComment className="text-lg" />
+                        Comment
+                      </button>
 
-                    {/* Job Details */}
-                    {post.jobDetails && (
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 mb-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div className="flex items-center gap-2">
-                            <BiDollarCircle className="text-green-600" />
-                            <div>
-                              <p className="text-xs text-gray-500">Salary</p>
-                              <p className="font-semibold text-gray-800">
-                                {post.jobDetails.salary}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <BiTime className="text-blue-600" />
-                            <div>
-                              <p className="text-xs text-gray-500">Type</p>
-                              <p className="font-semibold text-gray-800">
-                                {post.jobDetails.type}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <BiCar className="text-purple-600" />
-                            <div>
-                              <p className="text-xs text-gray-500">Vehicles</p>
-                              <p className="font-semibold text-gray-800">
-                                {post.jobDetails.vehicles}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <button className="mt-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-md transition-all flex items-center gap-2">
-                          <BiPhone className="text-sm" />
-                          Contact Now
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Road Update Image */}
-                    {post.image && (
-                      <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-xl p-8 mb-4 text-center">
-                        <div className="text-6xl mb-2">{post.image}</div>
-                        <p className="text-orange-700 font-medium">
-                          Road Construction Zone
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Post Actions */}
-                  <div className="px-6 py-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <button className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors">
-                          <BiHeart className="text-lg" />
-                          <span className="font-medium">{post.likes}</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors">
-                          <BiComment className="text-lg" />
-                          <span className="font-medium">{post.comments}</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors">
-                          <BiShare className="text-lg" />
-                          <span className="font-medium">{post.shares}</span>
-                        </button>
-                      </div>
-                      <button className="text-gray-600 hover:text-purple-500 transition-colors">
-                        <BiBookmark className="text-lg" />
+                      <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-500 hover:text-green-500 hover:bg-green-50 transition-all">
+                        <BiShare className="text-lg" />
+                        Share
                       </button>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Load More */}
-            <div className="text-center mt-8">
-              <button className="bg-white text-gray-600 px-8 py-3 rounded-full font-medium hover:shadow-md transition-all border border-gray-200 flex items-center gap-2 mx-auto">
-                Load More Posts
-                <BsArrowRight />
-              </button>
-            </div>
+                    {/* Comment Form */}
+                    {showCommentForm === post._id && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Write a comment..."
+                            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                          <button
+                            onClick={() => handleAddComment(post._id)}
+                            disabled={addCommentMutation.isPending}
+                            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                          >
+                            <BiSend className="text-lg" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Comments */}
+                    {post.comments && post.comments.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="space-y-3">
+                          {post.comments.slice(0, 3).map((comment) => (
+                            <div key={comment._id} className="flex gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                {comment.author?.name?.charAt(0) || "U"}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-semibold text-sm text-gray-800">
+                                    {comment.author?.name || "Anonymous"}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {formatTimeAgo(comment.createdAt)}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700">
+                                  {comment.content}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          {post.comments.length > 3 && (
+                            <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                              View all {post.comments.length} comments
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {feedData?.data?.posts?.length === 0 && (
+                  <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+                    <div className="text-gray-400 mb-4">
+                      <BiTrendingUp className="text-6xl mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                      No posts yet
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Be the first to share something with the community!
+                    </p>
+                    {user && canPerformAction("create_post") && (
+                      <button
+                        onClick={() => setShowCreatePost(true)}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                      >
+                        Create Your First Post
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
