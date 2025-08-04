@@ -136,7 +136,7 @@ const DriverDashboard = () => {
   }, [driverProfile?._id]);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
+    <div className="min-h-screen bg-gray-50 pt-6">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
