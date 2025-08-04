@@ -1,41 +1,37 @@
 import express from "express";
-import userAuth from "../middlewares/authMiddleware.js";
+import { isAuthenticated } from "../middlewares/authMiddleware.js";
 import {
   registerDriver,
   getDriverProfile,
   updateDriverProfile,
   toggleAvailability,
-  searchDrivers,
-  getAvailableDrivers,
   updateDriverLocation,
   getDriverStats,
-  getNearbyDrivers,
-  smartDriverMatching,
-  trackProfileView,
+  getAllDrivers,
+  getDriverById,
+  searchDrivers,
+  getDriverReviews,
   getProfileViews,
 } from "../controllers/driverController.js";
 
 const router = express.Router();
 
-// Driver registration and profile routes
-router.post("/register", userAuth, registerDriver);
-router.get("/profile", userAuth, getDriverProfile);
-router.put("/profile", userAuth, updateDriverProfile);
-router.post("/availability/toggle", userAuth, toggleAvailability);
-router.put("/toggle-availability", userAuth, toggleAvailability);
+// Driver profile management
+router.post("/register", isAuthenticated, registerDriver);
+router.get("/profile", isAuthenticated, getDriverProfile);
+router.put("/profile", isAuthenticated, updateDriverProfile);
+router.post("/availability/toggle", isAuthenticated, toggleAvailability);
+router.put("/toggle-availability", isAuthenticated, toggleAvailability);
 
-// Location and real-time features
-router.put("/location", userAuth, updateDriverLocation);
-router.get("/stats", userAuth, getDriverStats);
-router.get("/nearby", getNearbyDrivers);
+// Location updates
+router.put("/location", isAuthenticated, updateDriverLocation);
+router.get("/stats", isAuthenticated, getDriverStats);
 
-// Driver search routes
+// Public driver listings
+router.get("/", getAllDrivers);
 router.get("/search", searchDrivers);
-router.get("/available", getAvailableDrivers);
-router.post("/smart-match", smartDriverMatching);
-
-// Profile view tracking routes
-router.post("/:driverId/track-view", trackProfileView);
-router.get("/:driverId/profile-views", userAuth, getProfileViews);
+router.get("/:driverId", getDriverById);
+router.get("/:driverId/reviews", getDriverReviews);
+router.get("/:driverId/profile-views", isAuthenticated, getProfileViews);
 
 export default router;
